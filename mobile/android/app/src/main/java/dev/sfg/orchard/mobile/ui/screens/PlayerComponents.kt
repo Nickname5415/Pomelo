@@ -87,7 +87,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -113,7 +116,23 @@ fun ExplicitBadge(modifier: Modifier = Modifier) {
         modifier = modifier.size(16.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text("E", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Black)
+            // Trim font padding so the glyph centers on its cap height.
+            Text(
+                "E",
+                color = Color.Black,
+                fontWeight = FontWeight.Black,
+                style =
+                    TextStyle(
+                        fontSize = 10.sp,
+                        lineHeight = 10.sp,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                        lineHeightStyle =
+                            LineHeightStyle(
+                                alignment = LineHeightStyle.Alignment.Center,
+                                trim = LineHeightStyle.Trim.Both,
+                            ),
+                    ),
+            )
         }
     }
 }
