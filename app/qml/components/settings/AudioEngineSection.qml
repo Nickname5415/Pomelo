@@ -60,7 +60,19 @@ AudioEngineSectionForm {
     speedSlider.onMoved: value => engine.speed = value
     pitchSlider.onMoved: value => engine.pitchSemitones = value
 
-    outputDevice.currentIndex: outputDevice.indexOfValue(engine.outputDeviceId)
+    // The model assignment resets currentIndex, so resync once it is populated.
+    function syncOutputDevice() {
+        const index = outputDevice.indexOfValue(engine.outputDeviceId);
+        if (index >= 0)
+            outputDevice.currentIndex = index;
+    }
+    outputDevice.onCountChanged: syncOutputDevice()
+    outputDevice.onModelChanged: syncOutputDevice()
+    Component.onCompleted: syncOutputDevice()
+    Connections {
+        target: root.engine
+        function onOutputDeviceChanged() { root.syncOutputDevice() }
+    }
     outputDevice.onActivated: engine.outputDeviceId = outputDevice.currentValue
 
     presetList.delegate: SettingsButton {
