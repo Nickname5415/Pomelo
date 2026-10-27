@@ -67,6 +67,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -340,9 +341,13 @@ private fun AccountCard(
             when (auth) {
                 AuthState.SignedOut -> SettingsPill("Sign in", onSignIn, Modifier.fillMaxWidth())
                 is AuthState.Error -> SettingsPill("Try again", onSignIn, Modifier.fillMaxWidth())
-                is AuthState.SignedIn -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SettingsPill("Switch account", onSwitchAccount, Modifier.weight(1f))
-                    SettingsPill("Sign out", onSignOut, Modifier.weight(1f), destructive = true)
+                is AuthState.SignedIn -> {
+                    val uriHandler = LocalUriHandler.current
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SettingsPill("Switch account", onSwitchAccount, Modifier.weight(1f))
+                        SettingsPill("Sign out", onSignOut, Modifier.weight(1f), destructive = true)
+                    }
+                    SettingsPill("YouTube Music Recap", { uriHandler.openUri("https://music.youtube.com/recap") }, Modifier.fillMaxWidth())
                 }
                 else -> Unit
             }

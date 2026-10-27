@@ -32,6 +32,7 @@ RowLayout {
     property bool signedIn: true
     property bool switching: false
     property alias switchButton: switchButton
+    property alias recapButton: recapButton
     property alias signOutButton: signOutButton
 
     spacing: 14
@@ -89,6 +90,12 @@ RowLayout {
         text: root.switching ? qsTr("Choosing...") : qsTr("Switch account")
         enabled: root.signedIn && !root.switching
         Accessible.name: qsTr("Switch YouTube account")
+    }
+
+    SettingsButton {
+        id: recapButton
+        text: qsTr("Recap")
+        Accessible.name: qsTr("Open YouTube Music Recap in the browser")
     }
 
     SettingsButton {

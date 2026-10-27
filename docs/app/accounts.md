@@ -55,6 +55,10 @@ Orchard checks that the selected channel can load your YouTube Music library bef
 
 If Orchard says "That account needs a fresh sign-in. Sign out, then sign in with it.", the account you picked uses a different Google login than the one Orchard holds. Select **Sign out**, then sign in with that account.
 
+## Open YouTube Music Recap
+
+In the **YouTube Music** card, select **Recap** (on Android, **YouTube Music Recap**). Your browser opens music.youtube.com/recap. YouTube only offers Recap during part of the year, so the page may be empty at other times. Orchard cannot show Recap itself.
+
 ## Sign in to an Orchard account
 
 An Orchard account lets you use Orchard across your devices. It is separate from your YouTube Music account and optional. Animated artwork in Discord also needs it. See [Integrations](integrations.md).

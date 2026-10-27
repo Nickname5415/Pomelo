@@ -33,5 +33,6 @@ AccountSettingForm {
     switching: OrchardAuth.accountSwitching
 
     switchButton.onClicked: OrchardAuth.switchAccount()
+    recapButton.onClicked: Qt.openUrlExternally("https://music.youtube.com/recap")
     signOutButton.onClicked: root.signOutRequested()
 }
