@@ -24,6 +24,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSettings>
+#include <utility>
 
 void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   if (receiveNonMusicSegments(id, result))
@@ -59,6 +60,7 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   }
   if (id == m_autoplayRequest && m_autoplayRequest) {
     m_autoplayRequest = 0;
+    const bool mix = std::exchange(m_mixRequest, false);
     // Drop generated rows that repeat an earlier row before refilling.
     QList<QVariantMap> rows;
     for (const auto &value : m_queue)
@@ -82,10 +84,11 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
         continue;
       candidates.append(track);
     }
-    const auto picked = autoplay::select(existing, candidates, 20);
+    const auto picked = autoplay::select(existing, candidates, mix ? 40 : 20);
     const int added = picked.size();
     for (auto track : picked) {
-      track.insert("autoplayGenerated", true);
+      if (!mix)
+        track.insert("autoplayGenerated", true);
       m_queue.append(track);
       m_orderedQueue.append(track);
     }

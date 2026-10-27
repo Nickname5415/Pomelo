@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Image
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.sfg.orchard.mobile.model.Track
+import dev.sfg.orchard.mobile.model.LocalStartMix
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import dev.sfg.orchard.mobile.ui.motion.pressScale
@@ -142,6 +144,9 @@ internal fun TrackActionsPopup(
             }
             onAddToQueue?.let { action ->
                 PopupActionRow(Icons.AutoMirrored.Rounded.PlaylistAdd, "Add to Queue", slot++) { onDismiss(); action() }
+            }
+            LocalStartMix.current?.takeUnless { track.isLocal }?.let { start ->
+                PopupActionRow(Icons.Rounded.AutoAwesome, "Start Mix", slot++) { onDismiss(); start(track) }
             }
             onAddToPlaylist?.let { action ->
                 PopupActionRow(Icons.AutoMirrored.Rounded.PlaylistAdd, "Add to Playlist", slot++) { onDismiss(); action() }

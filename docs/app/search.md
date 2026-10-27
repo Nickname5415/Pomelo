@@ -67,4 +67,4 @@ Quick Search shows "Type to find" before you type, the match count such as "3 ma
 
 ## Open the song menu from a search result
 
-Right-click a result, or select its "More options" button. The menu holds **Play next**, **Add to queue**, **Add to playlist…**, **View album**, **View artist**, and the copy-link entries. See [Manage the queue](queue.md) and [Library and playlists](library-and-playlists.md).
+Right-click a result, or select its "More options" button. The menu holds **Play next**, **Add to queue**, **Start mix**, **Add to playlist…**, **View album**, **View artist**, and the copy-link entries. See [Manage the queue](queue.md) and [Library and playlists](library-and-playlists.md).

@@ -167,6 +167,7 @@ fun OrchardApp(viewModel: OrchardViewModel) {
         LocalPlayerClock provides playerPresentation.clock,
         dev.sfg.orchard.mobile.ui.components.LocalNonMusicSkip provides nonMusicSkip,
         dev.sfg.orchard.mobile.model.LocalBestMixJob provides bestMixJob,
+        dev.sfg.orchard.mobile.model.LocalStartMix provides viewModel::startMix,
         dev.sfg.orchard.mobile.model.LocalQobuzLinked provides qobuzStatus.isConnected,
         dev.sfg.orchard.mobile.model.LocalMaxActive provides maxActive,
         dev.sfg.orchard.mobile.model.LocalQobuzAlbumQuality provides albumQualityLoader,

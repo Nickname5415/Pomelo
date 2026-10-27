@@ -28,6 +28,7 @@ import dev.sfg.orchard.mobile.model.PlaybackSnapshot
 import dev.sfg.orchard.mobile.model.PlaybackTarget
 import dev.sfg.orchard.mobile.model.PlaybackTargetState
 import dev.sfg.orchard.mobile.model.Track
+import dev.sfg.orchard.mobile.playback.AutoplayRecommendations
 import dev.sfg.orchard.mobile.playback.LocalPlaybackController
 import dev.sfg.orchard.mobile.playback.QueueEditor
 import dev.sfg.orchard.mobile.playback.smart.BestMixSorter
@@ -66,6 +67,20 @@ internal class QueueLauncher(
     fun play(track: Track, contextTitle: String = "") {
         Log.d(TAG, "play: track=${track.id} ('${track.title}'), contextTitle='$contextTitle'")
         playAll(listOf(track), contextTitle = contextTitle)
+    }
+
+    /** Plays [track] over a fresh queue of YouTube Music's radio for it, whatever Autoplay is set to. */
+    fun startMix(track: Track) {
+        if (track.isLocal || !graph.networkMonitor.isOnline.value) {
+            play(track)
+            return
+        }
+        scope.launch {
+            val related = runCatching { graph.catalog.upNext(track.id) }.getOrDefault(emptyList())
+            val additions = AutoplayRecommendations.select(listOf(track), related, MIX_LIMIT)
+            if (additions.isEmpty()) showWarning("No songs for a mix were found.")
+            replaceQueue(listOf(track) + additions, 0, "Mix: ${track.title}", shuffle = false)
+        }
     }
 
     fun playAll(
@@ -268,5 +283,6 @@ internal class QueueLauncher(
 
     private companion object {
         const val TAG = "QueueLauncher"
+        const val MIX_LIMIT = 40
     }
 }

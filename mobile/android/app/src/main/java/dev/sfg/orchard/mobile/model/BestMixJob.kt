@@ -29,5 +29,8 @@ data class BestMixJob(val key: String, val status: String) {
     }
 }
 
+/** Starts a mix from a song; null where the app does not provide one. */
+val LocalStartMix = compositionLocalOf<((Track) -> Unit)?> { null }
+
 /** Survives screen changes because the launcher owns the run, not the screen that started it. */
 val LocalBestMixJob = compositionLocalOf<BestMixJob?> { null }

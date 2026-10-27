@@ -293,6 +293,7 @@ class OrchardViewModel(application: Application) : AndroidViewModel(application)
     val transitionMarker = graph.transitionMarker
 
     fun play(track: Track, contextTitle: String = "") = launcher.play(track, contextTitle)
+    fun startMix(track: Track) = launcher.startMix(track)
     fun playAll(tracks: List<Track>, startIndex: Int = 0, contextTitle: String = "", shuffle: Boolean = false) =
         launcher.playAll(tracks, startIndex, contextTitle, shuffle)
     fun playFromSearch(query: String) = launcher.playFromSearch(query)
