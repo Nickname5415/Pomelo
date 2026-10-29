@@ -32,10 +32,6 @@
     void onEvent(java.lang.String);
     void onData(java.lang.String, java.lang.String, byte[]);
 }
-# The QuickJS provider host calls these callbacks by name from native code.
--keep class dev.sfg.orchard.mobile.provider.ProviderHost { *; }
--keep class * extends dev.sfg.orchard.mobile.provider.ProviderHost { *; }
--keep class dev.sfg.orchard.mobile.provider.ProviderNative { native <methods>; }
 
 # Strip verbose/debug logging from release; several sit on playback and UI hot paths.
 -assumenosideeffects class android.util.Log {

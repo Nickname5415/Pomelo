@@ -57,7 +57,7 @@ data class Track(
      * the signed-in web player.
      */
     val isUpload: Boolean = false,
-    val playbackSource: String = "youtube",
+    val playbackSource: String = TIDAL_SOURCE,
     val bitDepth: Int? = null,
     val sampleRate: Int? = null,
     val hires: Boolean = false,
@@ -74,6 +74,9 @@ data class Track(
     /** True for a file on this phone: it needs no account, resolver or network to play. */
     val isLocal: Boolean
         get() = playbackSource.equals(LOCAL_SOURCE, ignoreCase = true)
+
+    val isTidal: Boolean
+        get() = playbackSource.equals(TIDAL_SOURCE, ignoreCase = true)
 
     val isQobuz: Boolean
         get() = false

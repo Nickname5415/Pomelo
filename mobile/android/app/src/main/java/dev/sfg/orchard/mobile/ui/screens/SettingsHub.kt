@@ -332,22 +332,20 @@ private fun AccountCard(
                         AuthState.Restoring -> AccountText("Checking session…", "One moment")
                         AuthState.Authorizing -> AccountText("Completing sign-in…", "One moment")
                         AuthState.SignedOut -> AccountText("Not signed in", "Sync your library and recommendations")
-                        // displayName falls back to the literal "YouTube Music", so the subtitle must not repeat it.
-                        is AuthState.SignedIn -> AccountText(auth.displayName, "Signed in")
+                        // displayName falls back to the literal "TIDAL", so the subtitle must not repeat it.
+                        is AuthState.SignedIn -> AccountText(auth.displayName, "Signed in with TIDAL")
                         is AuthState.Error -> AccountText("Sign-in failed", auth.message, CanopyColors.Danger)
                     }
                 }
             }
             when (auth) {
-                AuthState.SignedOut -> SettingsPill("Sign in", onSignIn, Modifier.fillMaxWidth())
+                AuthState.SignedOut -> SettingsPill("Sign in with TIDAL", onSignIn, Modifier.fillMaxWidth())
                 is AuthState.Error -> SettingsPill("Try again", onSignIn, Modifier.fillMaxWidth())
                 is AuthState.SignedIn -> {
-                    val uriHandler = LocalUriHandler.current
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         SettingsPill("Switch account", onSwitchAccount, Modifier.weight(1f))
                         SettingsPill("Sign out", onSignOut, Modifier.weight(1f), destructive = true)
                     }
-                    SettingsPill("YouTube Music Recap", { uriHandler.openUri("https://music.youtube.com/recap") }, Modifier.fillMaxWidth())
                 }
                 else -> Unit
             }

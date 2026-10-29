@@ -118,7 +118,7 @@ data class OrchardSettings(
     /** Whether the phone bottom bar has a Settings tab. */
     val showSettingsTab: Boolean = false,
     /** [HomeSource][dev.sfg.orchard.mobile.home.HomeSource] id that fills Home; others are fallbacks. */
-    val homeSource: String = YOUTUBE_SOURCE,
+    val homeSource: String = TIDAL_SOURCE,
     /** Online layout configuration. */
     val homeLayoutOnline: List<HomeSectionConfig> = listOf(
         HomeSectionConfig(BuiltInHomeSection.YOUR_PLAYLISTS, true),

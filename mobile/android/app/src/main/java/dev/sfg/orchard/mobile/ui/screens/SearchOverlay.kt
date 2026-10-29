@@ -130,7 +130,7 @@ internal fun SearchOverlay(
     backdropArtworkUrl: String,
     backdropPlaying: Boolean,
     showBackdrop: Boolean,
-    youtubeCatalog: Boolean = true,
+    onlineCatalog: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(open, modifier, enter = fadeIn(tween(160)), exit = fadeOut(tween(120))) {
@@ -163,12 +163,12 @@ internal fun SearchOverlay(
                     .imePadding()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                SearchBar(query, actions, focus, youtubeCatalog)
+                SearchBar(query, actions, focus, onlineCatalog)
                 Spacer(Modifier.height(8.dp))
                 // Wraps its rows and stops at the keyboard; the empty remainder falls through to the scrim.
                 SearchPanel(
                     query, state, history, downloadedTrackIds, downloadingTrackIds, actions,
-                    youtubeCatalog,
+                    onlineCatalog,
                     Modifier.weight(1f, fill = false),
                 )
             }
@@ -177,7 +177,7 @@ internal fun SearchOverlay(
 }
 
 @Composable
-private fun SearchBar(query: String, actions: SearchActions, focus: FocusRequester, youtubeCatalog: Boolean) {
+private fun SearchBar(query: String, actions: SearchActions, focus: FocusRequester, onlineCatalog: Boolean) {
     val shape = RoundedCornerShape(16.dp)
     Row(verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -230,7 +230,7 @@ private fun SearchPanel(
     downloadedTrackIds: Set<String>,
     downloadingTrackIds: Set<String>,
     actions: SearchActions,
-    youtubeCatalog: Boolean,
+    onlineCatalog: Boolean,
     modifier: Modifier,
 ) {
     var scope by rememberSaveable { mutableStateOf(SearchScope.All) }
@@ -243,7 +243,7 @@ private fun SearchPanel(
     ) {
         LazyColumn(contentPadding = PaddingValues(bottom = 6.dp)) {
             when (state) {
-                LoadState.Idle -> idle(history, actions, youtubeCatalog)
+                LoadState.Idle -> idle(history, actions, onlineCatalog)
                 LoadState.Loading -> items(4) { TrackRowShimmer() }
                 is LoadState.Content -> results(state.value, query, scope, { scope = it }, downloadedTrackIds, downloadingTrackIds, actions)
                 is LoadState.Empty -> item {
@@ -265,8 +265,8 @@ private fun SearchPanel(
     }
 }
 
-private fun LazyListScope.idle(history: List<String>, actions: SearchActions, youtubeCatalog: Boolean) {
-    if (youtubeCatalog) {
+private fun LazyListScope.idle(history: List<String>, actions: SearchActions, onlineCatalog: Boolean) {
+    if (onlineCatalog) {
         item { PanelCaption("Browse") }
         item { BrowseTiles(actions.onOpenDetail) }
     }

@@ -19,18 +19,16 @@
 
 package dev.sfg.orchard.mobile.auth
 
-/** Authenticated YouTube web session captured by the native Android login screen. */
-data class YouTubeSession(
-    val cookie: String,
-    val visitorData: String = "",
-    val dataSyncId: String = "",
-    val accountIndex: Int = 0,
-    val displayName: String = "YouTube Music",
+/** Authenticated TIDAL session. */
+data class TidalSession(
+    val userId: String = "",
+    val displayName: String = "TIDAL",
     val avatarUrl: String = "",
+    val countryCode: String = "US",
 )
 
-fun interface YouTubeSessionProvider {
-    fun session(): YouTubeSession?
+fun interface TidalSessionProvider {
+    fun session(): TidalSession?
 }
 
 sealed interface AuthState {
@@ -38,8 +36,9 @@ sealed interface AuthState {
     data object SignedOut : AuthState
     data object Authorizing : AuthState
     data class SignedIn(
-        val displayName: String = "YouTube Music",
+        val displayName: String = "TIDAL",
         val avatarUrl: String = "",
+        val userId: String = "",
     ) : AuthState
     data class Error(val message: String) : AuthState
 }

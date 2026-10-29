@@ -97,7 +97,7 @@ internal fun SearchOverlayHost(
         backdropArtworkUrl = backdropArtworkUrl,
         backdropPlaying = backdropPlaying,
         showBackdrop = showBackdrop,
-        youtubeCatalog = settings.homeSource == "youtube",
+        onlineCatalog = settings.homeSource == "tidal",
         modifier = modifier,
     )
 

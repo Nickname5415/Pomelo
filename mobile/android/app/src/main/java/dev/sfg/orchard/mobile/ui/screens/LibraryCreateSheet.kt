@@ -75,8 +75,8 @@ internal fun LibraryCreateSheet(
     open: Boolean,
     onDismiss: () -> Unit,
     repository: LocalLibraryRepository,
-    youtubeAvailable: Boolean,
-    onCreateYouTubePlaylist: (String) -> Unit,
+    remoteAvailable: Boolean,
+    onCreateRemotePlaylist: (String) -> Unit,
     onOpenPlaylist: (String) -> Unit,
 ) {
     var naming by remember { mutableStateOf(false) }
@@ -106,7 +106,7 @@ internal fun LibraryCreateSheet(
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
                 )
                 CreateRow(Icons.AutoMirrored.Rounded.PlaylistAdd, "New playlist",
-                    if (youtubeAvailable) "On YouTube Music or this phone" else "Kept on this phone", accent = true) {
+                    if (remoteAvailable) "On TIDAL or this phone" else "Kept on this phone", accent = true) {
                     naming = true
                     onDismiss()
                 }
@@ -124,12 +124,12 @@ internal fun LibraryCreateSheet(
 
     if (step == CreateStep.PLAYLIST) {
         NewPlaylistSheet(
-            youtubeAvailable = youtubeAvailable,
+            remoteAvailable = remoteAvailable,
             onDismiss = { naming = false },
             onCreate = { title, local, thenAddSongs ->
                 naming = false
                 if (!local) {
-                    onCreateYouTubePlaylist(title)
+                    onCreateRemotePlaylist(title)
                 } else {
                     val id = repository.createPlaylist(title)
                     if (thenAddSongs) {

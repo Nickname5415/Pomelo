@@ -22,7 +22,7 @@ package dev.sfg.orchard.mobile.home
 import dev.sfg.orchard.mobile.catalog.CatalogRepository
 import dev.sfg.orchard.mobile.model.CatalogItem
 import dev.sfg.orchard.mobile.model.HomeFeed
-import dev.sfg.orchard.mobile.model.YOUTUBE_SOURCE
+import dev.sfg.orchard.mobile.model.TIDAL_SOURCE
 
 /** A service that can fill the home screen. [id] matches [dev.sfg.orchard.mobile.model.Track.playbackSource]. */
 interface HomeSource {
@@ -38,12 +38,15 @@ interface HomeSource {
     suspend fun sectionItems(browseId: String, params: String): List<CatalogItem>
 }
 
-/** YouTube Music serves guests, so it is always available. */
-class YouTubeHomeSource(private val catalog: CatalogRepository) : HomeSource {
-    override val id = YOUTUBE_SOURCE
-    override val name = "YouTube Music"
+/** TIDAL home source. */
+class TidalHomeSource(
+    private val catalog: CatalogRepository,
+    private val isAvailable: () -> Boolean = { true },
+) : HomeSource {
+    override val id = TIDAL_SOURCE
+    override val name = "TIDAL"
 
-    override fun available() = true
+    override fun available() = isAvailable()
 
     override suspend fun feed() = catalog.home()
 

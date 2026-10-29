@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/orchard-youtube-extractor",
     "crates/orchard-core-ffi",
     "crates/orchard-system-media"
 ]

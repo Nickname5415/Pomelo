@@ -36,7 +36,7 @@ class AudioCacheVariantTest {
     @Test
     fun providersHaveSeparateKeys() {
         assertNotEquals(
-            audioCacheVariant(AudioQuality.HIGH, "youtube"),
+            audioCacheVariant(AudioQuality.HIGH, "local"),
             audioCacheVariant(AudioQuality.HIGH, "tidal"),
         )
     }

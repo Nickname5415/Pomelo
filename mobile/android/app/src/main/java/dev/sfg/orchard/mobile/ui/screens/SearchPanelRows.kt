@@ -237,11 +237,11 @@ internal fun TopResultRow(item: CatalogItem, onOpen: () -> Unit, onPlay: () -> U
 
 private class BrowseEntry(val label: String, val icon: ImageVector, val id: String)
 
-// Same shelves the old chips opened; browse ids are YouTube Music's own.
+// TIDAL browse sections.
 private val browseEntries = listOf(
-    BrowseEntry("New releases", Icons.Rounded.Flare, "FEmusic_new_releases"),
-    BrowseEntry("Charts", Icons.AutoMirrored.Rounded.TrendingUp, "FEmusic_charts"),
-    BrowseEntry("Moods", Icons.Rounded.SentimentSatisfied, "FEmusic_moods_and_genres"),
+    BrowseEntry("New releases", Icons.Rounded.Flare, "new_releases"),
+    BrowseEntry("Charts", Icons.AutoMirrored.Rounded.TrendingUp, "charts"),
+    BrowseEntry("Moods & Genres", Icons.Rounded.SentimentSatisfied, "genres"),
 )
 
 @Composable

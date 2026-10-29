@@ -58,7 +58,7 @@ import dev.sfg.orchard.mobile.ui.theme.LocalAccent
 
 /**
  * Modern onboarding and welcome screen providing new and existing users with an intuitive
- * setup walkthrough for YouTube Music login, animated visual backdrops, crossfade transitions,
+ * setup walkthrough for TIDAL login, animated visual backdrops, crossfade transitions,
  * audio quality, and offline stream cache limits.
  */
 @Composable

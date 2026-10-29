@@ -107,7 +107,7 @@ fun SettingsHomeLayout(
                             RowTitle("Music source")
                             RowSubtitle("Choose the catalog for Home, search, albums, artists and playlists.")
                             SettingsSegmented(
-                                options = listOf("youtube" to "YouTube Music", "tidal" to "TIDAL"),
+                                options = listOf("tidal" to "TIDAL"),
                                 selected = settings.homeSource,
                                 onSelect = { onSettings(settings.copy(homeSource = it)) },
                             )

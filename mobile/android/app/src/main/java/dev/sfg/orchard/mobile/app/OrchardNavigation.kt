@@ -174,8 +174,8 @@ internal fun OrchardNavigation(
                 localLibrary = viewModel.localLibrary,
                 localSnapshot = localSnapshot,
                 localBusy = localBusy,
-                youtubeAvailable = auth is dev.sfg.orchard.mobile.auth.AuthState.SignedIn,
-                onCreateYouTubePlaylist = { title -> viewModel.createPlaylist(title, null) },
+                remoteAvailable = auth is dev.sfg.orchard.mobile.auth.AuthState.SignedIn,
+                onCreateRemotePlaylist = { title -> viewModel.createPlaylist(title, null) },
             )
         }
         composable(Routes.DOWNLOADS) {

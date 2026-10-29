@@ -30,13 +30,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.sfg.orchard.connect.R
-import dev.sfg.orchard.mobile.model.YOUTUBE_SOURCE
+import dev.sfg.orchard.mobile.model.TIDAL_SOURCE
 
 private val MarkSize = 16.dp
 
 /** Whether [PlaybackSourceMark] draws anything for [source] in this build. */
 internal fun playbackSourceHasMark(source: String): Boolean = when (source.lowercase()) {
-    YOUTUBE_SOURCE -> true
+    TIDAL_SOURCE -> true
     else -> false
 }
 
@@ -44,9 +44,9 @@ internal fun playbackSourceHasMark(source: String): Boolean = when (source.lower
 @Composable
 internal fun PlaybackSourceMark(source: String, modifier: Modifier = Modifier, size: Dp = MarkSize) {
     when (source.lowercase()) {
-        YOUTUBE_SOURCE -> Image(
-            painter = painterResource(R.drawable.ic_source_youtube_music),
-            contentDescription = "Playing from YouTube Music",
+        TIDAL_SOURCE -> Image(
+            painter = painterResource(R.drawable.ic_source_tidal),
+            contentDescription = "Playing from TIDAL",
             modifier = modifier.size(size),
         )
     }

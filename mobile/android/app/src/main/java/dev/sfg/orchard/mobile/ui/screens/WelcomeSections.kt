@@ -154,12 +154,12 @@ internal fun WelcomeAuthSection(
     onSignOut: () -> Unit,
 ) {
     WelcomeSectionCard(
-        title = "YouTube Music Account",
-        subtitle = "Connect to sync your library, likes, and recommendations",
+        title = "TIDAL Account",
+        subtitle = "Connect to stream high fidelity music and sync your library",
     ) {
         val isSignedIn = auth is AuthState.SignedIn
         val avatarUrl = (auth as? AuthState.SignedIn)?.avatarUrl.orEmpty()
-        val displayName = (auth as? AuthState.SignedIn)?.displayName.orEmpty().ifBlank { "YouTube Music" }
+        val displayName = (auth as? AuthState.SignedIn)?.displayName.orEmpty().ifBlank { "TIDAL" }
 
         Row(
             modifier = Modifier
@@ -200,7 +200,7 @@ internal fun WelcomeAuthSection(
                     color = CanopyColors.Text,
                 )
                 Text(
-                    text = if (isSignedIn) "Signed in and ready to stream" else "Guest mode active",
+                    text = if (isSignedIn) "Signed in and ready to stream" else "Sign in required for full playback",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isSignedIn) LocalAccent.current else CanopyColors.Muted,
                 )
@@ -226,7 +226,7 @@ internal fun WelcomeAuthSection(
                     ),
                     modifier = Modifier.fillMaxWidth().height(46.dp),
                 ) {
-                    Text("Sign in with YouTube Music", fontWeight = FontWeight.Bold)
+                    Text("Sign in with TIDAL", fontWeight = FontWeight.Bold)
                 }
             }
         }

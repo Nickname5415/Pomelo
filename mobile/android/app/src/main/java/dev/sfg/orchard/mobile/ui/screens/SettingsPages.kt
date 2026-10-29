@@ -136,16 +136,7 @@ internal fun AudioPage(
     SectionLabel("Devices", 10)
     SettingsPanel(index = 11) { ChromecastSettingsRow() }
 
-    SectionLabel("Listening history", 12)
-    SettingsPanel(index = 13) {
-        ToggleRow(
-            title = "Save plays to YouTube Music history",
-            subtitle = "Add songs you play in Orchard to your YouTube Music history",
-            icon = Icons.Rounded.History,
-            checked = settings.sendYouTubeHistory,
-            onChecked = { onSettings(settings.copy(sendYouTubeHistory = it)) },
-        )
-    }
+
 }
 
 @Composable

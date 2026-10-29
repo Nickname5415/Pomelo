@@ -74,13 +74,13 @@ import dev.sfg.orchard.mobile.ui.theme.LocalAccent
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
-/** Playlists credit the most frequent artist when the owner is YouTube Music itself. */
+/** Playlists credit the most frequent artist when the owner is TIDAL itself. */
 internal fun collectionArtistName(detail: BrowseDetail): String {
     return if (detail.kind == CatalogKind.PLAYLIST) {
-        detail.artist.takeIf { it.isNotBlank() && !it.equals("YouTube Music", ignoreCase = true) }
+        detail.artist.takeIf { it.isNotBlank() && !it.equals("TIDAL", ignoreCase = true) }
             ?: detail.tracks.map { it.artist }.filter { it.isNotBlank() && !it.equals("Unknown artist", true) }
                 .groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
-            ?: detail.artist.ifBlank { "YouTube Music" }
+            ?: detail.artist.ifBlank { "TIDAL" }
     } else {
         detail.artist.ifBlank {
             detail.tracks.firstOrNull { it.artist.isNotBlank() }?.artist.orEmpty()

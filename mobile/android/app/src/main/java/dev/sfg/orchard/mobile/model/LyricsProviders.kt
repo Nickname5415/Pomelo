@@ -10,7 +10,7 @@ enum class LyricsProvider(val key: String, val label: String) {
     BETTER_LYRICS("betterlyrics", "BetterLyrics"),
     LYRICS_PLUS("lyricsplus", "LyricsPlus"),
     LRCLIB("lrclib", "LRCLIB"),
-    YOUTUBE("youtube", "YouTube Music"),
+    TIDAL("tidal", "TIDAL"),
 }
 
 data class LyricsProviderConfig(val provider: LyricsProvider, val enabled: Boolean = true)

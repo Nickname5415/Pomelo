@@ -38,7 +38,7 @@ import dev.sfg.orchard.mobile.model.NonMusicSkipMode
 import dev.sfg.orchard.mobile.model.OrchardSettings
 import dev.sfg.orchard.mobile.model.BuiltInHomeSection
 import dev.sfg.orchard.mobile.model.HomeSectionConfig
-import dev.sfg.orchard.mobile.model.YOUTUBE_SOURCE
+import dev.sfg.orchard.mobile.model.TIDAL_SOURCE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -95,7 +95,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                 ),
                 playerGesturesEnabled = values[PLAYER_GESTURES_ENABLED] ?: true,
                 showSettingsTab = values[SHOW_SETTINGS_TAB] ?: false,
-                homeSource = values[HOME_SOURCE] ?: YOUTUBE_SOURCE,
+                homeSource = values[HOME_SOURCE] ?: TIDAL_SOURCE,
                 homeLayoutOnline = decodeHomeLayout(values[HOME_LAYOUT_ONLINE], true),
                 homeLayoutOffline = decodeHomeLayout(values[HOME_LAYOUT_OFFLINE], false),
                 customDeviceName = values[CUSTOM_DEVICE_NAME] ?: "",
