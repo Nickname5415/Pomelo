@@ -22,10 +22,8 @@ package dev.sfg.orchard.mobile.connect
 import android.content.Context
 import android.util.Log
 import dev.sfg.orchard.mobile.OrchardGraph
-import dev.sfg.orchard.mobile.auth.OrchardAccountService
 import dev.sfg.orchard.mobile.model.PlaybackSnapshot
 import dev.sfg.orchard.mobile.playback.LocalPlaybackController
-import dev.sfg.orchard.mobile.playback.RemoteMix
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +72,6 @@ class ConnectRepository(
     private var player: LocalConnectPlayer? = null
     private val requests = ConcurrentHashMap<String, CompletableDeferred<JSONObject>>()
     internal val providers = ConnectProviders(this, graph)
-    private val mix = ConnectMix(this)
 
     private val mutableState = MutableStateFlow(ConnectState())
     val state: StateFlow<ConnectState> = mutableState.asStateFlow()
@@ -148,13 +145,7 @@ class ConnectRepository(
             handle.takeIf { it != 0L }?.let { ConnectNative.sendStream(it, sessionId, meta.toString(), payload) }
         }?.takeIf { it.isNotEmpty() }
 
-    /** The desktop mixing for this phone, while this phone is a target and one is connected. */
-    internal fun mixHost(): RemoteMix? = mixSession()?.let { mix }
 
-    internal fun mixSession(): String? {
-        val host = roleHost("mix") ?: return null
-        return state.value.sessions.firstOrNull { it.peer.id == host && !it.isController && it.state == "CONNECTED" }?.id
-    }
 
     /** The device holding a role, or null when it is this phone or nobody. */
     fun roleHost(role: String): String? {
@@ -241,7 +232,7 @@ class ConnectRepository(
 
     override fun onData(sessionId: String, headerJson: String, payload: ByteArray) {
         val header = runCatching { JSONObject(headerJson) }.getOrNull() ?: return
-        if (header.optString("kind") == "audio") mix.onAudio(header, payload) else providers.onData(header, payload)
+        if (header.optString("kind") != "audio") providers.onData(header, payload)
     }
 
     private fun handleEvent(event: JSONObject) {

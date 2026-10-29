@@ -31,7 +31,6 @@ import dev.sfg.orchard.mobile.model.Track
 import dev.sfg.orchard.mobile.playback.AutoplayRecommendations
 import dev.sfg.orchard.mobile.playback.LocalPlaybackController
 import dev.sfg.orchard.mobile.playback.QueueEditor
-import dev.sfg.orchard.mobile.playback.smart.BestMixSorter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -183,71 +182,20 @@ internal class QueueLauncher(
         onProgress: (String) -> Unit = {},
         onComplete: () -> Unit = {},
     ) = scope.launch {
-        if (!beginBestMix(BestMixJob.collectionKey(title))) return@launch
         val playable = tracks.filter { it.id.isNotBlank() }.distinctBy(Track::id)
         val bestMixTitle = title.takeIf { it.isNotBlank() }?.let { "$it • Best Mix" } ?: "Best Mix"
-        try {
-            if (playable.isEmpty()) return@launch
-            val first = playable.first()
-            val rest = playable.drop(1)
-            bestMix.prepare(listOf(first) + rest.take(BestMixSorter.SNAPSHOT), "Best Mix") { reportBestMix(it, onProgress) }
-            reportBestMix("Sorting Best Mix...", onProgress)
-            val sorted = withContext(Dispatchers.IO) { BestMixSorter.sort(graph.bestMixFeatures, rest, first) }
-            if (sorted == null) showWarning("No songs could be analyzed for Best Mix.")
-            playAll(listOf(first) + (sorted ?: rest), contextTitle = bestMixTitle)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (error: Throwable) {
-            // Best Mix is an enhancement to playback, not a prerequisite.
-            Log.w(TAG, "Best Mix preparation failed; playing the original order", error)
-            if (playable.isNotEmpty()) {
-                playAll(playable, contextTitle = bestMixTitle)
-                showWarning("Best Mix could not finish analyzing every song. Playing the original order.")
-            }
-        } finally {
-            bestMixJobState.value = null
-            onComplete()
+        if (playable.isNotEmpty()) {
+            playAll(playable, contextTitle = bestMixTitle)
         }
+        onComplete()
     }
 
-    /** Orders the upcoming songs to follow the current one, as desktop's queue Best Mix. */
+    /** Orders the upcoming songs to follow the current one. */
     fun bestMixUpcoming(
         onProgress: (String) -> Unit = {},
         onComplete: () -> Unit = {},
     ) = scope.launch {
-        if (!beginBestMix(BestMixJob.QUEUE_KEY)) return@launch
-        try {
-            val currentSnapshot = playback.value
-            val upcoming = currentSnapshot.upcoming
-            if (upcoming.size <= 1) return@launch
-            val queueRequest = BestMixQueueRequest.capture(currentSnapshot)
-            val currentTrack = currentSnapshot.currentTrack
-            bestMix.prepare(listOfNotNull(currentTrack) + upcoming.take(BestMixSorter.SNAPSHOT),
-                "Queue Best Mix") { reportBestMix(it, onProgress) }
-            reportBestMix("Sorting queue...", onProgress)
-            val sortedUpcoming = withContext(Dispatchers.IO) {
-                BestMixSorter.sort(graph.bestMixFeatures, upcoming, currentTrack)
-            } ?: run {
-                showWarning("No songs could be analyzed for Best Mix.")
-                return@launch
-            }
-            val reconciled = queueRequest.reconcile(playback.value, sortedUpcoming) ?: return@launch
-            val baseTitle = currentSnapshot.contextTitle.ifBlank { currentTrack?.album.orEmpty() }
-            val newTitle = when {
-                baseTitle.isBlank() -> "Best Mix"
-                baseTitle.endsWith("• Best Mix", ignoreCase = true) -> baseTitle
-                else -> "$baseTitle • Best Mix"
-            }
-            local.replaceUpcoming(reconciled, contextTitle = newTitle)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (error: Throwable) {
-            Log.w(TAG, "Could not prepare Best Mix for the upcoming queue", error)
-            showWarning("Best Mix could not finish preparing the queue.")
-        } finally {
-            bestMixJobState.value = null
-            onComplete()
-        }
+        onComplete()
     }
 
     /**

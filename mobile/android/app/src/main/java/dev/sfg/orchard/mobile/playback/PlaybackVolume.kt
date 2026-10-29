@@ -33,7 +33,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import dev.sfg.orchard.mobile.OrchardGraph
-import dev.sfg.orchard.mobile.playback.smart.TransitionFilter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -134,15 +133,12 @@ internal fun observeAudioSettings(
     graph: OrchardGraph,
     scope: CoroutineScope,
     volume: PlaybackVolumeState,
-    filters: List<TransitionFilter>,
     equalizers: List<EqualizerAudioProcessor>,
 ) {
     volume.exponentialEnabled = graph.settings.settings.value.exponentialVolumeEnabled
     scope.launch {
         graph.settings.settings.combine(graph.maxActive) { settings, max -> settings to max }.collect { (settings, max) ->
             volume.exponentialEnabled = settings.exponentialVolumeEnabled
-            filters.forEach { it.volumeNormalizationEnabled = settings.volumeNormalizationEnabled }
-            // MAX streams Qobuz bytes untouched by the equalizer.
             val eq = if (max) settings.equalizerConfig.copy(enabled = false) else settings.equalizerConfig
             equalizers.forEach { it.config = eq }
         }

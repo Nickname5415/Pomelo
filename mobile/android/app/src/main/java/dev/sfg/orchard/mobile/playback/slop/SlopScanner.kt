@@ -26,9 +26,6 @@ import dev.sfg.orchard.mobile.OrchardGraph
 import dev.sfg.orchard.mobile.auth.AuthState
 import dev.sfg.orchard.mobile.local.isLocalTrackId
 import dev.sfg.orchard.mobile.model.Track
-import dev.sfg.orchard.mobile.playback.smart.FileMediaDataSource
-import dev.sfg.orchard.mobile.playback.smart.PcmDecoder
-import dev.sfg.orchard.mobile.playback.smart.PcmSink
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
@@ -108,37 +105,6 @@ internal class SlopScanner(context: Context, private val graph: OrchardGraph, sc
     fun close() { job.cancel() }
 
     private suspend fun analyze(id: String, file: File) {
-        val coroutine = currentCoroutineContext()
-        var handle = 0L
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60)
-        val sink = object : PcmSink {
-            override fun begin(rate: Int): Boolean {
-                if (handle != 0L) SlopNative.free(handle)
-                handle = SlopNative.create(rate, 2, model)
-                return handle != 0L
-            }
-            override fun push(samples: FloatArray, count: Int): Boolean {
-                coroutine.ensureActive()
-                SlopNative.push(handle, samples, count)
-                return true
-            }
-            override fun shouldStop(): Boolean {
-                coroutine.ensureActive()
-                check(System.nanoTime() < deadline) { "Scan decoder timed out" }
-                return handle != 0L && SlopNative.full(handle)
-            }
-        }
-        val originalPriority = Process.getThreadPriority(Process.myTid())
-        try {
-            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-            val decoded = FileMediaDataSource(file).use { PcmDecoder.decode(it, sink) }
-            coroutine.ensureActive()
-            val result = if (decoded) SlopNative.verdict(handle) else null
-            if (result == null) failed += id
-            else graph.slopVerdicts.record(id, result[0], result[1])
-        } finally {
-            if (handle != 0L) SlopNative.free(handle)
-            Process.setThreadPriority(originalPriority)
-        }
+        // Audio scan disabled without PolyForm PcmDecoder
     }
 }

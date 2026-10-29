@@ -40,7 +40,6 @@ import dev.sfg.orchard.mobile.listenbrainz.ListenBrainzRepository
 import dev.sfg.orchard.mobile.settings.SettingsRepository
 import dev.sfg.orchard.mobile.download.DownloadManager
 import dev.sfg.orchard.mobile.playback.YouTubeStreamResolver
-import dev.sfg.orchard.mobile.playback.smart.BestMixFeatureStore
 import dev.sfg.orchard.mobile.songlinks.SongLinksRepository
 import dev.sfg.orchard.mobile.youtube.YouTubeProvider
 import dev.sfg.orchard.mobile.youtube.providerJson
@@ -80,7 +79,6 @@ class OrchardGraph(context: Context) {
         },
     )
     val settings = SettingsRepository(context, applicationScope)
-    val bestMixFeatures = BestMixFeatureStore(context)
     val slopVerdicts by lazy { dev.sfg.orchard.mobile.playback.slop.SlopVerdicts(context) }
     val networkMonitor = dev.sfg.orchard.mobile.network.NetworkMonitor(context)
     val spotifyCanvas = dev.sfg.orchard.mobile.spotify.SpotifyCanvasRepository(context, http, settings)

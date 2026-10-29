@@ -30,9 +30,8 @@ import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ShuffleOrder
-import dev.sfg.orchard.mobile.playback.smart.MixSplicer
-import dev.sfg.orchard.mobile.playback.smart.SplicingAudioChain
-import dev.sfg.orchard.mobile.playback.smart.TransitionFilter
+import androidx.media3.common.audio.AudioProcessorChain
+import androidx.media3.common.audio.AudioProcessor
 
 internal val ORCHARD_AUDIO_ATTRIBUTES: AudioAttributes = AudioAttributes.Builder()
     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -42,16 +41,13 @@ internal val ORCHARD_AUDIO_ATTRIBUTES: AudioAttributes = AudioAttributes.Builder
 private const val BUFFER_FOR_PLAYBACK_MS = 500
 private const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 2_000
 private const val WHOLE_TRACK_BUFFER_MS = 20 * 60 * 1_000
-// Two players plus playlist preloading share the app heap with audio analysis.
 private const val TARGET_BUFFER_BYTES = 8 * 1024 * 1024
 
-/** One deck of the crossfade pair, with Orchard's processors inside its audio sink. */
+/** One deck with standard audio chain. */
 @UnstableApi
 internal fun buildOrchardPlayer(
     context: Context,
     mediaSourceFactory: MediaSource.Factory,
-    splicer: MixSplicer,
-    filter: TransitionFilter,
     eq: EqualizerAudioProcessor,
     volume: PlaybackVolumeState,
     handlesAudioFocus: Boolean,
@@ -66,15 +62,14 @@ internal fun buildOrchardPlayer(
         .setTargetBufferBytes(TARGET_BUFFER_BYTES)
         .setPrioritizeTimeOverSizeThresholds(false)
         .build()
-    // The fades, splices and filter rides have to happen inside the sink; player volume only
-    // scales the whole signal, and only from the main thread.
+
     val renderersFactory = object : DefaultRenderersFactory(context) {
         override fun buildAudioSink(
             context: Context,
             enableFloatOutput: Boolean,
             enableAudioOutputPlaybackParams: Boolean,
         ): AudioSink = VolumeAudioSink(DefaultAudioSink.Builder(context)
-            .setAudioProcessorChain(SplicingAudioChain(splicer, filter, eq))
+            .setAudioProcessors(arrayOf<AudioProcessor>(eq))
             .setEnableFloatOutput(enableFloatOutput)
             .setEnableAudioOutputPlaybackParameters(enableAudioOutputPlaybackParams)
             .build(), volume)

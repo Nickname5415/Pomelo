@@ -44,12 +44,10 @@ internal fun observeAudioVariants(graph: OrchardGraph, scope: CoroutineScope, on
 @UnstableApi
 internal fun reloadAudioForVariant(
     player: ExoPlayer,
-    crossfade: CrossfadeEngine,
     cache: StreamCache,
     streams: PlayerStreams,
     prefetch: (Player) -> Unit,
 ) {
-    crossfade.abort()
     cache.retainOnly(emptyList())
     streams.clear()
     val item = player.currentMediaItem ?: return

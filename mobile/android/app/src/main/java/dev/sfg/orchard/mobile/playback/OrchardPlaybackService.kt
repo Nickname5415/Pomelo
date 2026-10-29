@@ -39,9 +39,6 @@ import dev.sfg.orchard.connect.R
 import dev.sfg.orchard.connect.app.MainActivity
 import dev.sfg.orchard.mobile.OrchardGraph
 import dev.sfg.orchard.mobile.model.Track
-import dev.sfg.orchard.mobile.playback.smart.CrossfadeMode
-import dev.sfg.orchard.mobile.playback.smart.MixSplicer
-import dev.sfg.orchard.mobile.playback.smart.TransitionFilter
 import dev.sfg.orchard.mobile.widget.OrchardWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,14 +72,8 @@ class OrchardPlaybackService : MediaLibraryService() {
     private lateinit var nowPlaying: NowPlayingPublisher
     private lateinit var chromecastStreamServer: ChromecastStreamServer
     private lateinit var chromecastPlayback: ChromecastPlayback
-    // One filter per player, inserted in each one's audio pipeline. They follow the players
-    // through a handoff, so a filter never ends up automating the wrong track.
-    private lateinit var playerFilter: TransitionFilter
-    private lateinit var spareFilter: TransitionFilter
     private lateinit var playbackVolume: PlaybackVolumeMonitor
     private lateinit var slop: dev.sfg.orchard.mobile.playback.slop.SlopPlayback
-    // Adaptive mixes and standard fades run at the head of each pipeline; a splicer stays with its player.
-    private val splicers = java.util.IdentityHashMap<ExoPlayer, MixSplicer>()
     /** Queue order as it was when shuffle went on, so turning it off can put the queue back. */
     private var unshuffledOrder: List<String> = emptyList()
 
@@ -129,14 +120,12 @@ class OrchardPlaybackService : MediaLibraryService() {
                 }
             }
         }
-        playerFilter = TransitionFilter()
-        spareFilter = TransitionFilter()
         val playerEq = EqualizerAudioProcessor()
         val spareEq = EqualizerAudioProcessor()
         playbackVolume = PlaybackVolumeMonitor(this)
-        observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerFilter, spareFilter), listOf(playerEq, spareEq))
-        player = buildPlayer(playerFilter, playerEq, handlesAudioFocus = true)
-        spare = buildPlayer(spareFilter, spareEq, handlesAudioFocus = false)
+        observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerEq, spareEq))
+        player = buildPlayer(playerEq, handlesAudioFocus = true)
+        spare = buildPlayer(spareEq, handlesAudioFocus = false)
         unshuffledOrder = stateStore.load().also { it.restoreInto(player) }.unshuffledOrder
         // The restored song is known before anything can ask for it. No more amnesiac cold starts.
         snapshotQueue(player)
@@ -174,14 +163,8 @@ class OrchardPlaybackService : MediaLibraryService() {
                 CrossfadeEngine.Config(
                     enabled = settings.crossfadeMs > 0,
                     fadeSeconds = settings.crossfadeMs / 1000.0,
-                    mode = if (settings.smartCrossfade && !graph.maxActive.value) CrossfadeMode.SMART else CrossfadeMode.STANDARD,
                 )
             },
-            // A connected desktop does the heavy lifting; the phone keeps the clock and the speaker.
-            mixer = AdaptiveMixer(this, handler, remote = graph.connect::mixHost),
-            // Adaptive mixes decode whole songs, so both must be fully cached first.
-            sourceFor = { uri -> if (streamCache.isFullyCached(uri)) ({ streamCache.mediaDataSource(uri) }) else null },
-            splicerFor = splicers::get,
             onMarker = { graph.transitionMarker.value = it },
             onHandoff = ::adoptPlayer,
             canCrossfadeTo = { dev.sfg.orchard.mobile.playback.slop.SlopPlayback.allowsTransition(graph, it) },
@@ -226,10 +209,8 @@ class OrchardPlaybackService : MediaLibraryService() {
         loadedAudioVariant = next
         reloadAudioForVariant(player, crossfade, streamCache, streams, ::prefetchAround)
     }
-    private fun buildPlayer(filter: TransitionFilter, eq: EqualizerAudioProcessor, handlesAudioFocus: Boolean): ExoPlayer {
-        val splicer = MixSplicer()
-        return buildOrchardPlayer(this, streams.mediaSourceFactory(), splicer, filter, eq, playbackVolume.state, handlesAudioFocus)
-            .also { splicers[it] = splicer }
+    private fun buildPlayer(eq: EqualizerAudioProcessor, handlesAudioFocus: Boolean): ExoPlayer {
+        return buildOrchardPlayer(this, streams.mediaSourceFactory(), eq, playbackVolume.state, handlesAudioFocus)
     }
 
     /**
@@ -244,10 +225,6 @@ class OrchardPlaybackService : MediaLibraryService() {
         incoming.addListener(playbackListener)
         player = incoming
         spare = outgoing
-        // The filters travel with their players, so the pair swaps too.
-        val heldFilter = playerFilter
-        playerFilter = spareFilter
-        spareFilter = heldFilter
         mediaSession.player = OrchardSessionPlayer(incoming)
         persistPlayback()
         OrchardWidgetUpdater.onPlayerChanged(this, incoming)
