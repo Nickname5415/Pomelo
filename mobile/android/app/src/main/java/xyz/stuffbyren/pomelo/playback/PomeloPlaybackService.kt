@@ -31,7 +31,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.drm.DrmSessionManagerProvider
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.SilenceMediaSource
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -97,7 +101,10 @@ class PomeloPlaybackService : MediaLibraryService() {
         val playerEq = EqualizerAudioProcessor()
         playbackVolume = PlaybackVolumeMonitor(this)
         observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerEq))
-        player = buildOrchardPlayer(this, DefaultMediaSourceFactory(this), playerEq, playbackVolume.state, handlesAudioFocus = true)
+        val defaultMediaSourceFactory = DefaultMediaSourceFactory(this)
+        val pomeloMediaSourceFactory = PomeloMediaSourceFactory(defaultMediaSourceFactory)
+        player = buildOrchardPlayer(this, pomeloMediaSourceFactory, playerEq, playbackVolume.state, handlesAudioFocus = true)
+        player.volume = 0f
 
         unshuffledOrder = stateStore.load().also { it.restoreInto(player) }.unshuffledOrder
         snapshotQueue(player)
@@ -304,6 +311,14 @@ class PomeloPlaybackService : MediaLibraryService() {
             }
         }
 
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            if (playWhenReady) {
+                tidalPlayer?.playbackEngine?.play()
+            } else {
+                tidalPlayer?.playbackEngine?.pause()
+            }
+        }
+
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             Log.d(TAG, "onMediaItemTransition: item=${mediaItem?.mediaId}, reason=$reason")
             OrchardGraph.from(this@PomeloPlaybackService).transitionMarker.value = null
@@ -313,7 +328,12 @@ class PomeloPlaybackService : MediaLibraryService() {
 
             val track = mediaItem?.let { queueTrack(it.mediaId) ?: MediaItemMapper.toTrack(it) }
             if (track != null) {
-                loadTidalTrack(track)
+                if (track.isTidal) {
+                    player.volume = 0f
+                    loadTidalTrack(track)
+                } else if (track.isLocal) {
+                    player.volume = 1f
+                }
             }
         }
 
@@ -361,3 +381,33 @@ class PomeloPlaybackService : MediaLibraryService() {
         )
     }
 }
+
+@UnstableApi
+private class PomeloMediaSourceFactory(
+    private val defaultFactory: DefaultMediaSourceFactory,
+) : MediaSource.Factory {
+    override fun createMediaSource(mediaItem: MediaItem): MediaSource {
+        val uri = mediaItem.localConfiguration?.uri
+        if (uri != null && (uri.scheme == "pomelo" || MediaItemMapper.isPomeloUri(uri))) {
+            val track = MediaItemMapper.toTrack(mediaItem)
+            val durationUs = (track.durationMs.takeIf { it > 0 } ?: 180_000L) * 1000L
+            val silenceSource = SilenceMediaSource.Factory()
+                .setDurationUs(durationUs)
+                .createMediaSource()
+            silenceSource.updateMediaItem(mediaItem)
+            return silenceSource
+        }
+        return defaultFactory.createMediaSource(mediaItem)
+    }
+
+    override fun setDrmSessionManagerProvider(provider: DrmSessionManagerProvider): MediaSource.Factory = apply {
+        defaultFactory.setDrmSessionManagerProvider(provider)
+    }
+
+    override fun setLoadErrorHandlingPolicy(policy: LoadErrorHandlingPolicy): MediaSource.Factory = apply {
+        defaultFactory.setLoadErrorHandlingPolicy(policy)
+    }
+
+    override fun getSupportedTypes(): IntArray = defaultFactory.supportedTypes
+}
+
