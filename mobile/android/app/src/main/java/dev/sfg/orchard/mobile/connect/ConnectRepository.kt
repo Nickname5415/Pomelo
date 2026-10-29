@@ -22,6 +22,7 @@ package dev.sfg.orchard.mobile.connect
 import android.content.Context
 import android.util.Log
 import dev.sfg.orchard.mobile.OrchardGraph
+import dev.sfg.orchard.mobile.auth.OrchardAccountService
 import dev.sfg.orchard.mobile.model.PlaybackSnapshot
 import dev.sfg.orchard.mobile.playback.LocalPlaybackController
 import kotlinx.coroutines.CompletableDeferred
@@ -192,7 +193,7 @@ class ConnectRepository(
             }
         }
         scope.launch {
-            combine(graph.auth.state, graph.qobuz.status, graph.settings.settings) { _, _, _ -> Unit }
+            combine(graph.auth.state, graph.settings.settings) { _, _ -> Unit }
                 .collect { refreshDevice() }
         }
         scope.launch {
@@ -258,8 +259,6 @@ class ConnectRepository(
             "command_result" -> if (!event.optBoolean("ok")) message(event.optString("error"), currentPeerName())
             "rpc" -> providers.serve(event)
             "rpc_result" -> requests.remove(event.optString("id"))?.complete(event)
-            "stream_sent" -> mix.onStreamSent(event.optString("stream"))
-            "stream_failed" -> mix.onStreamFailed(event.optString("stream"))
             "error" -> {
                 val device = state.value.devices.firstOrNull { it.id == event.optString("device_id") }
                 if (device != null && state.value.pending?.id == device.id) mutableState.update { it.copy(pending = null) }

@@ -64,8 +64,7 @@ internal class SearchController(
             combine(
                 mutableQuery.debounce(350).distinctUntilChanged(),
                 graph.settings.settings.map { it.homeSource }.distinctUntilChanged(),
-                graph.appleMusic.connection.map { it.connected }.distinctUntilChanged(),
-            ) { value, _, _ -> value }.collectLatest { value ->
+            ) { value, _ -> value }.collectLatest { value ->
                 if (value.isBlank()) {
                     mutableResults.value = LoadState.Idle
                     return@collectLatest

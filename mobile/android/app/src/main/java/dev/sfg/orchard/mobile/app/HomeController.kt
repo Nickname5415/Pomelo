@@ -54,11 +54,6 @@ internal class HomeController(
         scope.launch {
             graph.settings.settings.map { it.homeSource }.distinctUntilChanged().drop(1).collect { refresh() }
         }
-        scope.launch {
-            graph.appleMusic.connection.map { it.connected }.distinctUntilChanged().drop(1).collect {
-                if (graph.settings.settings.value.homeSource == "apple_music") refresh()
-            }
-        }
     }
 
     fun refresh() {

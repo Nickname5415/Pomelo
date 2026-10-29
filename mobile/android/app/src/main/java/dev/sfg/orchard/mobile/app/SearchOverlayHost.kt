@@ -97,7 +97,7 @@ internal fun SearchOverlayHost(
         backdropArtworkUrl = backdropArtworkUrl,
         backdropPlaying = backdropPlaying,
         showBackdrop = showBackdrop,
-        youtubeCatalog = settings.homeSource != "apple_music",
+        youtubeCatalog = settings.homeSource == "youtube",
         modifier = modifier,
     )
 

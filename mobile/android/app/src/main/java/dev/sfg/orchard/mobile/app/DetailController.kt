@@ -145,10 +145,7 @@ internal class DetailController(
 
     fun observeArtwork() {
         scope.launch {
-            combine(
-                graph.settings.settings.map { it.homeSource }.distinctUntilChanged(),
-                graph.appleMusic.connection.map { it.connected }.distinctUntilChanged(),
-            ) { source, connected -> source to connected }.drop(1).collect {
+            graph.settings.settings.map { it.homeSource }.distinctUntilChanged().drop(1).collect {
                 if (requestedId.isNotBlank() && !isLocalPlaylistId(requestedId))
                     load(requestedId, requestedSeed, preserveContent = false)
             }
@@ -181,8 +178,8 @@ internal class DetailController(
                                 mutableArtistImages.value = graph.artistImages.images(performer)
                             }
                         }
-                        // Channel avatars are often a logo; TheAudioDB has a real photograph. Apple's artwork already is one.
-                        CatalogKind.ARTIST -> if (detailVal.source != "apple_music") {
+                        // Channel avatars are often a logo; TheAudioDB has a real photograph.
+                        CatalogKind.ARTIST -> {
                             mutableArtistImages.value = graph.artistImages.images(detailVal.title)
                         }
                         else -> Unit

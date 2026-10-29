@@ -57,8 +57,6 @@ class ArtworkRepository(
     http: OkHttpClient,
     private val spotifyCanvas: dev.sfg.orchard.mobile.spotify.SpotifyCanvasRepository? = null,
     private val sourceOrder: () -> List<ArtworkSource> = { ArtworkSource.entries },
-    private val appleSignedIn: () -> Boolean = { false },
-    private val appleArtwork: suspend (track: Track, album: Boolean) -> TrackArtwork? = { _, _ -> null },
 ) {
     private val client: OkHttpClient = http.newBuilder()
         // The lookup only upgrades artwork after the fact, so it can afford to wait
@@ -77,10 +75,9 @@ class ArtworkRepository(
 
     suspend fun artwork(track: Track): TrackArtwork? = withContext(Dispatchers.IO) {
         val order = sourceOrder().distinct().let { saved -> saved + ArtworkSource.entries.filterNot(saved::contains) }
-        val apple = appleSignedIn()
-        val key = "${normalize(track.title)}::${normalize(track.artist)}::${normalize(track.album)}::${order.joinToString()}::$apple"
+        val key = "${normalize(track.title)}::${normalize(track.artist)}::${normalize(track.album)}::${order.joinToString()}"
         if (key.startsWith("::") || track.title.isBlank() || track.artist.isBlank()) return@withContext null
-        cached(key) { orderedArtwork(track, order, apple) }
+        cached(key) { orderedArtwork(track, order) }
     }
 
     private suspend fun cached(key: String, resolve: suspend () -> TrackArtwork?): TrackArtwork? {
@@ -90,21 +87,16 @@ class ArtworkRepository(
         return resolved
     }
 
-    private suspend fun orderedArtwork(track: Track, order: List<ArtworkSource>, apple: Boolean): TrackArtwork? = coroutineScope {
+    private suspend fun orderedArtwork(track: Track, order: List<ArtworkSource>): TrackArtwork? = coroutineScope {
         val lookups = mutableListOf<suspend () -> TrackArtwork?>()
-        var appleQueued = false
         for (source in order) {
-            when {
-                source == ArtworkSource.SPOTIFY -> lookups += {
+            when (source) {
+                ArtworkSource.SPOTIFY -> lookups += {
                     // Canvas carries Spotify's id; consumers match the playing YouTube id.
                     runCatching { spotifyCanvas?.getCanvas(track.title, track.artist) }.getOrNull()
                         ?.copy(trackId = track.id)
                 }
-                !apple -> lookups += { providers.getValue(source).let { fetch(it, track) } }
-                !appleQueued -> {
-                    appleQueued = true
-                    lookups += { fromApple(track, album = false) }
-                }
+                else -> lookups += { providers.getValue(source).let { fetch(it, track) } }
             }
         }
         val attempts = lookups.map { lookup -> async { lookup() } }
@@ -136,15 +128,9 @@ class ArtworkRepository(
         val titleTrack = detail.tracks.firstOrNull { it.title.equals(detail.title, ignoreCase = true) }
             ?: detail.tracks.firstOrNull()
 
-        // Both lookups start together, but the album answer is taken as soon as it has motion;
-        // waiting on the fallback as well meant a hung second request cost the whole read timeout
-        // even when the album query had already succeeded.
-        val apple = appleSignedIn()
         coroutineScope {
             val albumArt = async {
-                if (apple) cached("album::${detail.id}::${normalize(detail.title)}::${normalize(artist)}") {
-                    fromApple(albumQuery, album = true)
-                } else artwork(albumQuery)
+                artwork(albumQuery)
             }
             val fallback = async {
                 titleTrack?.let { artwork(it.copy(album = it.album.ifBlank { detail.title })) }
@@ -160,11 +146,6 @@ class ArtworkRepository(
             }
         }
     }
-
-    private suspend fun fromApple(track: Track, album: Boolean): TrackArtwork? =
-        runCatching { appleArtwork(track, album) }
-            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it; Log.w(TAG, "Apple Music artwork failed", it) }
-            .getOrNull()
 
     private fun TrackArtwork?.hasMotion(): Boolean =
         this != null && (videoUrl.isNotBlank() || videoUrlVertical.isNotBlank())

@@ -49,18 +49,18 @@ class HomeFeedsTest {
 
     @Test
     fun preferredSourceServesWithoutWarning() = runBlocking {
-        val apple = FakeSource("apple_music", "Apple Music")
-        val result = HomeFeeds(listOf(FakeSource("youtube", "YouTube Music"), apple)) { "apple_music" }.load()
-        assertEquals("apple_music", result.source.id)
+        val tidal = FakeSource("tidal", "TIDAL")
+        val result = HomeFeeds(listOf(FakeSource("youtube", "YouTube Music"), tidal)) { "tidal" }.load()
+        assertEquals("tidal", result.source.id)
         assertNull(result.warning)
     }
 
     @Test
     fun disconnectedPreferredReportsErrorWithoutSwitchingCatalogs() {
         val youtube = FakeSource("youtube", "YouTube Music")
-        val feeds = HomeFeeds(listOf(youtube, FakeSource("apple_music", "Apple Music", connected = false))) { "apple_music" }
+        val feeds = HomeFeeds(listOf(youtube, FakeSource("tidal", "TIDAL", connected = false))) { "tidal" }
         val error = assertThrows(IllegalStateException::class.java) { runBlocking { feeds.load() } }
-        assertEquals("Apple Music is not connected.", error.message)
+        assertEquals("TIDAL is not connected.", error.message)
         assertNull(feeds.activeSource)
         runBlocking { feeds.sectionItems("shelf", "") }
         assertEquals(emptyList<String>(), youtube.seeAll)
@@ -70,9 +70,9 @@ class HomeFeedsTest {
     fun failedPreferredReportsItsOwnErrorWithoutSwitchingCatalogs() {
         val sources = listOf(
             FakeSource("youtube", "YouTube Music"),
-            FakeSource("apple_music", "Apple Music", failure = IllegalStateException("down")),
+            FakeSource("tidal", "TIDAL", failure = IllegalStateException("down")),
         )
-        val feeds = HomeFeeds(sources) { "apple_music" }
+        val feeds = HomeFeeds(sources) { "tidal" }
         val error = assertThrows(IllegalStateException::class.java) { runBlocking { feeds.load() } }
         assertEquals("down", error.message)
         assertNull(feeds.activeSource)

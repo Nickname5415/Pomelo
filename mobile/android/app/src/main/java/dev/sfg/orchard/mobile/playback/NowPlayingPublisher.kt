@@ -63,7 +63,7 @@ internal class NowPlayingPublisher(
         val item = player.currentMediaItem
         val uri = item?.let { it.requestMetadata.mediaUri ?: it.localConfiguration?.uri }
         if (item == null || MediaItemMapper.isVideoUri(uri)) {
-            publish(0, qobuz = false)
+            publish(0)
             return
         }
         val format = player.audioFormat
@@ -73,30 +73,15 @@ internal class NowPlayingPublisher(
             // The container's own average, else what the decoder reports once the file is open.
             val decoded = listOfNotNull(format?.averageBitrate, format?.bitrate).firstOrNull { it > 0 }?.div(1000) ?: 0
             val codec = playerCodec.ifBlank { localTrack.codec.uppercase() }
-            publish(if (localTrack.localBitrateKbps > 0) localTrack.localBitrateKbps else decoded, qobuz = false, StreamDetail(codec = codec))
+            publish(if (localTrack.localBitrateKbps > 0) localTrack.localBitrateKbps else decoded, StreamDetail(codec = codec))
             return
         }
         val resolved = uri?.let { cachedStream(it.toString()) }
-        if (resolved != null && resolved.isQobuz) {
-            publish(resolved.bitrateKbps, qobuz = true, resolved.qobuzDetail())
-            return
-        }
         val duration = player.duration.takeIf { it > 0 } ?: 0L
         val measured = uri?.let { cache.cachedBitrateKbps(it, duration) } ?: 0
         val kbps = if (measured > 0) measured else graph.streams.knownBitrateKbps(item.mediaId)
-        // A cache hit skips resolution, so the remembered format keeps the badge on its label.
-        val qobuzSelected = graph.streamVariant().contains("|qobuz|")
-        val remembered = if (qobuzSelected && resolved == null) {
-            graph.qobuzTiers.detail(item.mediaId, graph.streamVariant())
-        } else null
-        if (remembered != null) {
-            publish(kbps, qobuz = true, remembered)
-        } else {
-            publish(kbps, qobuz = false, StreamDetail(codec = playerCodec.ifBlank { codecName(resolved?.mimeType) }))
-        }
+        publish(kbps, StreamDetail(codec = playerCodec.ifBlank { codecName(resolved?.mimeType) }))
     }
-
-    private fun ResolvedStream.qobuzDetail() = StreamDetail(hires, bitDepth ?: 0, sampleRate ?: 0, "FLAC")
 
     private fun codecName(mime: String?): String {
         val m = mime.orEmpty().lowercase()
@@ -110,9 +95,8 @@ internal class NowPlayingPublisher(
         }
     }
 
-    private fun publish(kbps: Int, qobuz: Boolean, detail: StreamDetail = StreamDetail()) {
+    private fun publish(kbps: Int, detail: StreamDetail = StreamDetail()) {
         graph.activeBitrate.value = kbps
-        graph.activeTrackIsQobuz.value = qobuz
         graph.activeStreamDetail.value = detail
     }
 
@@ -125,12 +109,7 @@ internal class NowPlayingPublisher(
             val item = player()?.currentMediaItem ?: return@post
             val currentUri = item.requestMetadata.mediaUri ?: item.localConfiguration?.uri
             if (currentUri?.toString() != stableUri) return@post
-            if (stream.isQobuz) {
-                val detail = stream.qobuzDetail()
-                publish(stream.bitrateKbps, qobuz = true, detail)
-            } else {
-                publishBitrate()
-            }
+            publishBitrate()
         }
     }
 

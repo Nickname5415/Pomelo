@@ -207,7 +207,7 @@ class OrchardPlaybackService : MediaLibraryService() {
         val next = OrchardGraph.from(this).streamVariant()
         if (next == loadedAudioVariant || authoritativePlayer() !== player) return
         loadedAudioVariant = next
-        reloadAudioForVariant(player, crossfade, streamCache, streams, ::prefetchAround)
+        reloadAudioForVariant(player, streamCache, streams, ::prefetchAround)
     }
     private fun buildPlayer(eq: EqualizerAudioProcessor, handlesAudioFocus: Boolean): ExoPlayer {
         return buildOrchardPlayer(this, streams.mediaSourceFactory(), eq, playbackVolume.state, handlesAudioFocus)
@@ -283,7 +283,6 @@ class OrchardPlaybackService : MediaLibraryService() {
         queueSnapshot = emptyMap()
         OrchardGraph.from(this).onClearStreamCache = null
         if (::streamCache.isInitialized) streamCache.release()
-        OrchardGraph.from(this).qobuzResolver.release()
         if (::streams.isInitialized) streams.clear()
         super.onDestroy()
     }

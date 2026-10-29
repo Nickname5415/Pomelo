@@ -52,7 +52,6 @@ data class ResolvedStream(
     val referer: String? = null,
     /** Whether independent bounded ranges may be fetched concurrently. */
     val supportsParallelRanges: Boolean = false,
-    val isQobuz: Boolean = false,
     val bitDepth: Int? = null,
     val sampleRate: Int? = null,
     val hires: Boolean = false,
@@ -279,9 +278,6 @@ class YouTubeStreamResolver(
     }
 
     private fun payload(videoId: String, track: Track, quality: String): JSONObject {
-        check(!videoId.startsWith("am.") && track.playbackSource != "apple_music") {
-            "Apple Music playback is not available yet."
-        }
         return JSONObject()
             .put("session", sessions.session().providerJson())
             .put("track", track.providerJson())

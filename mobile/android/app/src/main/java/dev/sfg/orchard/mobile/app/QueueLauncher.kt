@@ -90,10 +90,6 @@ internal class QueueLauncher(
     ) {
         Log.d(TAG, "playAll: ${tracks.size} tracks, startIndex=$startIndex, contextTitle='$contextTitle'")
         if (tracks.isEmpty()) return
-        if (tracks[startIndex.coerceIn(tracks.indices)].let { it.playbackSource == "apple_music" || it.id.startsWith("am.") }) {
-            showWarning("Apple Music playback is not available yet.")
-            return
-        }
         scope.launch {
             val safeIndex = startIndex.coerceIn(tracks.indices)
             val source = contextTitle.takeIf { it.isMeaningfulPlaybackSource() }

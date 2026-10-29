@@ -43,8 +43,6 @@ import dev.sfg.orchard.mobile.discord.DiscordPresenceStatus
 import dev.sfg.orchard.mobile.lastfm.LastfmState
 import dev.sfg.orchard.mobile.listenbrainz.ListenBrainzState
 import dev.sfg.orchard.mobile.model.OrchardSettings
-import dev.sfg.orchard.mobile.qobuz.QobuzQuality
-import dev.sfg.orchard.mobile.qobuz.QobuzStatus
 
 /** Services listed under Connections; each opens its own detail page. */
 internal enum class ConnectionService(val title: String, val blurb: String) {
@@ -52,8 +50,6 @@ internal enum class ConnectionService(val title: String, val blurb: String) {
     Lastfm("Last.fm", "Send now-playing updates and completed listens"),
     ListenBrainz("ListenBrainz", "Send listens with your user token"),
     Spotify("Spotify", "Canvas videos in the player"),
-    Qobuz("Qobuz", "Lossless and Hi-Res audio"),
-    AppleMusic("Apple Music", "Connect your Apple Music subscription"),
     Orchard("Orchard Account", "Use your account across devices"),
 }
 
@@ -65,9 +61,7 @@ internal fun connectionStatuses(
     discordStatus: DiscordPresenceStatus,
     lastfmState: LastfmState,
     listenBrainzState: ListenBrainzState,
-    qobuzStatus: QobuzStatus,
     orchardEmail: String,
-    appleMusicStatus: ConnectionStatus,
 ): Map<ConnectionService, ConnectionStatus> = mapOf(
     ConnectionService.Discord to when {
         !settings.discordPresenceEnabled -> ConnectionStatus(false, "Presence off")
@@ -94,17 +88,11 @@ internal fun connectionStatuses(
     } else {
         ConnectionStatus(false, ConnectionService.Spotify.blurb)
     },
-    ConnectionService.Qobuz to if (qobuzStatus.isConnected) {
-        ConnectionStatus(true, if (qobuzStatus.enabled) qobuzStatus.quality.label else "Disabled")
-    } else {
-        ConnectionStatus(false, ConnectionService.Qobuz.blurb)
-    },
     ConnectionService.Orchard to if (orchardEmail.isNotBlank()) {
         ConnectionStatus(true, "Signed in as $orchardEmail")
     } else {
         ConnectionStatus(false, ConnectionService.Orchard.blurb)
     },
-    ConnectionService.AppleMusic to appleMusicStatus,
 )
 
 /** Connected services first, the rest under Available with a Connect hint. */
@@ -143,9 +131,6 @@ private fun ConnectionRow(
     SettingsRow(
         title = service.title,
         subtitle = status.summary,
-        leading = if (service == ConnectionService.AppleMusic && BuildConfig.APPLE_MUSIC_LOGO) {
-            { AppleMusicLogo(Modifier.size(36.dp)) }
-        } else null,
         modifier = Modifier.clickable { onOpen(service) },
     ) {
         if (status.connected) {
@@ -200,7 +185,6 @@ internal fun ConnectionDetail(
     discordStatus: DiscordPresenceStatus,
     lastfmState: LastfmState,
     listenBrainzState: ListenBrainzState,
-    qobuzStatus: QobuzStatus,
     onSettings: (OrchardSettings) -> Unit,
     onConnectLastfm: () -> Unit,
     onCompleteLastfm: () -> Unit,
@@ -208,12 +192,6 @@ internal fun ConnectionDetail(
     onConnectListenBrainz: (String) -> Unit,
     onDisconnectListenBrainz: () -> Unit,
     onConnectSpotify: () -> Unit,
-    onConnectQobuz: () -> Unit,
-    onConnectQobuzToken: () -> Unit,
-    onConnectAppleMusic: () -> Unit,
-    onDisconnectQobuz: () -> Unit,
-    onQobuzEnabledChange: (Boolean) -> Unit,
-    onQobuzQualityChange: (QobuzQuality) -> Unit,
 ) {
     Column(Modifier.padding(top = 8.dp)) {
         SettingsPanel(index = 1) {
@@ -239,16 +217,7 @@ internal fun ConnectionDetail(
                     onSettings = onSettings,
                     onConnectSpotify = onConnectSpotify,
                 )
-                ConnectionService.Qobuz -> QobuzSettingsCard(
-                    status = qobuzStatus,
-                    onConnect = onConnectQobuz,
-                    onConnectToken = onConnectQobuzToken,
-                    onDisconnect = onDisconnectQobuz,
-                    onEnabledChange = onQobuzEnabledChange,
-                    onQualityChange = onQobuzQualityChange,
-                )
                 ConnectionService.Orchard -> OrchardAccountSettingsCard()
-                ConnectionService.AppleMusic -> AppleMusicSettingsCard(onConnect = onConnectAppleMusic)
             }
         }
     }

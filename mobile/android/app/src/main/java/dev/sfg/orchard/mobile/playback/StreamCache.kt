@@ -106,7 +106,7 @@ class StreamCache(
      * Wraps [upstream] so reads are served from disk when possible and written to it when not.
      *
      * The variant (quality and audio source) is folded into the cache key: the same track at
-     * DATA_SAVER and HIGH, or from YouTube and Qobuz, is different bytes, and keying both as the
+     * DATA_SAVER and HIGH is different bytes, and keying both as the
      * track alone would serve whichever was fetched first.
      */
     fun dataSourceFactory(upstream: DataSource.Factory): DataSource.Factory {

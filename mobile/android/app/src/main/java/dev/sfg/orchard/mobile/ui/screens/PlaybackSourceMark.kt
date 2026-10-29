@@ -30,8 +30,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.sfg.orchard.connect.R
-import dev.sfg.orchard.connect.BuildConfig
-import dev.sfg.orchard.mobile.model.APPLE_MUSIC_SOURCE
 import dev.sfg.orchard.mobile.model.YOUTUBE_SOURCE
 
 private val MarkSize = 16.dp
@@ -39,7 +37,6 @@ private val MarkSize = 16.dp
 /** Whether [PlaybackSourceMark] draws anything for [source] in this build. */
 internal fun playbackSourceHasMark(source: String): Boolean = when (source.lowercase()) {
     YOUTUBE_SOURCE -> true
-    APPLE_MUSIC_SOURCE -> BuildConfig.APPLE_MUSIC_LOGO
     else -> false
 }
 
@@ -52,11 +49,5 @@ internal fun PlaybackSourceMark(source: String, modifier: Modifier = Modifier, s
             contentDescription = "Playing from YouTube Music",
             modifier = modifier.size(size),
         )
-        // The logo only ships in builds that bundle the local Apple Music artwork.
-        APPLE_MUSIC_SOURCE -> if (BuildConfig.APPLE_MUSIC_LOGO) {
-            Box(modifier.size(size).semantics { contentDescription = "Playing from Apple Music" }) {
-                AppleMusicLogo(Modifier.size(size))
-            }
-        }
     }
 }

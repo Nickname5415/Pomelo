@@ -194,7 +194,7 @@ private fun SearchBar(query: String, actions: SearchActions, focus: FocusRequest
             Box(Modifier.weight(1f).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
                 val textStyle = MaterialTheme.typography.bodyLarge.copy(color = SettingsStyle.Title)
                 if (query.isEmpty()) {
-                    Text(if (youtubeCatalog) "Search YouTube Music" else "Search Apple Music", style = textStyle, color = SettingsStyle.Description)
+                    Text("Search music", style = textStyle, color = SettingsStyle.Description)
                 }
                 BasicTextField(
                     value = query,
@@ -269,8 +269,6 @@ private fun LazyListScope.idle(history: List<String>, actions: SearchActions, yo
     if (youtubeCatalog) {
         item { PanelCaption("Browse") }
         item { BrowseTiles(actions.onOpenDetail) }
-    } else {
-        item { PanelCaption("Apple Music") }
     }
     if (history.isEmpty()) return
     item { Column { PanelDivider(); PanelCaption("Recent", "Clear all", actions.onClearHistory) } }

@@ -49,11 +49,3 @@ class YouTubeHomeSource(private val catalog: CatalogRepository) : HomeSource {
 
     override suspend fun sectionItems(browseId: String, params: String) = catalog.sectionItems(browseId, params)
 }
-
-internal class AppleMusicHomeSource(private val catalog: dev.sfg.orchard.mobile.applemusic.AppleMusicCatalog) : HomeSource {
-    override val id = "apple_music"
-    override val name = "Apple Music"
-    override fun available() = catalog.signedIn()
-    override suspend fun feed() = catalog.home()
-    override suspend fun sectionItems(browseId: String, params: String) = catalog.homeSection(browseId)
-}

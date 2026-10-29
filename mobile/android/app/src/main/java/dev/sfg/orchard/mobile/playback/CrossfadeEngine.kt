@@ -18,7 +18,7 @@ import androidx.media3.exoplayer.ExoPlayer
 internal class CrossfadeEngine(
     private val handler: Handler,
     private val config: () -> Config,
-    private val onMarker: (Any?) -> Unit = {},
+    private val onMarker: (dev.sfg.orchard.mobile.model.TransitionMarker?) -> Unit = {},
     private val onHandoff: (outgoing: ExoPlayer, incoming: ExoPlayer) -> Unit = { _, _ -> },
     private val canCrossfadeTo: (String) -> Boolean = { true },
 ) {

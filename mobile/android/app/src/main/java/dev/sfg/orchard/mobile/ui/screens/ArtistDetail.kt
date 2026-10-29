@@ -272,7 +272,7 @@ private fun ArtistAboutCard(detail: BrowseDetail, palette: ArtworkPalette) {
         title = "About",
         text = detail.description,
         collapsedLines = 4,
-        html = detail.source == "apple_music" || Regex(
+        html = Regex(
             "</?(?:a|b|br|div|em|i|li|ol|p|span|strong|u|ul)\\b", RegexOption.IGNORE_CASE,
         ).containsMatchIn(detail.description),
         modifier = Modifier

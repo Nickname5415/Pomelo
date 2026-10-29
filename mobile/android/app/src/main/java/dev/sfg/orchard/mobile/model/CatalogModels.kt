@@ -76,7 +76,7 @@ data class Track(
         get() = playbackSource.equals(LOCAL_SOURCE, ignoreCase = true)
 
     val isQobuz: Boolean
-        get() = playbackSource.equals("qobuz", ignoreCase = true)
+        get() = false
 
     /** True for album audio, which is the version a listener expects from an album or search. */
     val isAudioOnly: Boolean
@@ -92,7 +92,7 @@ const val LOCAL_SOURCE = "local"
 
 /** [Track.playbackSource] ids that the now playing source mark recognizes. */
 const val YOUTUBE_SOURCE = "youtube"
-const val APPLE_MUSIC_SOURCE = "apple_music"
+const val TIDAL_SOURCE = "tidal"
 
 const val MUSIC_VIDEO_TYPE_ATV = "MUSIC_VIDEO_TYPE_ATV"
 const val MUSIC_VIDEO_TYPE_OMV = "MUSIC_VIDEO_TYPE_OMV"

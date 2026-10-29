@@ -53,7 +53,7 @@ private fun kHz(rate: Int): String {
 }
 
 /** "Hi-Res · 24-bit / 44.1 kHz · FLAC", leaving out what the stream has not reported. */
-private fun qobuzLabel(detail: StreamDetail): String {
+private fun losslessFormatLabel(detail: StreamDetail): String {
     val format = listOfNotNull(
         if (detail.bitDepth > 0) "${detail.bitDepth}-bit" else null,
         if (detail.sampleRate > 0) kHz(detail.sampleRate) else null,
@@ -65,14 +65,14 @@ private fun qobuzLabel(detail: StreamDetail): String {
  * Bitrate readout badge under the player scrubber.
  *
  * For standard streams, renders "$bitrate kbps · codec".
- * For Qobuz streams, renders the tier, format and codec in gold; clicking it smoothly animates
+ * For lossless/hi-res streams, renders the tier, format and codec in gold; clicking it smoothly animates
  * between that and the numeric bitrate readout.
  */
 @Composable
 fun LosslessBadge(
     showBitrate: Boolean,
     bitrateKbps: Int,
-    isQobuz: Boolean,
+    isQobuz: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     if (!showBitrate || bitrateKbps <= 0) return
@@ -91,7 +91,7 @@ fun LosslessBadge(
         }
     } else {
         var showNumeric by remember { mutableStateOf(false) }
-        val tierLabel = qobuzLabel(LocalStreamDetail.current)
+        val tierLabel = losslessFormatLabel(LocalStreamDetail.current)
 
         Box(
             modifier = modifier

@@ -39,13 +39,11 @@ internal object ConnectDeviceInfo {
         .put("can_render_audio", true)
         // The phone can mix and fetch artwork for itself; a desktop still wins both roles.
         .put("can_mix_audio", true)
-        .put("can_fetch_artwork", true)
-        .put("providers", JSONArray(listOf("youtube", "qobuz")))
+        .put("providers", JSONArray(listOf("youtube")))
         .put(
             "provider_sessions",
             JSONObject()
-                .put("youtube", graph.auth.state.value is AuthState.SignedIn)
-                .put("qobuz", graph.qobuzResolver.hasSession()),
+                .put("youtube", graph.auth.state.value is AuthState.SignedIn),
         )
         .put("audio_transports", JSONArray(listOf("pcm_s16", "pcm_f32", "source")))
 

@@ -19,24 +19,20 @@
 
 package dev.sfg.orchard.mobile.catalog
 
-import dev.sfg.orchard.mobile.applemusic.AppleMusicCatalog
 import dev.sfg.orchard.mobile.model.BrowseDetail
 import dev.sfg.orchard.mobile.model.CatalogItem
-import dev.sfg.orchard.mobile.model.CatalogKind
 import dev.sfg.orchard.mobile.model.SearchResults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 
-internal fun isAppleMusicId(id: String): Boolean = id.startsWith("am.")
+internal fun isAppleMusicId(id: String): Boolean = false
 
-/** Home, search and detail pages share the listener's catalog selection. */
+/** Home, search and detail pages. */
 internal class CatalogRouter(
     private val youtube: Source,
-    private val apple: Source,
-    private val preferred: () -> String,
+    private val preferred: () -> String = { "youtube" },
 ) {
     internal interface Source {
         suspend fun search(query: String): SearchResults
@@ -45,46 +41,24 @@ internal class CatalogRouter(
         suspend fun artist(name: String): BrowseDetail? = null
     }
 
-    constructor(youtube: CatalogRepository, apple: AppleMusicCatalog, preferred: () -> String) : this(
+    constructor(youtube: CatalogRepository, preferred: () -> String = { "youtube" }) : this(
         object : Source {
             override suspend fun search(query: String) = youtube.search(query)
             override fun pages(id: String) = youtube.browsePages(id)
             override suspend fun sectionItems(id: String, params: String) = youtube.sectionItems(id, params)
         },
-        object : Source {
-            override suspend fun search(query: String) = apple.search(query)
-            override fun pages(id: String) = flow { emit(apple.detail(id)) }
-            override suspend fun sectionItems(id: String, params: String) = apple.artistView(id, params)
-            override suspend fun artist(name: String) = apple.matchArtist(name)?.let { apple.detail(it) }
-        },
         preferred,
     )
 
-    private val appleSelected: Boolean get() = preferred() == "apple_music"
-
-    suspend fun search(query: String): SearchResults =
-        (if (appleSelected) apple else youtube).search(query)
+    suspend fun search(query: String): SearchResults = youtube.search(query)
 
     fun pages(id: String, seed: CatalogItem? = null): Flow<BrowseDetail> = flow {
-        if (!appleSelected) {
-            check(!isAppleMusicId(id)) { "This is from Apple Music. Switch to Apple Music in Settings to open it." }
-            emitAll(youtube.pages(id))
-        } else if (isAppleMusicId(id)) {
-            emitAll(apple.pages(id))
-        } else {
-            check(CatalogRepository.kindOf(id.substringBefore(":")) == CatalogKind.ARTIST) {
-                "This is from YouTube Music. Switch to YouTube Music in Settings to open it."
-            }
-            val name = (seed as? CatalogItem.Performer)?.artist?.name?.takeIf { it.isNotBlank() }
-                ?: youtube.pages(id).first().title
-            emit(apple.artist(name) ?: error("Apple Music has no artist named $name."))
-        }
+        emitAll(youtube.pages(id))
     }
 
     suspend fun browse(id: String): BrowseDetail = pages(id).last()
 
     suspend fun sectionItems(browseId: String, params: String): List<CatalogItem> {
-        check(isAppleMusicId(browseId) == appleSelected) { "Switch catalogs in Settings to open this section." }
-        return (if (appleSelected) apple else youtube).sectionItems(browseId, params)
+        return youtube.sectionItems(browseId, params)
     }
 }

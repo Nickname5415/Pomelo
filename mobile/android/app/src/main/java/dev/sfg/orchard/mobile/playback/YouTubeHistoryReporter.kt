@@ -46,7 +46,7 @@ internal class YouTubeHistoryReporter(private val graph: OrchardGraph, private v
         val item = player.currentMediaItem
         val currentId = item?.mediaId.orEmpty()
         val local = item?.let(MediaItemMapper::toTrack)?.isLocal == true
-        val eligible = player.isPlaying && !local && !graph.activeTrackIsQobuz.value &&
+        val eligible = player.isPlaying && !local &&
             graph.settings.settings.value.sendYouTubeHistory && graph.networkMonitor.isOnline.value &&
             graph.auth.session() != null
         if (currentId == trackId) positionMs = player.currentPosition.coerceAtLeast(0)

@@ -86,8 +86,6 @@ class OrchardGraph(context: Context) {
         http,
         spotifyCanvas,
         sourceOrder = { settings.settings.value.artworkSourceOrder },
-        appleSignedIn = { appleMusic.signedIn() },
-        appleArtwork = { track, album -> appleMusic.artwork(track, album) },
     )
     val downloads = DownloadManager(
         context = context,
@@ -104,12 +102,8 @@ class OrchardGraph(context: Context) {
         YouTubeStreamResolver(youtube, auth, ::audioQuality, { downloads })
     }
     val catalog = CatalogRepository(youtube, auth)
-    internal val appleMusic = dev.sfg.orchard.mobile.applemusic.AppleMusicCatalog(context, http, providerAsset)
-    internal val catalogRouter = dev.sfg.orchard.mobile.catalog.CatalogRouter(catalog, appleMusic) {
-        settings.settings.value.homeSource
-    }
-    val homeFeeds = HomeFeeds(listOf(YouTubeHomeSource(catalog),
-        dev.sfg.orchard.mobile.home.AppleMusicHomeSource(appleMusic))) { settings.settings.value.homeSource }
+    internal val catalogRouter = dev.sfg.orchard.mobile.catalog.CatalogRouter(catalog)
+    val homeFeeds = HomeFeeds(listOf(YouTubeHomeSource(catalog))) { "youtube" }
     val playlistActions = PlaylistActions(youtube, auth)
     val videoVersions = VideoVersionResolver(catalog)
     val library = LibraryRepository(LibraryCache(context), catalog, applicationScope)
@@ -128,51 +122,28 @@ class OrchardGraph(context: Context) {
     val listenBrainz = ListenBrainzRepository(context, http, applicationScope)
 
     /**
-     * The transition the playback service has planned, or null when there is none.
-     *
-     * Held on the graph rather than sent through the media session because both live in this
-     * process: the session carries what a remote controller needs, and a planned-but-not-started
-     * transition is not that. A Connect target simply leaves this null, which is correct; the
-     * marker describes local playback.
-     */
-    /**
      * Clear hook for the active playback service's [StreamCache].
      * Null before the playback service starts or after it is destroyed.
      */
     @Volatile
     var onClearStreamCache: (() -> Unit)? = null
 
-
-
     val transitionMarker = kotlinx.coroutines.flow.MutableStateFlow<dev.sfg.orchard.mobile.model.TransitionMarker?>(null)
     val warningEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 16)
     val activeBitrate = kotlinx.coroutines.flow.MutableStateFlow(0)
-    val activeTrackIsQobuz = kotlinx.coroutines.flow.MutableStateFlow(false)
     val activeStreamDetail = kotlinx.coroutines.flow.MutableStateFlow(dev.sfg.orchard.mobile.model.StreamDetail())
-    val qobuzTiers = dev.sfg.orchard.mobile.qobuz.QobuzTierMemory(context)
-    val qobuz = dev.sfg.orchard.mobile.qobuz.QobuzRepository(context, applicationScope)
-    val qobuzResolver = dev.sfg.orchard.mobile.qobuz.QobuzResolver(qobuz, http, providerAsset)
 
     /** The tier for the current network: cellular on metered connections, otherwise the Wi-Fi tier. */
     fun audioQuality(s: dev.sfg.orchard.mobile.model.OrchardSettings = settings.settings.value): AudioQuality =
         if (networkMonitor.isMetered.value) s.cellularAudioQuality else s.audioQuality
 
-    /** Active Qobuz playback leaves adaptive mix and the equalizer off. */
     val maxActive: kotlinx.coroutines.flow.StateFlow<Boolean> by lazy {
-        kotlinx.coroutines.flow.combine(settings.settings, qobuz.status, connect.state, networkMonitor.isMetered) { s, _, _, _ ->
-            audioQuality(s) == AudioQuality.MAX && qobuzResolver.isAvailable()
-        }.stateIn(
-            applicationScope,
-            kotlinx.coroutines.flow.SharingStarted.Eagerly,
-            audioQuality() == AudioQuality.MAX && qobuzResolver.isAvailable(),
-        )
+        kotlinx.coroutines.flow.MutableStateFlow(false)
     }
 
-    /** Names where MAX audio comes from; cached streams and bytes from another source must not be reused. */
+    /** Names where audio comes from; cached streams and bytes from another source must not be reused. */
     fun streamVariant(): String {
-        val quality = audioQuality()
-        val qobuzEnabled = quality == AudioQuality.MAX && qobuzResolver.isAvailable()
-        return audioCacheVariant(quality, qobuzEnabled, qobuz.status.value.quality.id)
+        return audioCacheVariant(audioQuality())
     }
 
     val discordPresence = dev.sfg.orchard.mobile.discord.DiscordPresenceCoordinator(

@@ -77,7 +77,6 @@ internal class NonMusicSkipper(
                 track == null || found == null || found.trackId != track.id -> null
                 target.selected !is PlaybackTarget.LocalPhone || partyState.isActive -> null
                 snapshot.playingVideo || snapshot.renderedMixPositionMs != null -> null
-                track.isQobuz || graph.activeTrackIsQobuz.value -> null
                 else -> found.spans.firstOrNull {
                     // The last half second is not worth interrupting for.
                     snapshot.positionMs >= it.startMs && snapshot.positionMs < it.endMs - END_GRACE_MS

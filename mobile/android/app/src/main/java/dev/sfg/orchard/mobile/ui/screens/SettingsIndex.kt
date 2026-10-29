@@ -52,7 +52,7 @@ private val entries = listOf(
     SettingsEntry("Autoplay", "Keep playing related music", SettingsPage.Audio, "queue radio"),
     SettingsEntry("Crossfade", "Blend the end of a track into the next", SettingsPage.Audio, "adaptive mix smart overlap transition"),
     SettingsEntry("Chromecast", "Cast to speakers and TVs", SettingsPage.Audio, "cast tv speaker"),
-    SettingsEntry("Home screen layout", "Choose your music source and arrange Home", SettingsPage.Appearance, "sections home music source catalog search youtube apple music recommendations"),
+    SettingsEntry("Home screen layout", "Choose your music source and arrange Home", SettingsPage.Appearance, "sections home music source catalog search youtube recommendations"),
     SettingsEntry("Player gestures", "Swipe to skip and tap to like", SettingsPage.Appearance),
     SettingsEntry("Use system colours", "Match your wallpaper", SettingsPage.Appearance, "theme material you accent"),
     SettingsEntry("Animated artwork", "Move artwork while music plays", SettingsPage.Appearance, "motion cover"),
@@ -67,7 +67,6 @@ private val entries = listOf(
     SettingsEntry("Last.fm", "Now-playing updates and listens", SettingsPage.Connections, "scrobble"),
     SettingsEntry("ListenBrainz", "Send listens with a user token", SettingsPage.Connections, "scrobble"),
     SettingsEntry("Spotify", "Spotify Canvas animated artwork", SettingsPage.Connections, "canvas cookie"),
-    SettingsEntry("Qobuz", "Lossless and Hi-Res audio", SettingsPage.Connections, "hires streaming"),
     SettingsEntry("Orchard Account", "Sign in with Google and manage devices", SettingsPage.Connections, "account devices google"),
     SettingsEntry("Save plays to YouTube Music history", "Add played songs to your YouTube Music history", SettingsPage.Audio, "listening history tracking"),
     SettingsEntry("Cached audio", "Cache limit for played tracks", SettingsPage.Storage, "size limit"),
@@ -75,7 +74,6 @@ private val entries = listOf(
     SettingsEntry("Check for updates", "Look for newer releases", SettingsPage.Storage, "version upgrade"),
     SettingsEntry("Release notes", "What changed in this version", SettingsPage.Storage, "changelog"),
     SettingsEntry("Beta channel", "Get beta builds from GitHub", SettingsPage.Storage),
-    SettingsEntry("Apple Music", "Connect your Apple Music subscription", SettingsPage.Connections, "apple musickit account sign in"),
 )
 
 /** Case-insensitive match on every word of [query] against title, subtitle and keywords. */

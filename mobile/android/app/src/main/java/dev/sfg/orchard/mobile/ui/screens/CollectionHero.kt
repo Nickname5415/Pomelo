@@ -67,9 +67,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.sfg.orchard.mobile.model.LocalQobuzAlbumQuality
-import dev.sfg.orchard.mobile.model.QobuzAlbumQuality
-import dev.sfg.orchard.mobile.ui.components.QobuzAlbumQualityChip
 import dev.sfg.orchard.mobile.model.BrowseDetail
 import dev.sfg.orchard.mobile.model.CatalogKind
 import dev.sfg.orchard.mobile.model.Track
@@ -165,15 +162,6 @@ internal fun CollectionHero(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = HeroGutter),
         )
-        // Only while MAX is on, as on desktop; the lookup is cached per album.
-        val loadAlbumQuality = LocalQobuzAlbumQuality.current
-        val albumQuality by produceState<QobuzAlbumQuality?>(null, detail.id, detail.tracks.size, loadAlbumQuality) {
-            value = if (isAlbum && detail.tracks.isNotEmpty()) loadAlbumQuality?.invoke(detail) else null
-        }
-        albumQuality?.let {
-            Spacer(Modifier.height(8.dp))
-            QobuzAlbumQualityChip(it)
-        }
 
         Spacer(Modifier.height(24.dp))
         HeroPlayRow(

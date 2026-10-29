@@ -57,65 +57,18 @@ class CatalogRouterTest {
     }
 
     @Test
-    fun searchFollowsCatalogChangesAndPreservesAppleIdentity() = runBlocking {
+    fun searchDelegatesToSource() = runBlocking {
         val youtube = FakeSource("youtube")
-        val apple = FakeSource("apple_music")
-        var selected = "apple_music"
-        val router = CatalogRouter(youtube, apple) { selected }
-        assertEquals("apple_music", router.search("Song").tracks.single().playbackSource)
-        assertTrue(youtube.calls.isEmpty())
-        selected = "youtube"
+        val router = CatalogRouter(youtube)
         assertEquals("youtube", router.search("Song").tracks.single().playbackSource)
         assertEquals(listOf("search:Song"), youtube.calls)
     }
 
     @Test
-    fun appleFailureNeverSearchesYouTube() {
+    fun pagesDelegatesToSource() = runBlocking {
         val youtube = FakeSource("youtube")
-        val apple = FakeSource("apple_music").apply { failure = IllegalStateException("Disconnected") }
-        val router = CatalogRouter(youtube, apple) { "apple_music" }
-        val error = assertThrows(IllegalStateException::class.java) { runBlocking { router.search("Song") } }
-        assertEquals("Disconnected", error.message)
-        assertTrue(youtube.calls.isEmpty())
-    }
-
-    @Test
-    fun youtubeModeKeepsYouTubeArtistPagesEvenWhenAppleIsConnected() = runBlocking {
-        val youtube = FakeSource("youtube")
-        val apple = FakeSource("apple_music")
-        val router = CatalogRouter(youtube, apple) { "youtube" }
+        val router = CatalogRouter(youtube)
         assertEquals("UCartist", router.pages("UCartist").toList().single().id)
-        assertTrue(apple.calls.isEmpty())
-    }
-
-    @Test
-    fun appleModeResolvesTrackArtistLinksToAppleAndKeepsAppleIdentity() = runBlocking {
-        val youtube = FakeSource("youtube")
-        val apple = FakeSource("apple_music")
-        val router = CatalogRouter(youtube, apple) { "apple_music" }
-        val seed = CatalogItem.Performer(Artist("UCartist", "Artist"))
-        assertEquals("am.artists.123", router.pages("UCartist", seed).toList().single().id)
-        assertTrue(youtube.calls.isEmpty())
-        assertEquals(listOf("artist:Artist"), apple.calls)
-    }
-
-    @Test
-    fun mismatchedCollectionRequiresChangingCatalog() {
-        val youtube = FakeSource("youtube")
-        val apple = FakeSource("apple_music")
-        val router = CatalogRouter(youtube, apple) { "apple_music" }
-        assertThrows(IllegalStateException::class.java) { runBlocking { router.pages("MPREalbum").toList() } }
-        assertTrue(youtube.calls.isEmpty())
-        assertTrue(apple.calls.isEmpty())
-    }
-
-    @Test
-    fun sectionsUseApplePaginationWithoutLosingTheirView() = runBlocking {
-        val youtube = FakeSource("youtube")
-        val apple = FakeSource("apple_music")
-        val router = CatalogRouter(youtube, apple) { "apple_music" }
-        router.sectionItems("am.artists.123", "view:live-albums")
-        assertEquals(listOf("section:am.artists.123:view:live-albums"), apple.calls)
-        assertTrue(youtube.calls.isEmpty())
+        assertEquals(listOf("pages:UCartist"), youtube.calls)
     }
 }

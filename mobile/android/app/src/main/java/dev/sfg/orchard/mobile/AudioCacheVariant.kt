@@ -22,6 +22,5 @@ package dev.sfg.orchard.mobile
 import dev.sfg.orchard.mobile.model.AudioQuality
 
 /** Separates playback cache bytes by selected provider and encoding tier. */
-internal fun audioCacheVariant(quality: AudioQuality, qobuzEnabled: Boolean, qobuzTier: String): String =
-    if (qobuzEnabled && quality == AudioQuality.MAX) "v2|qobuz|$qobuzTier"
-    else "v2|youtube|${if (quality == AudioQuality.MAX) AudioQuality.HIGH.name else quality.name}"
+internal fun audioCacheVariant(quality: AudioQuality, provider: String = "youtube"): String =
+    "v2|$provider|${quality.name}"

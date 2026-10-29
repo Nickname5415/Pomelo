@@ -183,30 +183,4 @@ class ArtworkRepositoryTest {
         order = listOf(ArtworkSource.M8TEC, ArtworkSource.BOIDU, ArtworkSource.SPOTIFY)
         assertEquals("https://example.test/m8tec.m3u8", ordered.artwork(espresso)?.videoUrl)
     }
-
-    @Test
-    fun appleSignInReplacesUnofficialProviders() = runBlocking {
-        val hosts = mutableListOf<String>()
-        val http = OkHttpClient.Builder().addInterceptor { chain ->
-            val request = chain.request()
-            synchronized(hosts) { hosts += request.url.host }
-            Response.Builder().request(request).protocol(Protocol.HTTP_1_1)
-                .code(200).message("Test response").body("{}".toResponseBody()).build()
-        }.build()
-        var signedIn = true
-        val apple = TrackArtwork("am", videoUrl = "https://example.test/apple.m3u8")
-        val repository = ArtworkRepository(
-            http,
-            sourceOrder = { listOf(ArtworkSource.M8TEC, ArtworkSource.BOIDU, ArtworkSource.SPOTIFY) },
-            appleSignedIn = { signedIn },
-            appleArtwork = { _, _ -> apple },
-        )
-
-        assertEquals("https://example.test/apple.m3u8", repository.artwork(espresso)?.videoUrl)
-        assertEquals(emptyList<String>(), hosts)
-
-        signedIn = false
-        assertNull(repository.artwork(espresso))
-        assertEquals(setOf("artwork.m8tec.top", "artwork.boidu.dev"), hosts.toSet())
-    }
 }
