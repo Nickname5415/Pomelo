@@ -52,7 +52,7 @@ import xyz.stuffbyren.pomelo.ui.components.filterTracks
 import xyz.stuffbyren.pomelo.ui.components.normalizeSearchText
 import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyColumn as LazyColumn
 
-private const val NEW_RELEASES_ID = "FEmusic_new_releases"
+private const val NEW_RELEASES_ID = "featured-playlists"
 
 @Composable
 fun LibraryScreen(

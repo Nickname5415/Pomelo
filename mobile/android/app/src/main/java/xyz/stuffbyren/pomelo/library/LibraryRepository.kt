@@ -156,12 +156,12 @@ class LibraryRepository(
         // The landing page contains recent-activity shelves, not the complete saved collections.
         // Albums and playlists each have their own browse id, so use those and retain the landing
         // page only as a fallback.
-        val savedAlbums = runCatching { catalog.sectionItems(LIKED_ALBUMS) }
+        val savedAlbums = runCatching { catalog.albums() }
             .getOrDefault(emptyList())
             .filterIsInstance<CatalogItem.Record>()
             .map { it.album }
             .distinctBy(Album::id)
-        val savedPlaylists = runCatching { catalog.sectionItems(LIKED_PLAYLISTS) }
+        val savedPlaylists = runCatching { catalog.playlists() }
             .getOrDefault(emptyList())
             .filterIsInstance<CatalogItem.Collection>()
             .map { it.playlist }
@@ -169,7 +169,6 @@ class LibraryRepository(
         val current = mutableLibrary.value
         val refreshed = current.copy(
             likedTracks = liked.ifEmpty { current.likedTracks },
-            // Never let a failed or empty remote fetch wipe a collection already cached by Orchard.
             savedAlbums = savedAlbums
                 .ifEmpty { items.filterIsInstance<CatalogItem.Record>().map { it.album }.distinctBy(Album::id) }
                 .ifEmpty { current.savedAlbums },
@@ -192,13 +191,6 @@ class LibraryRepository(
     private fun <T> toggle(values: List<T>, candidate: T, id: (T) -> String): List<T> {
         val existing = values.indexOfFirst { id(it) == id(candidate) }
         return if (existing >= 0) values.toMutableList().apply { removeAt(existing) } else listOf(candidate) + values
-    }
-
-    private companion object {
-        /** YouTube Music's own Albums tab — the albums the user actually saved. */
-        const val LIKED_ALBUMS = "FEmusic_liked_albums"
-        /** The complete saved-playlist grid; the library landing page contains only recent items. */
-        const val LIKED_PLAYLISTS = "FEmusic_liked_playlists"
     }
 }
 

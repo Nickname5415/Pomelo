@@ -81,7 +81,7 @@ class TidalCatalogRepository(
                         Log.w(TAG, "TIDAL API request failed: ${response.code} ${response.message} on $endpoint")
                         return@withContext null
                     }
-                    val body = response.body?.string().orEmpty()
+                    val body = response.body.string()
                     if (body.isBlank()) null else JSONObject(body)
                 }
             } catch (e: Exception) {
@@ -95,15 +95,22 @@ class TidalCatalogRepository(
      */
     suspend fun search(query: String, filter: String = "all", guest: Boolean = false): SearchResults =
         withContext(Dispatchers.IO) {
-            if (query.isBlank()) return@withContext SearchResults()
+            val trimmed = query.trim()
+            if (trimmed.isBlank()) return@withContext SearchResults()
 
-            val encodedQuery = URLEncoder.encode(query.trim(), "UTF-8")
             val json = executeGet(
-                endpoint = "/searchResults/$encodedQuery",
-                queryParams = mapOf("include" to "tracks,albums,artists,playlists"),
+                endpoint = "/searchResults",
+                queryParams = mapOf(
+                    "filter[query]" to trimmed,
+                    "include" to "tracks,albums,artists,playlists,tracks.artists,tracks.albums,albums.coverArt,playlists.coverArt",
+                ),
             ) ?: return@withContext SearchResults()
 
             val included = json.optJSONArray("included") ?: JSONArray()
+            val artworksMap = parseArtworksMap(included)
+            val artistsMap = parseArtistsMap(included)
+            val albumsMap = parseAlbumsMap(included)
+
             val tracks = mutableListOf<Track>()
             val albums = mutableListOf<Album>()
             val artists = mutableListOf<Artist>()
@@ -112,10 +119,10 @@ class TidalCatalogRepository(
             for (i in 0 until included.length()) {
                 val item = included.optJSONObject(i) ?: continue
                 when (item.optString("type")) {
-                    "tracks" -> parseTrack(item)?.let { tracks.add(it) }
-                    "albums" -> parseAlbum(item)?.let { albums.add(it) }
+                    "tracks" -> parseTrackWithContext(item, artistsMap, albumsMap, artworksMap)?.let { tracks.add(it) }
+                    "albums" -> parseAlbumWithContext(item, artistsMap, artworksMap)?.let { albums.add(it) }
                     "artists" -> parseArtist(item)?.let { artists.add(it) }
-                    "playlists" -> parsePlaylist(item)?.let { playlists.add(it) }
+                    "playlists" -> parsePlaylistWithContext(item, artworksMap)?.let { playlists.add(it) }
                 }
             }
 
@@ -128,35 +135,59 @@ class TidalCatalogRepository(
         }
 
     /**
-     * Home feed featuring recommendations, new releases, and popular playlists.
+     * Home feed featuring recommendations, popular playlists, trending songs, and top albums.
      */
     suspend fun home(): HomeFeed = withContext(Dispatchers.IO) {
         val sections = mutableListOf<CatalogSection>()
-        val featuredPlaylists = mutableListOf<CatalogItem>()
 
-        val searchRes = search("Pop Hits", filter = "playlists")
-        searchRes.playlists.forEach {
-            featuredPlaylists.add(CatalogItem.Collection(it))
-        }
-
-        if (featuredPlaylists.isNotEmpty()) {
+        // 1. Featured Playlists
+        val featuredPlaylistsRes = search("Hits", filter = "playlists")
+        val featuredItems = featuredPlaylistsRes.playlists.map { CatalogItem.Collection(it) }
+        if (featuredItems.isNotEmpty()) {
             sections.add(
                 CatalogSection(
                     id = "featured-playlists",
-                    title = "Featured on TIDAL",
-                    items = featuredPlaylists,
+                    title = "Featured Playlists",
+                    items = featuredItems,
                 ),
             )
         }
 
-        val topTracksRes = search("Top Hits", filter = "songs")
-        val topTrackItems = topTracksRes.tracks.map { CatalogItem.Song(it) }
-        if (topTrackItems.isNotEmpty()) {
+        // 2. Trending Songs
+        val trendingSongsRes = search("Top Hits", filter = "songs")
+        val songItems = trendingSongsRes.tracks.map { CatalogItem.Song(it) }
+        if (songItems.isNotEmpty()) {
             sections.add(
                 CatalogSection(
-                    id = "popular-tracks",
+                    id = "trending-songs",
                     title = "Trending Songs",
-                    items = topTrackItems,
+                    items = songItems,
+                ),
+            )
+        }
+
+        // 3. Popular Albums
+        val albumsRes = search("Hits", filter = "albums")
+        val albumItems = albumsRes.albums.map { CatalogItem.Record(it) }
+        if (albumItems.isNotEmpty()) {
+            sections.add(
+                CatalogSection(
+                    id = "popular-albums",
+                    title = "Popular Albums",
+                    items = albumItems,
+                ),
+            )
+        }
+
+        // 4. TIDAL Essentials
+        val discoveryRes = search("Essentials", filter = "playlists")
+        val discoveryItems = discoveryRes.playlists.map { CatalogItem.Collection(it) }
+        if (discoveryItems.isNotEmpty()) {
+            sections.add(
+                CatalogSection(
+                    id = "essential-playlists",
+                    title = "TIDAL Essentials",
+                    items = discoveryItems,
                 ),
             )
         }
@@ -170,6 +201,22 @@ class TidalCatalogRepository(
     suspend fun browse(id: String): BrowseDetail = withContext(Dispatchers.IO) {
         val cleanId = id.substringBefore(":")
         when {
+            cleanId == "featured-playlists" || cleanId == "trending-songs" ||
+                cleanId == "popular-albums" || cleanId == "essential-playlists" -> {
+                val items = sectionItems(cleanId)
+                BrowseDetail(
+                    id = cleanId,
+                    kind = CatalogKind.PLAYLIST,
+                    title = when (cleanId) {
+                        "featured-playlists" -> "Featured Playlists"
+                        "trending-songs" -> "Trending Songs"
+                        "popular-albums" -> "Popular Albums"
+                        else -> "TIDAL Essentials"
+                    },
+                    tracks = items.filterIsInstance<CatalogItem.Song>().map { it.track },
+                    source = TIDAL_SOURCE,
+                )
+            }
             cleanId.startsWith("album-") || cleanId.all { it.isDigit() } -> {
                 val albumId = cleanId.removePrefix("album-")
                 browseAlbum(albumId)
@@ -191,15 +238,21 @@ class TidalCatalogRepository(
     }.flowOn(Dispatchers.IO)
 
     private suspend fun browseAlbum(albumId: String): BrowseDetail {
-        val json = executeGet("/albums/$albumId", mapOf("include" to "items,artists"))
+        val json = executeGet("/albums/$albumId", mapOf("include" to "items,artists,coverArt"))
             ?: return BrowseDetail(id = albumId, kind = CatalogKind.ALBUM, title = "Album", source = TIDAL_SOURCE)
 
         val data = json.optJSONObject("data") ?: JSONObject()
         val attributes = data.optJSONObject("attributes") ?: JSONObject()
         val included = json.optJSONArray("included") ?: JSONArray()
+        val artworksMap = parseArtworksMap(included)
+        val artistsMap = parseArtistsMap(included)
+        val albumsMap = parseAlbumsMap(included)
 
         val title = attributes.optString("title", "Album")
-        val artworkUrl = resolveArtworkUrl(attributes)
+        val rels = data.optJSONObject("relationships")
+        val coverRel = rels?.optJSONObject("coverArt")?.optJSONArray("data")
+        val coverArtId = coverRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val artworkUrl = artworksMap[coverArtId] ?: resolveArtworkUrl(attributes)
         val releaseDate = attributes.optString("releaseDate", "")
         val year = releaseDate.take(4)
 
@@ -208,12 +261,11 @@ class TidalCatalogRepository(
 
         for (i in 0 until included.length()) {
             val inc = included.optJSONObject(i) ?: continue
-            if (inc.optString("type") == "tracks") {
-                parseTrack(inc, fallbackAlbum = title, fallbackArtwork = artworkUrl)?.let { tracks.add(it) }
-            } else if (inc.optString("type") == "artists") {
-                if (primaryArtist.isEmpty()) {
-                    primaryArtist = inc.optJSONObject("attributes")?.optString("name", "").orEmpty()
-                }
+            val type = inc.optString("type")
+            if (type == "tracks") {
+                parseTrackWithContext(inc, artistsMap, albumsMap, artworksMap, fallbackAlbum = title, fallbackArtwork = artworkUrl)?.let { tracks.add(it) }
+            } else if (type == "artists" && primaryArtist.isEmpty()) {
+                primaryArtist = inc.optJSONObject("attributes")?.optString("name", "").orEmpty()
             }
         }
 
@@ -230,23 +282,21 @@ class TidalCatalogRepository(
     }
 
     private suspend fun browseArtist(artistId: String): BrowseDetail {
-        val json = executeGet("/artists/$artistId", mapOf("include" to "albums,tracks"))
+        val json = executeGet("/artists/$artistId", mapOf("include" to "albums"))
             ?: return BrowseDetail(id = artistId, kind = CatalogKind.ARTIST, title = "Artist", source = TIDAL_SOURCE)
 
         val data = json.optJSONObject("data") ?: JSONObject()
         val attributes = data.optJSONObject("attributes") ?: JSONObject()
         val name = attributes.optString("name", "Artist")
-        val artworkUrl = resolveArtworkUrl(attributes)
-
         val included = json.optJSONArray("included") ?: JSONArray()
-        val tracks = mutableListOf<Track>()
-        val albums = mutableListOf<CatalogItem>()
+        val artworksMap = parseArtworksMap(included)
+        val artistsMap = parseArtistsMap(included)
 
+        val albums = mutableListOf<CatalogItem>()
         for (i in 0 until included.length()) {
             val inc = included.optJSONObject(i) ?: continue
-            when (inc.optString("type")) {
-                "tracks" -> parseTrack(inc, fallbackArtist = name)?.let { tracks.add(it) }
-                "albums" -> parseAlbum(inc)?.let { albums.add(CatalogItem.Record(it)) }
+            if (inc.optString("type") == "albums") {
+                parseAlbumWithContext(inc, artistsMap + (artistId to name), artworksMap)?.let { albums.add(CatalogItem.Record(it)) }
             }
         }
 
@@ -254,30 +304,36 @@ class TidalCatalogRepository(
             id = artistId,
             kind = CatalogKind.ARTIST,
             title = name,
-            artworkUrl = artworkUrl,
-            tracks = tracks,
+            artworkUrl = "",
+            tracks = emptyList(),
             related = albums,
             source = TIDAL_SOURCE,
         )
     }
 
     private suspend fun browsePlaylist(playlistId: String): BrowseDetail {
-        val json = executeGet("/playlists/$playlistId", mapOf("include" to "items"))
+        val json = executeGet("/playlists/$playlistId", mapOf("include" to "items,coverArt"))
             ?: return BrowseDetail(id = playlistId, kind = CatalogKind.PLAYLIST, title = "Playlist", source = TIDAL_SOURCE)
 
         val data = json.optJSONObject("data") ?: JSONObject()
         val attributes = data.optJSONObject("attributes") ?: JSONObject()
         val title = attributes.optString("name", "Playlist")
         val description = attributes.optString("description", "")
-        val artworkUrl = resolveArtworkUrl(attributes)
-
         val included = json.optJSONArray("included") ?: JSONArray()
-        val tracks = mutableListOf<Track>()
+        val artworksMap = parseArtworksMap(included)
+        val artistsMap = parseArtistsMap(included)
+        val albumsMap = parseAlbumsMap(included)
 
+        val rels = data.optJSONObject("relationships")
+        val coverRel = rels?.optJSONObject("coverArt")?.optJSONArray("data")
+        val coverArtId = coverRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val artworkUrl = artworksMap[coverArtId] ?: resolveArtworkUrl(attributes)
+
+        val tracks = mutableListOf<Track>()
         for (i in 0 until included.length()) {
             val inc = included.optJSONObject(i) ?: continue
             if (inc.optString("type") == "tracks") {
-                parseTrack(inc, fallbackArtwork = artworkUrl)?.let { tracks.add(it) }
+                parseTrackWithContext(inc, artistsMap, albumsMap, artworksMap, fallbackArtwork = artworkUrl)?.let { tracks.add(it) }
             }
         }
 
@@ -296,11 +352,14 @@ class TidalCatalogRepository(
         if (trackId.isBlank()) return@withContext emptyList()
         val json = executeGet("/tracks/$trackId/relationships/suggestedTracks") ?: return@withContext emptyList()
         val included = json.optJSONArray("included") ?: JSONArray()
+        val artworksMap = parseArtworksMap(included)
+        val artistsMap = parseArtistsMap(included)
+        val albumsMap = parseAlbumsMap(included)
         val tracks = mutableListOf<Track>()
         for (i in 0 until included.length()) {
             val inc = included.optJSONObject(i) ?: continue
             if (inc.optString("type") == "tracks") {
-                parseTrack(inc)?.let { tracks.add(it) }
+                parseTrackWithContext(inc, artistsMap, albumsMap, artworksMap)?.let { tracks.add(it) }
             }
         }
         tracks
@@ -321,22 +380,50 @@ class TidalCatalogRepository(
     }
 
     suspend fun library(): List<CatalogSection> = withContext(Dispatchers.IO) {
-        val playlists = playlists()
-        if (playlists.isEmpty()) emptyList()
-        else listOf(CatalogSection(id = "library-playlists", title = "Playlists", items = playlists))
+        val sections = mutableListOf<CatalogSection>()
+        val userPlaylists = playlists()
+        if (userPlaylists.isNotEmpty()) {
+            sections.add(CatalogSection(id = "library-playlists", title = "Playlists", items = userPlaylists))
+        }
+        val userAlbums = savedAlbums()
+        if (userAlbums.isNotEmpty()) {
+            sections.add(CatalogSection(id = "library-albums", title = "Albums", items = userAlbums))
+        }
+        sections
     }
 
     suspend fun playlists(): List<CatalogItem> = withContext(Dispatchers.IO) {
         val session = auth.session() ?: return@withContext emptyList()
-        if (session.userId.isBlank()) return@withContext emptyList()
+        val json = executeGet("/userCollectionPlaylists/me", mapOf("include" to "items,items.coverArt"))
+            ?: (if (session.userId.isNotBlank()) executeGet("/userCollectionPlaylists/${session.userId}", mapOf("include" to "items,items.coverArt")) else null)
+            ?: return@withContext emptyList()
 
-        val json = executeGet("/userCollections/${session.userId}/relationships/playlists") ?: return@withContext emptyList()
         val included = json.optJSONArray("included") ?: JSONArray()
+        val artworksMap = parseArtworksMap(included)
         val items = mutableListOf<CatalogItem>()
         for (i in 0 until included.length()) {
             val inc = included.optJSONObject(i) ?: continue
             if (inc.optString("type") == "playlists") {
-                parsePlaylist(inc)?.let { items.add(CatalogItem.Collection(it)) }
+                parsePlaylistWithContext(inc, artworksMap)?.let { items.add(CatalogItem.Collection(it)) }
+            }
+        }
+        items
+    }
+
+    suspend fun savedAlbums(): List<CatalogItem> = withContext(Dispatchers.IO) {
+        val session = auth.session() ?: return@withContext emptyList()
+        val json = executeGet("/userCollectionAlbums/me", mapOf("include" to "items,items.artists,items.coverArt"))
+            ?: (if (session.userId.isNotBlank()) executeGet("/userCollectionAlbums/${session.userId}", mapOf("include" to "items,items.artists,items.coverArt")) else null)
+            ?: return@withContext emptyList()
+
+        val included = json.optJSONArray("included") ?: JSONArray()
+        val artworksMap = parseArtworksMap(included)
+        val artistsMap = parseArtistsMap(included)
+        val items = mutableListOf<CatalogItem>()
+        for (i in 0 until included.length()) {
+            val inc = included.optJSONObject(i) ?: continue
+            if (inc.optString("type") == "albums") {
+                parseAlbumWithContext(inc, artistsMap, artworksMap)?.let { items.add(CatalogItem.Record(it)) }
             }
         }
         items
@@ -344,15 +431,27 @@ class TidalCatalogRepository(
 
     suspend fun likedSongs(): BrowseDetail = withContext(Dispatchers.IO) {
         val session = auth.session()
-        if (session != null && session.userId.isNotBlank()) {
-            val json = executeGet("/userCollections/${session.userId}/relationships/tracks")
+        if (session != null) {
+            val json = executeGet(
+                "/userCollectionTracks/me",
+                mapOf("include" to "items,items.artists,items.albums,items.albums.coverArt"),
+            ) ?: (if (session.userId.isNotBlank()) {
+                executeGet(
+                    "/userCollectionTracks/${session.userId}",
+                    mapOf("include" to "items,items.artists,items.albums,items.albums.coverArt"),
+                )
+            } else null)
+
             if (json != null) {
                 val included = json.optJSONArray("included") ?: JSONArray()
+                val artworksMap = parseArtworksMap(included)
+                val artistsMap = parseArtistsMap(included)
+                val albumsMap = parseAlbumsMap(included)
                 val tracks = mutableListOf<Track>()
                 for (i in 0 until included.length()) {
                     val inc = included.optJSONObject(i) ?: continue
                     if (inc.optString("type") == "tracks") {
-                        parseTrack(inc)?.let { tracks.add(it) }
+                        parseTrackWithContext(inc, artistsMap, albumsMap, artworksMap)?.let { tracks.add(it) }
                     }
                 }
                 return@withContext BrowseDetail(
@@ -373,7 +472,20 @@ class TidalCatalogRepository(
     }
 
     suspend fun sectionItems(browseId: String, params: String = ""): List<CatalogItem> {
-        val searchRes = search(browseId)
+        val query = when (browseId) {
+            "featured-playlists" -> "Hits"
+            "trending-songs" -> "Top Hits"
+            "popular-albums" -> "Hits"
+            "essential-playlists" -> "Essentials"
+            else -> browseId
+        }
+        val filter = when (browseId) {
+            "featured-playlists", "essential-playlists" -> "playlists"
+            "trending-songs" -> "songs"
+            "popular-albums" -> "albums"
+            else -> "all"
+        }
+        val searchRes = search(query, filter = filter)
         return (searchRes.tracks.map { CatalogItem.Song(it) } +
             searchRes.albums.map { CatalogItem.Record(it) } +
             searchRes.playlists.map { CatalogItem.Collection(it) }).distinctBy { it.stableId }
@@ -381,8 +493,85 @@ class TidalCatalogRepository(
 
     // --- Parser helpers ---
 
-    private fun parseTrack(
+    data class ParsedAlbumInfo(
+        val title: String,
+        val coverArtId: String,
+        val releaseDate: String,
+        val explicit: Boolean,
+    )
+
+    private fun parseArtworksMap(included: JSONArray): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        for (i in 0 until included.length()) {
+            val item = included.optJSONObject(i) ?: continue
+            if (item.optString("type") == "artworks") {
+                val id = item.optString("id")
+                val files = item.optJSONObject("attributes")?.optJSONArray("files")
+                if (files != null && files.length() > 0) {
+                    var bestUrl = ""
+                    var maxWidth = 0
+                    for (f in 0 until files.length()) {
+                        val fileObj = files.optJSONObject(f) ?: continue
+                        val width = fileObj.optJSONObject("meta")?.optInt("width", 0) ?: 0
+                        val href = fileObj.optString("href", "")
+                        if (href.isNotBlank() && (bestUrl.isEmpty() || width > maxWidth)) {
+                            bestUrl = href
+                            maxWidth = width
+                        }
+                    }
+                    if (bestUrl.isNotBlank()) {
+                        map[id] = bestUrl
+                    }
+                }
+            }
+        }
+        return map
+    }
+
+    private fun parseArtistsMap(included: JSONArray): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        for (i in 0 until included.length()) {
+            val item = included.optJSONObject(i) ?: continue
+            if (item.optString("type") == "artists") {
+                val id = item.optString("id")
+                val name = item.optJSONObject("attributes")?.optString("name", "").orEmpty()
+                if (id.isNotBlank() && name.isNotBlank()) {
+                    map[id] = name
+                }
+            }
+        }
+        return map
+    }
+
+    private fun parseAlbumsMap(included: JSONArray): Map<String, ParsedAlbumInfo> {
+        val map = mutableMapOf<String, ParsedAlbumInfo>()
+        for (i in 0 until included.length()) {
+            val item = included.optJSONObject(i) ?: continue
+            if (item.optString("type") == "albums") {
+                val id = item.optString("id")
+                val attrs = item.optJSONObject("attributes") ?: JSONObject()
+                val title = attrs.optString("title", "Album")
+                val rels = item.optJSONObject("relationships")
+                val coverRel = rels?.optJSONObject("coverArt")?.optJSONArray("data")
+                val coverArtId = coverRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+                val releaseDate = attrs.optString("releaseDate", "")
+                val explicit = attrs.optBoolean("explicit", false)
+                map[id] = ParsedAlbumInfo(
+                    title = title,
+                    coverArtId = coverArtId,
+                    releaseDate = releaseDate,
+                    explicit = explicit,
+                )
+            }
+        }
+        return map
+    }
+
+    private fun parseTrackWithContext(
         obj: JSONObject,
+        artistsMap: Map<String, String>,
+        albumsMap: Map<String, ParsedAlbumInfo>,
+        artworksMap: Map<String, String>,
         fallbackArtist: String = "",
         fallbackAlbum: String = "",
         fallbackArtwork: String = "",
@@ -393,38 +582,87 @@ class TidalCatalogRepository(
         val durationIso = attributes.optString("duration", "")
         val durationMs = parseDurationMs(durationIso, attributes.optLong("durationSeconds", 0))
         val explicit = attributes.optBoolean("explicit", false)
-        val artworkUrl = resolveArtworkUrl(attributes).ifBlank { fallbackArtwork }
-        val artist = attributes.optString("artistName", fallbackArtist).ifBlank { "TIDAL Artist" }
+
+        val rels = obj.optJSONObject("relationships")
+        val artistRel = rels?.optJSONObject("artists")?.optJSONArray("data")
+        val artistId = artistRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val artistName = artistsMap[artistId]?.ifBlank { null }
+            ?: attributes.optString("artistName", fallbackArtist).ifBlank { "TIDAL Artist" }
+
+        val albumRel = rels?.optJSONObject("albums")?.optJSONArray("data")
+        val albumId = albumRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val albumInfo = albumsMap[albumId]
+        val albumTitle = albumInfo?.title?.ifBlank { null } ?: fallbackAlbum
+
+        val artworkUrl = albumInfo?.coverArtId?.let { artworksMap[it] }
+            ?: resolveArtworkUrl(attributes).ifBlank { fallbackArtwork }
 
         return Track(
             id = id,
             title = title,
-            artist = artist,
-            album = fallbackAlbum,
+            artist = artistName,
+            album = albumTitle,
             artworkUrl = artworkUrl,
             durationMs = durationMs,
             explicit = explicit,
             playbackSource = TIDAL_SOURCE,
-            artists = listOf(Artist(id = "", name = artist, artworkUrl = artworkUrl)),
+            artists = listOf(Artist(id = artistId, name = artistName, artworkUrl = artworkUrl)),
         )
     }
 
-    private fun parseAlbum(obj: JSONObject): Album? {
+    private fun parseAlbumWithContext(
+        obj: JSONObject,
+        artistsMap: Map<String, String>,
+        artworksMap: Map<String, String>,
+    ): Album? {
         val id = obj.optString("id").takeIf { it.isNotBlank() } ?: return null
         val attributes = obj.optJSONObject("attributes") ?: JSONObject()
         val title = attributes.optString("title", "Album")
-        val artworkUrl = resolveArtworkUrl(attributes)
+        val rels = obj.optJSONObject("relationships")
+        val coverRel = rels?.optJSONObject("coverArt")?.optJSONArray("data")
+        val coverArtId = coverRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val artworkUrl = artworksMap[coverArtId] ?: resolveArtworkUrl(attributes)
         val releaseDate = attributes.optString("releaseDate", "")
         val year = releaseDate.take(4)
         val explicit = attributes.optBoolean("explicit", false)
 
+        val artistRel = rels?.optJSONObject("artists")?.optJSONArray("data")
+        val artistId = artistRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val artist = artistsMap[artistId]?.ifBlank { null }
+            ?: attributes.optString("artistName", "TIDAL Artist")
+
         return Album(
             id = id,
             title = title,
-            artist = attributes.optString("artistName", "TIDAL Artist"),
+            artist = artist,
             artworkUrl = artworkUrl,
             year = year,
             explicit = explicit,
+        )
+    }
+
+    private fun parsePlaylistWithContext(
+        obj: JSONObject,
+        artworksMap: Map<String, String>,
+    ): Playlist? {
+        val id = obj.optString("id").takeIf { it.isNotBlank() } ?: return null
+        val attributes = obj.optJSONObject("attributes") ?: JSONObject()
+        val title = attributes.optString("name", "Playlist")
+        val description = attributes.optString("description", "")
+        val rels = obj.optJSONObject("relationships")
+        val coverRel = rels?.optJSONObject("coverArt")?.optJSONArray("data")
+        val coverArtId = coverRel?.optJSONObject(0)?.optString("id", "").orEmpty()
+        val artworkUrl = artworksMap[coverArtId] ?: resolveArtworkUrl(attributes)
+        val trackCount = attributes.optInt("numberOfTracks", 0).takeIf { it > 0 }
+            ?: attributes.optInt("numberOfItems", 0).takeIf { it > 0 }
+
+        return Playlist(
+            id = id,
+            title = title,
+            author = "TIDAL",
+            artworkUrl = artworkUrl,
+            description = description,
+            trackCount = trackCount,
         )
     }
 
@@ -438,24 +676,6 @@ class TidalCatalogRepository(
             id = id,
             name = name,
             artworkUrl = artworkUrl,
-        )
-    }
-
-    private fun parsePlaylist(obj: JSONObject): Playlist? {
-        val id = obj.optString("id").takeIf { it.isNotBlank() } ?: return null
-        val attributes = obj.optJSONObject("attributes") ?: JSONObject()
-        val title = attributes.optString("name", "Playlist")
-        val description = attributes.optString("description", "")
-        val artworkUrl = resolveArtworkUrl(attributes)
-        val trackCount = attributes.optInt("numberOfTracks", 0).takeIf { it > 0 }
-
-        return Playlist(
-            id = id,
-            title = title,
-            author = "TIDAL",
-            artworkUrl = artworkUrl,
-            description = description,
-            trackCount = trackCount,
         )
     }
 

@@ -34,6 +34,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.stuffbyren.pomelo.BuildConfig
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
+import org.json.JSONObject
 
 private const val TAG = "TidalAuth"
 
@@ -170,20 +174,83 @@ class TidalAuthRepository(
         }
     }
 
+    @Volatile
+    private var clientCredentialsToken: String? = null
+
+    @Volatile
+    private var clientCredentialsExpiresAt: Long = 0L
+
     /**
      * Resolves an active Bearer token for API calls.
+     * Prefers authenticated user token from CredentialsProvider,
+     * falling back to client credentials for catalog and search operations.
      */
     suspend fun getAccessToken(): String? = withContext(Dispatchers.IO) {
         try {
             val credResult = credentialsProvider.getCredentials()
             if (credResult.isSuccess) {
-                credResult.successData?.token
-            } else {
-                null
+                val token = credResult.successData?.token
+                if (!token.isNullOrBlank()) {
+                    return@withContext token
+                }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to resolve access token", e)
-            null
+            Log.w(TAG, "Failed to resolve credentials from TidalAuth, trying client credentials fallback", e)
         }
+
+        val now = System.currentTimeMillis()
+        if (clientCredentialsToken != null && now < clientCredentialsExpiresAt - 60_000L) {
+            return@withContext clientCredentialsToken
+        }
+
+        fetchClientCredentialsToken()
+    }
+
+    private fun fetchClientCredentialsToken(): String? {
+        val clientId = BuildConfig.TIDAL_CLIENT_ID
+        val clientSecret = BuildConfig.TIDAL_CLIENT_SECRET
+        if (clientId.isBlank() || clientSecret.isBlank()) {
+            Log.w(TAG, "Cannot fetch client credentials: TIDAL_CLIENT_ID or TIDAL_CLIENT_SECRET is missing")
+            return null
+        }
+
+        try {
+            val url = URL("https://auth.tidal.com/v1/oauth2/token")
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                doOutput = true
+                setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                connectTimeout = 10_000
+                readTimeout = 10_000
+            }
+
+            val body = "grant_type=client_credentials&client_id=" +
+                URLEncoder.encode(clientId, "UTF-8") +
+                "&client_secret=" +
+                URLEncoder.encode(clientSecret, "UTF-8")
+
+            connection.outputStream.use { os ->
+                os.write(body.toByteArray(Charsets.UTF_8))
+            }
+
+            if (connection.responseCode in 200..299) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val json = JSONObject(response)
+                val token = json.optString("access_token", "")
+                val expiresIn = json.optLong("expires_in", 3600L)
+                if (token.isNotBlank()) {
+                    clientCredentialsToken = token
+                    clientCredentialsExpiresAt = System.currentTimeMillis() + (expiresIn * 1000L)
+                    Log.i(TAG, "Acquired and cached client credentials access token")
+                    return token
+                }
+            } else {
+                val err = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                Log.w(TAG, "Client credentials request failed: ${connection.responseCode} $err")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Exception fetching client credentials token", e)
+        }
+        return null
     }
 }

@@ -78,7 +78,7 @@ object OfflineDetailSynthesizer {
 
         // 2. Liked songs have real membership too; only the dedicated Downloads screens aggregate
         // every file on the device.
-        if (id == "FEmusic_liked_videos") {
+        if (id == "FEmusic_liked_videos" || id == "liked-music") {
             val completedById = completedTracks.associateBy { it.id }
             val likedTracks = library.likedTracks.mapNotNull { completedById[it.id] }
             return BrowseDetail(

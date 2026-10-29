@@ -61,6 +61,8 @@ class CatalogRepository(
 
     suspend fun playlists(): List<CatalogItem> = tidalCatalog.playlists()
 
+    suspend fun albums(): List<CatalogItem> = tidalCatalog.savedAlbums()
+
     companion object {
         const val LIKED_MUSIC = "liked-music"
         const val MAX_TRACK_PAGES = 50
