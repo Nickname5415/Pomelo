@@ -45,7 +45,7 @@ class TidalAuthRepository(
     private val scope: CoroutineScope,
 ) : TidalSessionProvider {
 
-    val redirectUri: String = "${BuildConfig.APPLICATION_ID}://oauth/callback"
+    val redirectUri: String = "xyz.stuffbyren.pomelo://oauth/callback"
 
     private val authConfig by lazy {
         AuthConfig(
