@@ -103,7 +103,7 @@ class PomeloPlaybackService : MediaLibraryService() {
         observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerEq))
         val defaultMediaSourceFactory = DefaultMediaSourceFactory(this)
         val pomeloMediaSourceFactory = PomeloMediaSourceFactory(defaultMediaSourceFactory)
-        player = buildOrchardPlayer(this, pomeloMediaSourceFactory, playerEq, playbackVolume.state, handlesAudioFocus = true)
+        player = buildOrchardPlayer(this, pomeloMediaSourceFactory, playerEq, playbackVolume.state, handlesAudioFocus = false)
         player.volume = 0f
 
         unshuffledOrder = stateStore.load().also { it.restoreInto(player) }.unshuffledOrder
@@ -122,11 +122,10 @@ class PomeloPlaybackService : MediaLibraryService() {
         mediaSession = MediaLibrarySession.Builder(this, OrchardSessionPlayer(player), callback)
             .setSessionActivity(mainActivityIntent())
             .setBitmapLoader(
-                DataSourceBitmapLoader.Builder(this)
-                    .setDataSourceFactory(OkHttpDataSource.Factory(graph.http))
-                    .setMaximumOutputDimension(1024)
-                    .setMakeShared(true)
-                    .build(),
+                DataSourceBitmapLoader(
+                    DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get(),
+                    OkHttpDataSource.Factory(graph.http),
+                ),
             )
             .build()
 
@@ -207,9 +206,9 @@ class PomeloPlaybackService : MediaLibraryService() {
                     }
                 }
                 if (player.playWhenReady) {
-                    tp.playbackEngine.play()
+                    runCatching { tp.playbackEngine.play() }
                 } else {
-                    tp.playbackEngine.pause()
+                    runCatching { tp.playbackEngine.pause() }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Error loading track into TIDAL player engine", e)
@@ -304,19 +303,16 @@ class PomeloPlaybackService : MediaLibraryService() {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             savePositionWhilePlaying(isPlaying)
-            if (isPlaying) {
-                tidalPlayer?.playbackEngine?.play()
-            } else {
-                tidalPlayer?.playbackEngine?.pause()
-            }
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            if (playWhenReady) {
-                tidalPlayer?.playbackEngine?.play()
-            } else {
-                tidalPlayer?.playbackEngine?.pause()
-            }
+            runCatching {
+                if (playWhenReady) {
+                    tidalPlayer?.playbackEngine?.play()
+                } else {
+                    tidalPlayer?.playbackEngine?.pause()
+                }
+            }.onFailure { Log.w(TAG, "Failed to update TIDAL playback engine play/pause state", it) }
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -340,7 +336,9 @@ class PomeloPlaybackService : MediaLibraryService() {
         override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
             if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                 val seekSec = (newPosition.positionMs / 1000f)
-                tidalPlayer?.playbackEngine?.seek(seekSec)
+                runCatching {
+                    tidalPlayer?.playbackEngine?.seek(seekSec)
+                }.onFailure { Log.w(TAG, "Failed to seek TIDAL playback engine", it) }
             }
         }
 

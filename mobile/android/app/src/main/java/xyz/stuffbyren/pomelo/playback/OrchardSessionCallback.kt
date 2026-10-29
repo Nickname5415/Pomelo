@@ -144,7 +144,7 @@ internal class OrchardSessionCallback(
             .add(Player.COMMAND_SET_SHUFFLE_MODE)
             .add(Player.COMMAND_SET_REPEAT_MODE)
             .build()
-        return MediaSession.ConnectionResult.AcceptedResultBuilder(session, controller)
+        return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
             .setAvailableSessionCommands(sessionCommands)
             .setAvailablePlayerCommands(playerCommands)
             .build()
@@ -178,7 +178,6 @@ internal class OrchardSessionCallback(
     override fun onPlaybackResumption(
         mediaSession: MediaSession,
         controller: MediaSession.ControllerInfo,
-        isForPlayback: Boolean,
     ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
         val source = target()
         if (source.mediaItemCount > 0) {

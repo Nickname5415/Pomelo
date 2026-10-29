@@ -71,7 +71,7 @@ internal fun buildOrchardPlayer(
         ): AudioSink = VolumeAudioSink(DefaultAudioSink.Builder(context)
             .setAudioProcessors(arrayOf<AudioProcessor>(eq))
             .setEnableFloatOutput(enableFloatOutput)
-            .setEnableAudioOutputPlaybackParameters(enableAudioOutputPlaybackParams)
+            .setEnableAudioTrackPlaybackParams(enableAudioOutputPlaybackParams)
             .build(), volume)
     }
     return ExoPlayer.Builder(context, renderersFactory)
@@ -98,6 +98,5 @@ internal fun buildOrchardPlayer(
  */
 @UnstableApi
 internal fun ExoPlayer.keepQueueOrderUnshuffled() {
-    if (shuffleOrder is ShuffleOrder.UnshuffledShuffleOrder) return
     setShuffleOrder(ShuffleOrder.UnshuffledShuffleOrder(mediaItemCount))
 }

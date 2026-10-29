@@ -103,7 +103,7 @@ object AnimatedArtworkCache {
                 )
             val item = MediaItem.fromUri(playbackUrl)
             val downloader: Downloader = if (playbackUrl.isHlsUrl()) {
-                HlsDownloader.Factory(factory).create(item)
+                HlsDownloader(item, factory)
             } else {
                 ProgressiveDownloader(item, factory)
             }
@@ -127,7 +127,7 @@ object AnimatedArtworkCache {
                 )
             val item = MediaItem.fromUri(playbackUrl)
             val downloader: Downloader = if (playbackUrl.isHlsUrl()) {
-                HlsDownloader.Factory(factory).create(item)
+                HlsDownloader(item, factory)
             } else {
                 ProgressiveDownloader(item, factory)
             }
