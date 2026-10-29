@@ -66,6 +66,7 @@ class TidalAuthRepository(
                 "recommendations.read",
                 "search.read",
                 "search.write",
+                "user.read",
             ),
         )
     }
@@ -96,15 +97,21 @@ class TidalAuthRepository(
                 if (credResult.isSuccess) {
                     val creds = credResult.successData
                     val userId = creds?.userId ?: ""
+                    val token = creds?.token
+                    val profile = if (!token.isNullOrBlank()) fetchUserProfile(token) else null
+                    val displayName = profile?.first ?: if (userId.isNotBlank()) "TIDAL User ($userId)" else "TIDAL"
+                    val countryCode = profile?.second ?: "US"
+
                     currentSession = TidalSession(
                         userId = userId,
-                        displayName = if (userId.isNotBlank()) "TIDAL User ($userId)" else "TIDAL",
+                        displayName = displayName,
+                        countryCode = countryCode,
                     )
                     _authState.value = AuthState.SignedIn(
                         userId = userId,
-                        displayName = currentSession?.displayName ?: "TIDAL",
+                        displayName = displayName,
                     )
-                    Log.i(TAG, "Restored active TIDAL session for user: $userId")
+                    Log.i(TAG, "Restored active TIDAL session for user: $userId (country: $countryCode, level=${creds?.level}, grantedScopes=${creds?.grantedScopes}, requestedScopes=${creds?.requestedScopes})")
                     return@withContext
                 }
             }
@@ -139,15 +146,21 @@ class TidalAuthRepository(
                 val credResult = credentialsProvider.getCredentials()
                 val creds = credResult.successData
                 val userId = creds?.userId ?: ""
+                val token = creds?.token
+                val profile = if (!token.isNullOrBlank()) fetchUserProfile(token) else null
+                val displayName = profile?.first ?: if (userId.isNotBlank()) "TIDAL User ($userId)" else "TIDAL"
+                val countryCode = profile?.second ?: "US"
+
                 currentSession = TidalSession(
                     userId = userId,
-                    displayName = if (userId.isNotBlank()) "TIDAL User ($userId)" else "TIDAL",
+                    displayName = displayName,
+                    countryCode = countryCode,
                 )
                 _authState.value = AuthState.SignedIn(
                     userId = userId,
-                    displayName = currentSession?.displayName ?: "TIDAL",
+                    displayName = displayName,
                 )
-                Log.i(TAG, "TIDAL sign-in succeeded: $userId")
+                Log.i(TAG, "TIDAL sign-in succeeded: $userId (country: $countryCode, grantedScopes=${creds?.grantedScopes})")
                 true
             } else {
                 _authState.value = AuthState.Error("TIDAL login failed")
@@ -158,6 +171,44 @@ class TidalAuthRepository(
             _authState.value = AuthState.Error(e.message ?: "Authentication error")
             false
         }
+    }
+
+    private suspend fun fetchUserProfile(token: String): Pair<String, String>? = withContext(Dispatchers.IO) {
+        try {
+            val url = URL("https://openapi.tidal.com/v2/users/me")
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                setRequestProperty("Authorization", "Bearer $token")
+                setRequestProperty("Accept", "application/vnd.api+json")
+                connectTimeout = 10_000
+                readTimeout = 10_000
+            }
+            if (connection.responseCode in 200..299) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val json = JSONObject(response)
+                val data = json.optJSONObject("data")
+                val attributes = data?.optJSONObject("attributes")
+                val country = attributes?.optString("country", "US") ?: "US"
+                val username = attributes?.optString("username", "") ?: ""
+                val firstName = attributes?.optString("firstName", "") ?: ""
+                val lastName = attributes?.optString("lastName", "") ?: ""
+                val name = if (firstName.isNotBlank() || lastName.isNotBlank()) {
+                    "$firstName $lastName".trim()
+                } else if (username.isNotBlank()) {
+                    username
+                } else {
+                    "TIDAL User"
+                }
+                Log.i(TAG, "Fetched TIDAL user profile: name=$name, country=$country")
+                return@withContext Pair(name, country)
+            } else {
+                val err = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                Log.w(TAG, "Failed to fetch user profile: ${connection.responseCode} $err")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Exception fetching user profile", e)
+        }
+        null
     }
 
     /**

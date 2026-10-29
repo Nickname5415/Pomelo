@@ -41,9 +41,11 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import com.tidal.sdk.eventproducer.EventProducer
 import com.tidal.sdk.eventproducer.model.EventsConfig
+import com.tidal.sdk.player.common.model.AudioQuality
 import com.tidal.sdk.player.common.model.MediaProduct
 import com.tidal.sdk.player.common.model.ProductType
 import com.tidal.sdk.player.playbackengine.model.Event
+import com.tidal.sdk.player.playbackengine.model.PlaybackContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -155,6 +157,10 @@ class PomeloPlaybackService : MediaLibraryService() {
                 credentialsProvider = graph.auth.credentialsProvider,
                 eventSender = eventProducer.eventSender,
             )
+            tidalPlayer?.playbackEngine?.apply {
+                streamingWifiAudioQuality = AudioQuality.LOSSLESS
+                streamingCellularAudioQuality = AudioQuality.HIGH
+            }
             listenToTidalEvents(graph)
         } catch (e: Exception) {
             Log.w(TAG, "Failed to initialize TIDAL Player SDK", e)
@@ -170,6 +176,13 @@ class PomeloPlaybackService : MediaLibraryService() {
                 when (event) {
                     is Event.PlaybackStateChange -> {
                         Log.d(TAG, "TIDAL playback state changed: ${event.playbackState}")
+                    }
+                    is Event.MediaProductTransition -> {
+                        val trackCtx = event.playbackContext as? PlaybackContext.Track
+                        Log.i(
+                            TAG,
+                            "TIDAL transition: product=${event.mediaProduct.productId}, presentation=${event.playbackContext.assetPresentation}, previewReason=${trackCtx?.previewReason}, quality=${trackCtx?.audioQuality}, duration=${event.playbackContext.duration}"
+                        )
                     }
                     is Event.MediaProductEnded -> {
                         handler.post {
