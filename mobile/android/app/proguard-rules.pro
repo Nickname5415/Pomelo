@@ -20,10 +20,7 @@
     void onClosed(java.lang.String);
 }
 
-# The shared adaptive-mix library binds these natives by name and calls `pair` back from Rust.
--keep class dev.sfg.orchard.mobile.playback.smart.MixNative { native <methods>; }
--keep interface dev.sfg.orchard.mobile.playback.smart.MixNative$BestMixPairs { *; }
--keep class * implements dev.sfg.orchard.mobile.playback.smart.MixNative$BestMixPairs { *; }
+
 # The Discord shim binds these natives by name and calls onStatus back from C++.
 -keep class dev.sfg.orchard.mobile.discord.DiscordNative { native <methods>; public static void onStatus(java.lang.String, boolean); }
 
