@@ -1,0 +1,187 @@
+/*
+ * Copyright (C) 2026 SFG545
+ *
+ * This file is part of Orchard.
+ *
+ * Orchard is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * Orchard is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Orchard. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package xyz.stuffbyren.pomelo.app
+
+import xyz.stuffbyren.pomelo.ui.glass.LocalGlassScene
+import xyz.stuffbyren.pomelo.ui.glass.rememberGlassScene
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import xyz.stuffbyren.pomelo.model.LocalMaxActive
+import xyz.stuffbyren.pomelo.model.LocalStreamDetail
+import xyz.stuffbyren.pomelo.model.LibrarySnapshot
+import xyz.stuffbyren.pomelo.model.OrchardSettings
+import xyz.stuffbyren.pomelo.model.PlaybackSnapshot
+import xyz.stuffbyren.pomelo.model.PlaybackTargetState
+import xyz.stuffbyren.pomelo.model.Track
+import xyz.stuffbyren.pomelo.model.TransitionMarker
+import xyz.stuffbyren.pomelo.ui.components.PlaylistPickerSheet
+import xyz.stuffbyren.pomelo.ui.navigation.Routes
+import xyz.stuffbyren.pomelo.ui.screens.NowPlayingScreen
+
+/**
+ * The full player, presented over the app rather than routed to.
+ *
+ * Keeping it out of the [androidx.navigation.compose.NavHost] is what lets the screen
+ * behind it stay composed: the pull-down uncovers the real page and the real pill instead
+ * of an empty back stack. [collapseBounds] is where that pill actually sits, so the
+ * dismiss can shrink into it.
+ */
+@Composable
+fun NowPlayingOverlay(
+    open: Boolean,
+    onOpenChange: (Boolean) -> Unit,
+    collapseBounds: Rect?,
+    collapseArtworkBounds: Rect?,
+    restingCoverBounds: Rect?,
+    onRestingCoverBounds: (Rect) -> Unit,
+    nav: NavHostController,
+    viewModel: OrchardViewModel,
+    playback: PlaybackSnapshot,
+    transition: TransitionMarker?,
+    mixProgress: Float,
+    targets: PlaybackTargetState,
+    library: LibrarySnapshot,
+    settings: OrchardSettings,
+    modifier: Modifier = Modifier,
+) {
+    // Nothing to show once playback is cleared, and no reason to hold the player's
+    // state machine alive while it is closed.
+    if (!open) return
+    val currentTrack = playback.currentTrack ?: return
+
+    val lyrics by viewModel.lyrics.collectAsStateWithLifecycle()
+    val activeBitrate by viewModel.activeBitrate.collectAsStateWithLifecycle()
+    val activeStreamDetail by viewModel.activeStreamDetail.collectAsStateWithLifecycle()
+    val autoplayLoading by viewModel.autoplayLoading.collectAsStateWithLifecycle()
+    val autoplayError by viewModel.autoplayError.collectAsStateWithLifecycle()
+    val connectRemoteVolume by viewModel.connectRemoteVolume.collectAsStateWithLifecycle()
+    val downloadedTrackIds by viewModel.downloadedTrackIds.collectAsStateWithLifecycle()
+    val sleepTimerRemainingSeconds by viewModel.sleepTimerRemainingSeconds.collectAsStateWithLifecycle()
+    val sleepTimerEndOfTrack by viewModel.sleepTimerEndOfTrack.collectAsStateWithLifecycle()
+    val musicVideo by viewModel.musicVideo.collectAsStateWithLifecycle()
+    val videoPlayer by viewModel.videoPlayer.collectAsStateWithLifecycle()
+    var playlistPickerTrack by remember { mutableStateOf<Track?>(null) }
+    var devicesOpen by rememberSaveable { mutableStateOf(false) }
+
+    val liked = remember(library.likedTracks, currentTrack.id) { library.likedTracks.any { it.id == currentTrack.id } }
+
+    // The player's own backdrop, so glass inside it blurs the cover or video and not the page behind.
+    val glassScene = rememberGlassScene()
+    CompositionLocalProvider(
+        LocalStreamDetail provides activeStreamDetail.copy(hiRes = activeStreamDetail.hiRes || currentTrack.hires),
+        LocalGlassScene provides glassScene,
+    ) {
+        NowPlayingScreen(
+            modifier = modifier,
+            collapseBounds = collapseBounds,
+            collapseArtworkBounds = collapseArtworkBounds,
+            restingCoverBounds = restingCoverBounds,
+            onRestingCoverBounds = onRestingCoverBounds,
+            autoplayEnabled = settings.autoplayEnabled,
+            autoplayLoading = autoplayLoading,
+            autoplayError = autoplayError,
+            onAutoplayEnabled = viewModel::setAutoplayEnabled,
+            sleepTimerRemainingSeconds = sleepTimerRemainingSeconds,
+            sleepTimerEndOfTrack = sleepTimerEndOfTrack,
+            onStartSleepTimer = viewModel::startSleepTimer,
+            onStartSleepTimerAtEndOfTrack = viewModel::startSleepTimerAtEndOfTrack,
+            onCancelSleepTimer = viewModel::cancelSleepTimer,
+            smartCrossfade = settings.smartCrossfade && !LocalMaxActive.current,
+            onBestMixUpcoming = viewModel::bestMixUpcoming,
+            musicVideo = musicVideo,
+            videoPlayer = videoPlayer,
+            onToggleMusicVideo = viewModel::toggleMusicVideo,
+            onVideoQuality = viewModel::setVideoMaxHeight,
+            playback = playback,
+            transition = transition,
+            mixProgress = mixProgress,
+            targets = targets,
+            lyrics = lyrics,
+            animatedArtworkEnabled = settings.animatedArtwork,
+            animatedBackgroundEnabled = settings.animatedBackground,
+            gesturesEnabled = settings.playerGesturesEnabled,
+            showBitrate = settings.showBitrate,
+            bitrateKbps = activeBitrate,
+            isQobuz = false,
+            liked = liked,
+            remoteVolume = connectRemoteVolume,
+            onRemoteVolumeChange = viewModel::setRemoteVolume,
+            onBack = { onOpenChange(false) },
+            onToggle = viewModel::togglePlayback,
+            onPrevious = viewModel::previous,
+            onNext = viewModel::next,
+            onSeek = { positionMs ->
+                // At the audible handoff the UI is already on the incoming timeline while the engine
+                // may still own the outgoing deck. A seek commits to the track the user can see.
+                val authoritative = viewModel.playback.value
+                if (authoritative.currentTrack?.id != currentTrack.id &&
+                    playback.currentIndex in playback.queue.indices
+                ) {
+                    viewModel.playQueueIndex(playback.currentIndex)
+                }
+                viewModel.seek(positionMs)
+            },
+            onShuffle = viewModel::toggleShuffle,
+            onRepeat = viewModel::cycleRepeat,
+            onLiked = { viewModel.toggleLiked(currentTrack) },
+            onDevices = { devicesOpen = true },
+            onPlayQueueIndex = viewModel::playQueueIndex,
+            onRemoveQueueIndex = viewModel::removeQueueIndex,
+            onMoveQueueItem = viewModel::moveQueueItem,
+            onClearUpcoming = viewModel::clearUpcoming,
+            downloadedTrackIds = downloadedTrackIds,
+            onDownloadTrack = viewModel::downloadTrack,
+            onRemoveDownloadTrack = viewModel::removeDownload,
+            onAddToPlaylist = { playlistPickerTrack = it },
+            onShare = { viewModel.shareTrack(currentTrack) },
+            // Closes the player so the collection is not buried underneath it.
+            onOpenCollection = { id ->
+                onOpenChange(false)
+                viewModel.openDetail(id)
+                nav.navigate(Routes.detail(id))
+            },
+        )
+    }
+
+    if (devicesOpen) {
+        DevicesSheetHost(viewModel, targets) { devicesOpen = false }
+    }
+
+    playlistPickerTrack?.let { track ->
+        PlaylistPickerSheet(
+            track = track,
+            playlists = viewModel.playlistChoices(track, library.savedPlaylists),
+            onDismiss = { playlistPickerTrack = null },
+            onSelect = { playlist ->
+                playlistPickerTrack = null
+                viewModel.addTrackToPlaylist(playlist.id, track)
+            },
+        )
+    }
+}

@@ -47,7 +47,7 @@ def orchardNdkDir = {
 }
 
 android {
-    namespace = 'dev.sfg.orchard.connect'
+    namespace = 'xyz.stuffbyren.pomelo'
     compileSdk = 37
     // Pinned because two toolchains agree on it: CMake builds the streaming resampler and
     // cargo-ndk builds Earmark, and a mismatch between them is a link error a long
@@ -62,7 +62,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = 'dev.sfg.orchard.mobile'
+        applicationId = 'xyz.stuffbyren.pomelo'
         minSdk = orchardMinSdk
         targetSdk = 36
         versionCode = 20008
@@ -73,6 +73,16 @@ android {
         // upgrade nor installable over it.
         buildConfigField 'boolean', 'UPDATER_ENABLED', 'true'
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+
+        def tidalProps = new Properties()
+        def localPropsFile = file('../local.properties')
+        if (localPropsFile.exists()) {
+            localPropsFile.withInputStream { tidalProps.load(it) }
+        }
+        def tidalClientId = System.getenv("TIDAL_CLIENT_ID") ?: tidalProps.getProperty("tidal.clientId", "pomelo-tidal-client-id")
+        def tidalClientSecret = System.getenv("TIDAL_CLIENT_SECRET") ?: tidalProps.getProperty("tidal.clientSecret", "")
+        buildConfigField 'String', 'TIDAL_CLIENT_ID', "\"${tidalClientId}\""
+        buildConfigField 'String', 'TIDAL_CLIENT_SECRET', "\"${tidalClientSecret}\""
     }
 
     testOptions {
@@ -126,7 +136,7 @@ android {
             // reads `context.packageName`.
             applicationIdSuffix = '.debug'
             versionNameSuffix = '-debug'
-            resValue 'string', 'app_name', 'Orchard Debug'
+            resValue 'string', 'app_name', 'Pomelo Debug'
             buildConfigField 'boolean', 'UPDATER_ENABLED', 'false'
             ndk {
                 abiFilters += orchardDebugAbis
@@ -161,7 +171,7 @@ android {
             minifyEnabled = false
             shrinkResources = false
             versionNameSuffix = '-canary-fast'
-            resValue 'string', 'app_name', 'Orchard Canary Fast'
+            resValue 'string', 'app_name', 'Pomelo Canary Fast'
             matchingFallbacks = ['release']
         }
         canaryX86 {
@@ -170,7 +180,7 @@ android {
             versionNameSuffix = '-canary-x86'
             // A generated value takes priority over Canary's source-set label without
             // replacing an inherited build-type value (which AGP warns about).
-            resValue 'string', 'app_name', 'Orchard Canary x86_64'
+            resValue 'string', 'app_name', 'Pomelo Canary x86_64'
             ndk {
                 abiFilters.clear()
                 abiFilters += ['x86_64']
@@ -181,7 +191,7 @@ android {
             initWith canaryFast
             applicationIdSuffix = '.canaryx86'
             versionNameSuffix = '-canary-fast-x86'
-            resValue 'string', 'app_name', 'Orchard Canary Fast x86_64'
+            resValue 'string', 'app_name', 'Pomelo Canary Fast x86_64'
             matchingFallbacks = ['release']
             ndk {
                 abiFilters.clear()
@@ -218,7 +228,7 @@ gradle.taskGraph.whenReady { graph ->
             it.name.startsWith('publishRelease')
     }
     if (packagesRelease && !orchardReleaseSigningReady) {
-        throw new GradleException("Release signing environment is required for Orchard production builds.")
+        throw new GradleException("Release signing environment is required for Pomelo production builds.")
     }
 }
 

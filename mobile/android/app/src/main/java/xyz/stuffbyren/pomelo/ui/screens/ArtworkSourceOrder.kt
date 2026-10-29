@@ -1,0 +1,67 @@
+/*
+ * Copyright (C) 2026 SFG545
+ *
+ * This file is part of Orchard.
+ *
+ * Orchard is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * Orchard is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Orchard. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package xyz.stuffbyren.pomelo.ui.screens
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import xyz.stuffbyren.pomelo.model.ArtworkSource
+import xyz.stuffbyren.pomelo.model.OrchardSettings
+
+@Composable
+internal fun ArtworkSourceOrder(settings: OrchardSettings, onSettings: (OrchardSettings) -> Unit) {
+    val rows = settings.artworkSourceOrder
+    fun move(from: Int, to: Int) {
+        val reordered = rows.toMutableList()
+        java.util.Collections.swap(reordered, from, to)
+        onSettings(settings.copy(artworkSourceOrder = reordered))
+    }
+    Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+        RowTitle("Artwork source order")
+        RowSubtitle("Try sources from top to bottom for moving artwork")
+        Column(Modifier.padding(top = 8.dp)) {
+            rows.forEachIndexed { index, source ->
+                val label = source.label
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(label, color = SettingsStyle.Title, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { move(index, index - 1) }, enabled = index > 0) {
+                        Icon(Icons.Rounded.ArrowUpward, contentDescription = "Move $label up")
+                    }
+                    IconButton(onClick = { move(index, index + 1) }, enabled = index < rows.lastIndex) {
+                        Icon(Icons.Rounded.ArrowDownward, contentDescription = "Move $label down")
+                    }
+                }
+            }
+        }
+    }
+}

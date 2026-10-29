@@ -11,9 +11,9 @@
 -dontwarn ai.onnxruntime.**
 
 # Listening Party peers bind these natives by name and are called back from C++.
--keep class dev.sfg.orchard.mobile.social.PartyPeerNative { native <methods>; }
--keep interface dev.sfg.orchard.mobile.social.PartyPeerNative$Listener { *; }
--keep class * implements dev.sfg.orchard.mobile.social.PartyPeerNative$Listener {
+-keep class xyz.stuffbyren.pomelo.social.PartyPeerNative { native <methods>; }
+-keep interface xyz.stuffbyren.pomelo.social.PartyPeerNative$Listener { *; }
+-keep class * implements xyz.stuffbyren.pomelo.social.PartyPeerNative$Listener {
     void onSignal(java.lang.String);
     void onOpen();
     void onText(java.lang.String);
@@ -22,12 +22,12 @@
 
 
 # The Discord shim binds these natives by name and calls onStatus back from C++.
--keep class dev.sfg.orchard.mobile.discord.DiscordNative { native <methods>; public static void onStatus(java.lang.String, boolean); }
+-keep class xyz.stuffbyren.pomelo.discord.DiscordNative { native <methods>; public static void onStatus(java.lang.String, boolean); }
 
 # Orchard Connect's native core binds these by name and calls the listener back from C++.
--keep class dev.sfg.orchard.mobile.connect.ConnectNative { native <methods>; }
--keep interface dev.sfg.orchard.mobile.connect.ConnectNative$Listener { *; }
--keep class * implements dev.sfg.orchard.mobile.connect.ConnectNative$Listener {
+-keep class xyz.stuffbyren.pomelo.connect.ConnectNative { native <methods>; }
+-keep interface xyz.stuffbyren.pomelo.connect.ConnectNative$Listener { *; }
+-keep class * implements xyz.stuffbyren.pomelo.connect.ConnectNative$Listener {
     void onHubSend(java.lang.String);
     void onEvent(java.lang.String);
     void onData(java.lang.String, java.lang.String, byte[]);
@@ -39,4 +39,4 @@
     public static int d(...);
 }
 
--keep class dev.sfg.orchard.mobile.playback.slop.SlopNative { native <methods>; }
+-keep class xyz.stuffbyren.pomelo.playback.slop.SlopNative { native <methods>; }

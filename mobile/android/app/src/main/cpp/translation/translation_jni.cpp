@@ -74,7 +74,7 @@ MarianModel *model(jlong handle) { return reinterpret_cast<MarianModel *>(handle
 
 extern "C" {
 
-JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_packTable(JNIEnv *env,
+JNIEXPORT jbyteArray JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_packTable(JNIEnv *env,
                                                                                                         jclass) {
   std::string json = "[";
   for (const TranslationPack &pack : translationPackTable()) {
@@ -95,7 +95,7 @@ JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_Tran
 }
 
 // {"source":"kor","name":"Korean","translate":[true,false,...]}; source is empty for English songs.
-JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_plan(JNIEnv *env, jclass,
+JNIEXPORT jbyteArray JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_plan(JNIEnv *env, jclass,
                                                                                                    jobjectArray lines) {
   std::vector<std::string> texts;
   const jsize count = lines ? env->GetArrayLength(lines) : 0;
@@ -113,7 +113,7 @@ JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_Tran
   return toBytes(env, json + "]}");
 }
 
-JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_remoteMask(
+JNIEXPORT jbyteArray JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_remoteMask(
     JNIEnv *env, jclass, jobjectArray lines, jbyteArray target) {
   std::vector<std::string> texts;
   const jsize count = lines ? env->GetArrayLength(lines) : 0;
@@ -129,7 +129,7 @@ JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_Tran
   return toBytes(env, json + ']');
 }
 
-JNIEXPORT jlong JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_open(JNIEnv *env, jclass,
+JNIEXPORT jlong JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_open(JNIEnv *env, jclass,
                                                                                               jstring runtime,
                                                                                               jbyteArray directory,
                                                                                               jint threads) {
@@ -151,7 +151,7 @@ JNIEXPORT jlong JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_Translati
 }
 
 // Null when cancelled or when the model fails; an empty array when it has nothing to say.
-JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_translate(
+JNIEXPORT jbyteArray JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_translate(
     JNIEnv *env, jclass, jlong handle, jbyteArray text, jint generation) {
   MarianModel *open = model(handle);
   if (!open)
@@ -165,12 +165,12 @@ JNIEXPORT jbyteArray JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_Tran
 }
 
 // Any thread: translate() calls for other generations stop at their next token.
-JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_setGeneration(JNIEnv *, jclass,
+JNIEXPORT void JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_setGeneration(JNIEnv *, jclass,
                                                                                                        jint generation) {
   g_generation.store(generation, std::memory_order_relaxed);
 }
 
-JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_lyrics_translation_TranslationNative_close(JNIEnv *, jclass,
+JNIEXPORT void JNICALL Java_xyz_stuffbyren_pomelo_lyrics_translation_TranslationNative_close(JNIEnv *, jclass,
                                                                                               jlong handle) {
   delete model(handle);
 }
