@@ -45,14 +45,24 @@ class TidalAuthRepository(
     private val scope: CoroutineScope,
 ) : TidalSessionProvider {
 
-    val redirectUri: String = "${BuildConfig.APPLICATION_ID}://oauth-callback"
+    val redirectUri: String = "${BuildConfig.APPLICATION_ID}://oauth/callback"
 
     private val authConfig by lazy {
         AuthConfig(
             clientId = BuildConfig.TIDAL_CLIENT_ID.ifBlank { "pomelo-tidal-client-id" },
             clientSecret = BuildConfig.TIDAL_CLIENT_SECRET.ifBlank { null },
             credentialsKey = "pomelo_tidal_credentials",
-            scopes = setOf("r_usr", "w_usr"),
+            scopes = setOf(
+                "collection.read",
+                "collection.write",
+                "entitlements.read",
+                "playback",
+                "playlists.read",
+                "playlists.write",
+                "recommendations.read",
+                "search.read",
+                "search.write",
+            ),
         )
     }
 

@@ -99,7 +99,7 @@ class MainActivity : FragmentActivity() {
         val uri = intent.data
         val dataString = uri?.toString().orEmpty()
         if (dataString.isBlank()) return
-        if (uri?.scheme == "xyz.stuffbyren.pomelo" && uri.host == "oauth-callback") {
+        if (uri?.scheme == "xyz.stuffbyren.pomelo" && (uri.host == "oauth-callback" || (uri.host == "oauth" && uri.path == "/callback"))) {
             lifecycleScope.launch {
                 OrchardGraph.from(this@MainActivity).auth.handleCallback(uri)
             }

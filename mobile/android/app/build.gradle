@@ -79,8 +79,8 @@ android {
         if (localPropsFile.exists()) {
             localPropsFile.withInputStream { tidalProps.load(it) }
         }
-        def tidalClientId = System.getenv("TIDAL_CLIENT_ID") ?: tidalProps.getProperty("tidal.clientId", "pomelo-tidal-client-id")
-        def tidalClientSecret = System.getenv("TIDAL_CLIENT_SECRET") ?: tidalProps.getProperty("tidal.clientSecret", "")
+        def tidalClientId = System.getenv("TIDAL_CLIENT_ID") ?: tidalProps.getProperty("TIDAL_CLIENT_ID") ?: tidalProps.getProperty("tidal.clientId", "pomelo-tidal-client-id")
+        def tidalClientSecret = System.getenv("TIDAL_CLIENT_SECRET") ?: tidalProps.getProperty("TIDAL_CLIENT_SECRET") ?: tidalProps.getProperty("tidal.clientSecret", "")
         buildConfigField 'String', 'TIDAL_CLIENT_ID', "\"${tidalClientId}\""
         buildConfigField 'String', 'TIDAL_CLIENT_SECRET', "\"${tidalClientSecret}\""
     }
