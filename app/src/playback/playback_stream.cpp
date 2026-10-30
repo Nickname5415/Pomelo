@@ -37,9 +37,11 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   if (m_nextRequest && id == m_nextRequest) {
     m_nextRequest = 0;
     const auto stream = result.toObject();
-    const QUrl url(stream.value("url").toString());
-    if (url.scheme() != "https" || !(url.host().endsWith(".googlevideo.com") || url.host().endsWith(".c.youtube.com")) ||
-        stream.value("contentLength").toDouble() <= 0)
+    const bool hasManifest = stream.contains(QStringLiteral("manifestXml")) &&
+                             !stream.value(QStringLiteral("manifestXml")).toString().isEmpty();
+    const QUrl url(stream.value(QStringLiteral("url")).toString());
+    const bool hasUrl = !url.isEmpty() && (url.scheme() == QStringLiteral("https") || url.scheme() == QStringLiteral("http"));
+    if (!hasManifest && !hasUrl)
       return;
     openPreparedStream(stream);
     return;
@@ -130,12 +132,12 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   if (qEnvironmentVariableIsSet("ORCHARD_PLAYBACK_TIMING"))
     qInfo() << "Playback resolver stages (ms):"
             << stream.value("timings").toObject();
-  const QUrl url(stream.value("url").toString());
-  const qint64 length =
-      static_cast<qint64>(stream.value("contentLength").toDouble());
-  if (url.scheme() != "https" || !(url.host().endsWith(".googlevideo.com") || url.host().endsWith(".c.youtube.com")) ||
-      length <= 0) {
-    fail(tr("YouTube returned an invalid audio stream."));
+  const bool hasManifest = stream.contains(QStringLiteral("manifestXml")) &&
+                           !stream.value(QStringLiteral("manifestXml")).toString().isEmpty();
+  const QUrl url(stream.value(QStringLiteral("url")).toString());
+  const bool hasUrl = !url.isEmpty() && (url.scheme() == QStringLiteral("https") || url.scheme() == QStringLiteral("http"));
+  if (!hasManifest && !hasUrl) {
+    fail(tr("The music provider returned an invalid audio stream."));
     return;
   }
   startResolvedStream(stream);

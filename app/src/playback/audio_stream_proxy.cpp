@@ -87,6 +87,7 @@ private:
             const QByteArray xml = m_stream.value("manifestXml").toString().toUtf8();
             m_socket->write("HTTP/1.1 200 OK\r\nContent-Type: application/dash+xml\r\nContent-Length: " +
                             QByteArray::number(xml.size()) + "\r\nConnection: close\r\n\r\n" + (head ? QByteArray() : xml));
+            m_socket->disconnectFromHost();
             return;
         }
         m_length = static_cast<qint64>(m_stream.value("contentLength").toDouble());
