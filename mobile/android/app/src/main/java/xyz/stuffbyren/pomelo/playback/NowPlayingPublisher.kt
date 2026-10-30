@@ -42,6 +42,7 @@ internal class NowPlayingPublisher(
     private val graph: OrchardGraph,
     private val handler: Handler,
     private val scope: CoroutineScope,
+    private val tidalResolver: TidalStreamResolver? = null,
     /** The session's local player, or null before it exists. */
     private val player: () -> ExoPlayer?,
 ) {
@@ -60,11 +61,24 @@ internal class NowPlayingPublisher(
         }
         val format = player.audioFormat
         val playerCodec = codecName(format?.sampleMimeType)
-        val localTrack = MediaItemMapper.toTrack(item).takeIf { it.isLocal }
-        if (localTrack != null) {
+        val track = MediaItemMapper.toTrack(item)
+        if (track.isLocal) {
             val decoded = listOfNotNull(format?.averageBitrate, format?.bitrate).firstOrNull { it > 0 }?.div(1000) ?: 0
-            val codec = playerCodec.ifBlank { localTrack.codec.uppercase() }
-            publish(if (localTrack.localBitrateKbps > 0) localTrack.localBitrateKbps else decoded, StreamDetail(codec = codec))
+            val codec = playerCodec.ifBlank { track.codec.uppercase() }
+            publish(if (track.localBitrateKbps > 0) track.localBitrateKbps else decoded, StreamDetail(codec = codec))
+            return
+        }
+        val tidalInfo = tidalResolver?.getStreamInfo(track.id)
+        if (track.isTidal || tidalInfo != null) {
+            val bitDepth = tidalInfo?.bitDepth
+                ?: (track.bitDepth ?: if (format?.pcmEncoding == C.ENCODING_PCM_24BIT) 24 else 16)
+            val sampleRate = tidalInfo?.sampleRate
+                ?: (format?.sampleRate?.takeIf { it > 0 } ?: (track.sampleRate ?: 44100))
+            val hiRes = tidalInfo?.hiRes ?: (track.hires || bitDepth > 16 || sampleRate > 48000)
+            val codec = tidalInfo?.codec ?: playerCodec.ifBlank { "FLAC" }
+            val decoded = listOfNotNull(format?.averageBitrate, format?.bitrate).firstOrNull { it > 0 }?.div(1000) ?: 0
+            val kbps = tidalInfo?.bitrateKbps?.takeIf { it > 0 } ?: (if (decoded > 0) decoded else 850)
+            publish(kbps, StreamDetail(hiRes = hiRes, bitDepth = bitDepth, sampleRate = sampleRate, codec = codec))
             return
         }
         val decoded = listOfNotNull(format?.averageBitrate, format?.bitrate).firstOrNull { it > 0 }?.div(1000) ?: 0

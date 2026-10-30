@@ -57,12 +57,14 @@ object MediaItemMapper {
         val requestMetadata = MediaItem.RequestMetadata.Builder()
             .setMediaUri(uri)
             .build()
-        return MediaItem.Builder()
+        val mimeType = if (track.isLocal) null else MimeTypes.APPLICATION_MPD
+        val builder = MediaItem.Builder()
             .setMediaId(track.id)
             .setUri(uri)
+            .setMimeType(mimeType)
             .setRequestMetadata(requestMetadata)
             .setMediaMetadata(metadata)
-            .build()
+        return builder.build()
     }
 
     fun toTrack(item: MediaItem): Track {
@@ -130,7 +132,7 @@ object MediaItemMapper {
         val uri = Uri.Builder().scheme(SCHEME).authority(AUDIO_AUTHORITY).appendPath(item.mediaId).build()
         return item.buildUpon()
             .setUri(uri)
-            .setMimeType(null)
+            .setMimeType(MimeTypes.APPLICATION_MPD)
             .setRequestMetadata(item.requestMetadata.buildUpon().setMediaUri(uri).build())
             .build()
     }

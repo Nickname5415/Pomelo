@@ -24,18 +24,18 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.drm.DrmSessionManagerProvider
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.SilenceMediaSource
-import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -62,7 +62,7 @@ import xyz.stuffbyren.pomelo.widget.OrchardWidgetUpdater
 
 /**
  * Process-level owner of playback in Pomelo.
- * Playback is handled exclusively via official TIDAL SDK and synchronized with Android MediaSession.
+ * Streams are resolved and played directly through Media3 ExoPlayer with MediaSession synchronization.
  */
 @UnstableApi
 class PomeloPlaybackService : MediaLibraryService() {
@@ -96,17 +96,70 @@ class PomeloPlaybackService : MediaLibraryService() {
         val graph = OrchardGraph.from(this)
         val browseTree = OrchardMediaLibrary(graph)
 
-        nowPlaying = NowPlayingPublisher(graph, handler, ioScope) {
-            if (::player.isInitialized) player else null
-        }
-
         val playerEq = EqualizerAudioProcessor()
         playbackVolume = PlaybackVolumeMonitor(this)
         observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerEq))
+
+        try {
+            val eventProducer = EventProducer.getInstance(
+                credentialsProvider = graph.auth.credentialsProvider,
+                config = EventsConfig(
+                    maxDiskUsageBytes = 10 * 1024 * 1024,
+                    blockedConsentCategories = emptySet(),
+                    appVersion = "2.0.0",
+                ),
+                context = this,
+                coroutineScope = ioScope,
+            )
+            tidalPlayer = com.tidal.sdk.player.Player(
+                application = application,
+                credentialsProvider = graph.auth.credentialsProvider,
+                eventSender = eventProducer.eventSender,
+            )
+            tidalPlayer?.playbackEngine?.apply {
+                streamingWifiAudioQuality = AudioQuality.LOSSLESS
+                streamingCellularAudioQuality = AudioQuality.HIGH
+            }
+            listenToTidalEvents(graph)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to initialize TIDAL Player SDK", e)
+        }
+
+        val tidalResolver = TidalStreamResolver(
+            auth = graph.auth,
+            http = graph.http,
+            webSession = graph.tidalWebSession,
+            streamingApiProvider = { tidalPlayer?.streamingApi },
+        )
+
+        nowPlaying = NowPlayingPublisher(graph, handler, ioScope, tidalResolver) {
+            if (::player.isInitialized) player else null
+        }
+        val okHttpDataSourceFactory = OkHttpDataSource.Factory(graph.http)
+        val defaultDataSourceFactory = DefaultDataSource.Factory(this, okHttpDataSourceFactory)
+        val resolvingDataSourceFactory = ResolvingDataSource.Factory(
+            defaultDataSourceFactory,
+            object : ResolvingDataSource.Resolver {
+                override fun resolveDataSpec(dataSpec: DataSpec): DataSpec {
+                    val uri = dataSpec.uri
+                    if (MediaItemMapper.isPomeloUri(uri)) {
+                        val trackId = MediaItemMapper.sourceId(uri)
+                        val streamUrl = kotlinx.coroutines.runBlocking { tidalResolver.resolve(trackId) }
+                        if (!streamUrl.isNullOrBlank()) {
+                            Log.d(TAG, "Resolved track $trackId to: ${streamUrl.take(70)}...")
+                            return dataSpec.buildUpon()
+                                .setUri(Uri.parse(streamUrl))
+                                .build()
+                        }
+                        throw java.io.IOException("Failed to resolve stream URL for track $trackId")
+                    }
+                    return dataSpec
+                }
+            },
+        )
         val defaultMediaSourceFactory = DefaultMediaSourceFactory(this)
-        val pomeloMediaSourceFactory = PomeloMediaSourceFactory(defaultMediaSourceFactory)
-        player = buildOrchardPlayer(this, pomeloMediaSourceFactory, playerEq, playbackVolume.state, handlesAudioFocus = false)
-        player.volume = 0f
+            .setDataSourceFactory(resolvingDataSourceFactory)
+        player = buildOrchardPlayer(this, defaultMediaSourceFactory, playerEq, playbackVolume.state, handlesAudioFocus = true)
 
         unshuffledOrder = stateStore.load().also { it.restoreInto(player) }.unshuffledOrder
         snapshotQueue(player)
@@ -139,33 +192,6 @@ class PomeloPlaybackService : MediaLibraryService() {
         )
 
         player.addListener(playbackListener)
-
-        // Initialize official TIDAL SDK Player
-        try {
-            val eventProducer = EventProducer.getInstance(
-                credentialsProvider = graph.auth.credentialsProvider,
-                config = EventsConfig(
-                    maxDiskUsageBytes = 10 * 1024 * 1024,
-                    blockedConsentCategories = emptySet(),
-                    appVersion = "2.0.0",
-                ),
-                context = this,
-                coroutineScope = ioScope,
-            )
-            tidalPlayer = com.tidal.sdk.player.Player(
-                application = application,
-                credentialsProvider = graph.auth.credentialsProvider,
-                eventSender = eventProducer.eventSender,
-            )
-            tidalPlayer?.playbackEngine?.apply {
-                streamingWifiAudioQuality = AudioQuality.LOSSLESS
-                streamingCellularAudioQuality = AudioQuality.HIGH
-            }
-            listenToTidalEvents(graph)
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to initialize TIDAL Player SDK", e)
-        }
-
         OrchardWidgetUpdater.onPlayerChanged(this, player)
     }
 
@@ -202,29 +228,6 @@ class PomeloPlaybackService : MediaLibraryService() {
                     }
                     else -> {}
                 }
-            }
-        }
-    }
-
-    private fun loadTidalTrack(track: Track) {
-        val tp = tidalPlayer ?: return
-        if (track.isTidal && track.id.isNotBlank()) {
-            try {
-                tp.playbackEngine.load(MediaProduct(ProductType.TRACK, track.id))
-                val nextItem = if (player.hasNextMediaItem()) player.getMediaItemAt(player.nextMediaItemIndex) else null
-                if (nextItem != null) {
-                    val nextTrack = queueTrack(nextItem.mediaId) ?: MediaItemMapper.toTrack(nextItem)
-                    if (nextTrack.isTidal && nextTrack.id.isNotBlank()) {
-                        tp.playbackEngine.setNext(MediaProduct(ProductType.TRACK, nextTrack.id))
-                    }
-                }
-                if (player.playWhenReady) {
-                    runCatching { tp.playbackEngine.play() }
-                } else {
-                    runCatching { tp.playbackEngine.pause() }
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Error loading track into TIDAL player engine", e)
             }
         }
     }
@@ -296,7 +299,13 @@ class PomeloPlaybackService : MediaLibraryService() {
                 ) updateCustomLayout()
             }
             if (events.contains(Player.EVENT_TRACKS_CHANGED)) nowPlaying.publishBitrate()
-            if (events.containsAny(Player.EVENT_TIMELINE_CHANGED, Player.EVENT_MEDIA_ITEM_TRANSITION)) {
+            if (events.containsAny(
+                    Player.EVENT_TIMELINE_CHANGED,
+                    Player.EVENT_MEDIA_ITEM_TRANSITION,
+                    Player.EVENT_PLAYBACK_STATE_CHANGED,
+                    Player.EVENT_IS_PLAYING_CHANGED,
+                )
+            ) {
                 snapshotQueue(player)
                 nowPlaying.publishBitrate()
                 nowPlaying.hydrateArtwork()
@@ -318,41 +327,12 @@ class PomeloPlaybackService : MediaLibraryService() {
             savePositionWhilePlaying(isPlaying)
         }
 
-        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            runCatching {
-                if (playWhenReady) {
-                    tidalPlayer?.playbackEngine?.play()
-                } else {
-                    tidalPlayer?.playbackEngine?.pause()
-                }
-            }.onFailure { Log.w(TAG, "Failed to update TIDAL playback engine play/pause state", it) }
-        }
-
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             Log.d(TAG, "onMediaItemTransition: item=${mediaItem?.mediaId}, reason=$reason")
             OrchardGraph.from(this@PomeloPlaybackService).transitionMarker.value = null
             nowPlaying.resetArtwork()
             nowPlaying.hydrateArtwork()
             nowPlaying.publishBitrate()
-
-            val track = mediaItem?.let { queueTrack(it.mediaId) ?: MediaItemMapper.toTrack(it) }
-            if (track != null) {
-                if (track.isTidal) {
-                    player.volume = 0f
-                    loadTidalTrack(track)
-                } else if (track.isLocal) {
-                    player.volume = 1f
-                }
-            }
-        }
-
-        override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
-            if (reason == Player.DISCONTINUITY_REASON_SEEK) {
-                val seekSec = (newPosition.positionMs / 1000f)
-                runCatching {
-                    tidalPlayer?.playbackEngine?.seek(seekSec)
-                }.onFailure { Log.w(TAG, "Failed to seek TIDAL playback engine", it) }
-            }
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -391,34 +371,5 @@ class PomeloPlaybackService : MediaLibraryService() {
             Player.EVENT_PLAYLIST_METADATA_CHANGED,
         )
     }
-}
-
-@UnstableApi
-private class PomeloMediaSourceFactory(
-    private val defaultFactory: DefaultMediaSourceFactory,
-) : MediaSource.Factory {
-    override fun createMediaSource(mediaItem: MediaItem): MediaSource {
-        val uri = mediaItem.localConfiguration?.uri
-        if (uri != null && (uri.scheme == "pomelo" || MediaItemMapper.isPomeloUri(uri))) {
-            val track = MediaItemMapper.toTrack(mediaItem)
-            val durationUs = (track.durationMs.takeIf { it > 0 } ?: 180_000L) * 1000L
-            val silenceSource = SilenceMediaSource.Factory()
-                .setDurationUs(durationUs)
-                .createMediaSource()
-            silenceSource.updateMediaItem(mediaItem)
-            return silenceSource
-        }
-        return defaultFactory.createMediaSource(mediaItem)
-    }
-
-    override fun setDrmSessionManagerProvider(provider: DrmSessionManagerProvider): MediaSource.Factory = apply {
-        defaultFactory.setDrmSessionManagerProvider(provider)
-    }
-
-    override fun setLoadErrorHandlingPolicy(policy: LoadErrorHandlingPolicy): MediaSource.Factory = apply {
-        defaultFactory.setLoadErrorHandlingPolicy(policy)
-    }
-
-    override fun getSupportedTypes(): IntArray = defaultFactory.supportedTypes
 }
 

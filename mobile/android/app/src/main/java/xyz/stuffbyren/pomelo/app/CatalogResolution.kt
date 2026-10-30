@@ -22,6 +22,7 @@ package xyz.stuffbyren.pomelo.app
 import xyz.stuffbyren.pomelo.model.Artist
 import xyz.stuffbyren.pomelo.model.BrowseDetail
 import xyz.stuffbyren.pomelo.model.CatalogItem
+import xyz.stuffbyren.pomelo.model.CatalogKind
 import xyz.stuffbyren.pomelo.model.CatalogSection
 import xyz.stuffbyren.pomelo.model.LibrarySnapshot
 import xyz.stuffbyren.pomelo.model.LoadState
@@ -81,8 +82,16 @@ internal fun BrowseDetail.withSeed(seed: CatalogItem?): BrowseDetail {
         seedSubtitle.equals("Public", ignoreCase = true) ||
         seedSubtitle.equals("Private", ignoreCase = true)) "" else seedSubtitle
 
+    val resolvedKind = when (seed) {
+        is CatalogItem.Performer -> CatalogKind.ARTIST
+        is CatalogItem.Record -> CatalogKind.ALBUM
+        is CatalogItem.Collection -> CatalogKind.PLAYLIST
+        else -> kind
+    }
+
     return copy(
-        title = title.takeUnless { it.isBlank() || it.equals("Collection", true) } ?: seed.title,
+        kind = resolvedKind,
+        title = title.takeUnless { it.isBlank() || it.equals("Collection", true) || it.equals("Album", true) || it.equals("Artist", true) } ?: seed.title,
         artist = artist.ifBlank { cleanSeedArtist },
         subtitle = subtitle.ifBlank { seedSubtitle },
         artworkUrl = artworkUrl.ifBlank { seed.artworkUrl },

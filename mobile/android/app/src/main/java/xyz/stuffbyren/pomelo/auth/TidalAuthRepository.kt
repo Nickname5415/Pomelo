@@ -85,6 +85,8 @@ class TidalAuthRepository(
     @Volatile
     private var currentSession: TidalSession? = null
 
+    val isLoggedIn: Boolean get() = currentSession != null || credentialsProvider.isUserLoggedIn()
+
     override fun session(): TidalSession? = currentSession
 
     /**

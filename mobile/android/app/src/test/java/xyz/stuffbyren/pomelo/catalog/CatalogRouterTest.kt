@@ -42,7 +42,7 @@ class CatalogRouterTest {
             failure?.let { throw it }
             return SearchResults(tracks = listOf(Track("$id.song", query, "Artist", playbackSource = id)))
         }
-        override fun pages(id: String) = flowOf(BrowseDetail(id, CatalogKind.ARTIST, "Artist")).also {
+        override fun pages(id: String, seed: CatalogItem?) = flowOf(BrowseDetail(id, CatalogKind.ARTIST, "Artist")).also {
             calls += "pages:$id"
         }
         override suspend fun sectionItems(id: String, params: String): List<CatalogItem> {

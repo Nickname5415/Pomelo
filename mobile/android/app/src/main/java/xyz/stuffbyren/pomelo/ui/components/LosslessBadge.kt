@@ -75,12 +75,15 @@ fun LosslessBadge(
     isQobuz: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    if (!showBitrate || bitrateKbps <= 0) return
+    val detail = LocalStreamDetail.current
+    val isLossless = isQobuz || detail.codec.equals("FLAC", ignoreCase = true) || detail.bitDepth >= 16 || detail.hiRes
 
-    if (!isQobuz) {
+    if (!isLossless && (!showBitrate || bitrateKbps <= 0)) return
+
+    if (!isLossless) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text(
-                text = listOf("$bitrateKbps kbps", LocalStreamDetail.current.codec).filter { it.isNotBlank() }.joinToString(" · "),
+                text = listOf("$bitrateKbps kbps", detail.codec).filter { it.isNotBlank() }.joinToString(" · "),
                 color = Color.White.copy(alpha = 0.85f),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
@@ -91,7 +94,7 @@ fun LosslessBadge(
         }
     } else {
         var showNumeric by remember { mutableStateOf(false) }
-        val tierLabel = losslessFormatLabel(LocalStreamDetail.current)
+        val tierLabel = losslessFormatLabel(detail)
 
         Box(
             modifier = modifier
@@ -99,7 +102,9 @@ fun LosslessBadge(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                 ) {
-                    showNumeric = !showNumeric
+                    if (bitrateKbps > 0) {
+                        showNumeric = !showNumeric
+                    }
                 },
             contentAlignment = Alignment.Center,
         ) {
@@ -113,7 +118,7 @@ fun LosslessBadge(
                 label = "LosslessBitrateTransition",
             ) { numeric ->
                 Text(
-                    text = if (numeric) "$bitrateKbps kbps" else tierLabel,
+                    text = if (numeric && bitrateKbps > 0) "$bitrateKbps kbps" else tierLabel,
                     color = LosslessGold,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 11.sp,

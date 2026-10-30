@@ -362,7 +362,10 @@ class OrchardViewModel(application: Application) : AndroidViewModel(application)
 
     fun beginSignIn() = graph.auth.initializeLoginUrl()
     fun tidalSession() = graph.auth.session()
-    fun signOut() = viewModelScope.launch { graph.auth.logout() }
+    fun signOut() = viewModelScope.launch {
+        graph.auth.logout()
+        graph.tidalWebSession.clear()
+    }
 
     fun shareTrack(track: Track) =
         if (track.isLocal) showWarning("Files on your phone cannot be shared as links.") else songLinksCoordinator.shareTrack(track)

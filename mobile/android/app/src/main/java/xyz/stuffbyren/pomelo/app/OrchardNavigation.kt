@@ -99,6 +99,14 @@ internal fun OrchardNavigation(
         }
     }
 
+    val graph = remember(context) { OrchardGraph.from(context) }
+    val isSignedIn = auth is xyz.stuffbyren.pomelo.auth.AuthState.SignedIn
+    LaunchedEffect(isSignedIn) {
+        if (isSignedIn && !graph.tidalWebSession.hasToken()) {
+            nav.navigate(Routes.LOGIN)
+        }
+    }
+
     NavHost(
         navController = nav,
         startDestination = startDestination,
@@ -234,14 +242,18 @@ internal fun OrchardNavigation(
             )
         }
         composable(Routes.LOGIN) {
+            val graph = OrchardGraph.from(nav.context)
             TidalLoginScreen(
-                auth = OrchardGraph.from(nav.context).auth,
+                auth = graph.auth,
+                tidalWebSession = graph.tidalWebSession,
                 onDismiss = { nav.popBackStack(Routes.LOGIN, inclusive = true) },
             )
         }
         composable(Routes.ACCOUNT_SWITCH) {
+            val graph = OrchardGraph.from(nav.context)
             TidalLoginScreen(
-                auth = OrchardGraph.from(nav.context).auth,
+                auth = graph.auth,
+                tidalWebSession = graph.tidalWebSession,
                 onDismiss = { nav.popBackStack(Routes.ACCOUNT_SWITCH, inclusive = true) },
             )
         }

@@ -94,7 +94,12 @@ fun NowPlayingOverlay(
     // The player's own backdrop, so glass inside it blurs the cover or video and not the page behind.
     val glassScene = rememberGlassScene()
     CompositionLocalProvider(
-        LocalStreamDetail provides activeStreamDetail.copy(hiRes = activeStreamDetail.hiRes || currentTrack.hires),
+        LocalStreamDetail provides activeStreamDetail.copy(
+            hiRes = activeStreamDetail.hiRes || currentTrack.hires,
+            bitDepth = if (activeStreamDetail.bitDepth > 0) activeStreamDetail.bitDepth else (currentTrack.bitDepth ?: if (currentTrack.isTidal) 16 else 0),
+            sampleRate = if (activeStreamDetail.sampleRate > 0) activeStreamDetail.sampleRate else (currentTrack.sampleRate ?: if (currentTrack.isTidal) 44100 else 0),
+            codec = activeStreamDetail.codec.ifBlank { if (currentTrack.isTidal) "FLAC" else "" },
+        ),
         LocalGlassScene provides glassScene,
     ) {
         NowPlayingScreen(
@@ -128,7 +133,7 @@ fun NowPlayingOverlay(
             gesturesEnabled = settings.playerGesturesEnabled,
             showBitrate = settings.showBitrate,
             bitrateKbps = activeBitrate,
-            isQobuz = false,
+            isQobuz = currentTrack.isTidal || currentTrack.isQobuz,
             liked = liked,
             remoteVolume = connectRemoteVolume,
             onRemoteVolumeChange = viewModel::setRemoteVolume,

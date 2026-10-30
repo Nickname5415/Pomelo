@@ -22,6 +22,7 @@ package xyz.stuffbyren.pomelo.ui.screens
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
+import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -53,22 +54,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
 import xyz.stuffbyren.pomelo.auth.TidalAuthRepository
+import xyz.stuffbyren.pomelo.auth.TidalWebSession
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun TidalLoginScreen(
     auth: TidalAuthRepository,
+    tidalWebSession: TidalWebSession,
     onDismiss: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) }
-    val loginUri = remember { auth.initializeLoginUrl() }
+    var stage by remember { mutableStateOf(if (auth.isLoggedIn) "web" else "dev") }
+    val webAuthRequest = remember { tidalWebSession.createWebAuthRequest() }
+    var pendingWebVerifier by remember { mutableStateOf(webAuthRequest.verifier) }
+
+    val initialUrl = remember {
+        if (auth.isLoggedIn) {
+            webAuthRequest.authUrl
+        } else {
+            auth.initializeLoginUrl().toString()
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sign in to TIDAL") },
+                title = { Text(if (stage == "web") "Connecting TIDAL Player..." else "Sign in to TIDAL") },
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
                         Icon(
@@ -96,6 +109,7 @@ fun TidalLoginScreen(
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
                         settings.userAgentString = settings.userAgentString.replace("; wv", "")
+                        CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
                         webViewClient = object : WebViewClient() {
                             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -110,20 +124,41 @@ fun TidalLoginScreen(
                                 view: WebView?,
                                 request: WebResourceRequest?,
                             ): Boolean {
-                                val url = request?.url ?: return false
-                                if (url.toString().startsWith(auth.redirectUri)) {
+                                val uri = request?.url ?: return false
+                                val urlStr = uri.toString()
+
+                                if (urlStr.startsWith(auth.redirectUri)) {
                                     scope.launch {
-                                        val success = auth.handleCallback(url)
+                                        val success = auth.handleCallback(uri)
                                         if (success) {
+                                            val req = tidalWebSession.createWebAuthRequest()
+                                            pendingWebVerifier = req.verifier
+                                            stage = "web"
+                                            view?.loadUrl(req.authUrl)
+                                        } else {
                                             onDismiss()
                                         }
                                     }
                                     return true
                                 }
+
+                                if (urlStr.startsWith(TidalWebSession.REDIRECT_URI)) {
+                                    val code = uri.getQueryParameter("code")
+                                    if (!code.isNullOrBlank()) {
+                                        scope.launch {
+                                            tidalWebSession.exchangeCodeForToken(code, pendingWebVerifier)
+                                            onDismiss()
+                                        }
+                                    } else {
+                                        onDismiss()
+                                    }
+                                    return true
+                                }
+
                                 return false
                             }
                         }
-                        loadUrl(loginUri.toString())
+                        loadUrl(initialUrl)
                     }
                 },
             )

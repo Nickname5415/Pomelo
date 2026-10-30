@@ -40,9 +40,9 @@ class CatalogRepository(
     suspend fun search(query: String, filter: String = "all", guest: Boolean = false): SearchResults =
         tidalCatalog.search(query, filter, guest)
 
-    suspend fun browse(id: String): BrowseDetail = tidalCatalog.browse(id)
+    suspend fun browse(id: String, seed: CatalogItem? = null): BrowseDetail = tidalCatalog.browse(id, seed)
 
-    fun browsePages(id: String): Flow<BrowseDetail> = tidalCatalog.browsePages(id)
+    fun browsePages(id: String, seed: CatalogItem? = null): Flow<BrowseDetail> = tidalCatalog.browsePages(id, seed)
 
     suspend fun upNext(trackId: String): List<Track> = tidalCatalog.upNext(trackId)
 

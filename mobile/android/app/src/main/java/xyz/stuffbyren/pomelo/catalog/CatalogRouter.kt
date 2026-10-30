@@ -36,7 +36,7 @@ internal class CatalogRouter(
 ) {
     internal interface Source {
         suspend fun search(query: String): SearchResults
-        fun pages(id: String): Flow<BrowseDetail>
+        fun pages(id: String, seed: CatalogItem? = null): Flow<BrowseDetail>
         suspend fun sectionItems(id: String, params: String): List<CatalogItem>
         suspend fun artist(name: String): BrowseDetail? = null
     }
@@ -44,7 +44,7 @@ internal class CatalogRouter(
     constructor(youtube: CatalogRepository, preferred: () -> String = { "youtube" }) : this(
         object : Source {
             override suspend fun search(query: String) = youtube.search(query)
-            override fun pages(id: String) = youtube.browsePages(id)
+            override fun pages(id: String, seed: CatalogItem?) = youtube.browsePages(id, seed)
             override suspend fun sectionItems(id: String, params: String) = youtube.sectionItems(id, params)
         },
         preferred,
@@ -53,7 +53,7 @@ internal class CatalogRouter(
     suspend fun search(query: String): SearchResults = youtube.search(query)
 
     fun pages(id: String, seed: CatalogItem? = null): Flow<BrowseDetail> = flow {
-        emitAll(youtube.pages(id))
+        emitAll(youtube.pages(id, seed))
     }
 
     suspend fun browse(id: String): BrowseDetail = pages(id).last()

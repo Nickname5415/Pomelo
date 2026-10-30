@@ -59,7 +59,8 @@ class OrchardGraph(context: Context) {
         .build()
 
     val auth = TidalAuthRepository(context, applicationScope)
-    val tidalCatalog = TidalCatalogRepository(http, auth)
+    val tidalWebSession = xyz.stuffbyren.pomelo.auth.TidalWebSession(context, http)
+    val tidalCatalog = TidalCatalogRepository(http, auth, tidalWebSession)
     val catalog = CatalogRepository(tidalCatalog)
     internal val catalogRouter = xyz.stuffbyren.pomelo.catalog.CatalogRouter(catalog)
     val homeFeeds = HomeFeeds(listOf(TidalHomeSource(catalog))) { TIDAL_SOURCE }
