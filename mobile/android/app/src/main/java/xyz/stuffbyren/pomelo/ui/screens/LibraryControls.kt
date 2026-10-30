@@ -191,15 +191,10 @@ private fun PillButton(label: String, icon: ImageVector, filled: Boolean, onClic
 internal fun LibraryShortcuts(likedCount: Int, downloadedCount: Int, onLiked: () -> Unit, onDownloads: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = LibraryGutter).padding(top = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         ShortcutTile(
             "Liked songs", songCountLabel(likedCount), Icons.Rounded.Favorite,
-            Color(0xFF3B5A47), SettingsStyle.SageSoft, onLiked, Modifier.weight(1f),
-        )
-        ShortcutTile(
-            "Downloads", if (downloadedCount == 0) "None yet" else "${songCountLabel(downloadedCount)} offline", Icons.Rounded.DownloadDone,
-            Color(0xFF2E3F52), Color(0xFFBFD3EA), onDownloads, Modifier.weight(1f),
+            Color(0xFF3B5A47), SettingsStyle.SageSoft, onLiked, Modifier.fillMaxWidth(),
         )
     }
 }

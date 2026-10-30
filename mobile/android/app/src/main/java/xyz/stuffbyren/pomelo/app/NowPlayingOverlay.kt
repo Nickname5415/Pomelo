@@ -161,8 +161,8 @@ fun NowPlayingOverlay(
             onMoveQueueItem = viewModel::moveQueueItem,
             onClearUpcoming = viewModel::clearUpcoming,
             downloadedTrackIds = downloadedTrackIds,
-            onDownloadTrack = viewModel::downloadTrack,
-            onRemoveDownloadTrack = viewModel::removeDownload,
+            onDownloadTrack = null,
+            onRemoveDownloadTrack = null,
             onAddToPlaylist = { playlistPickerTrack = it },
             onShare = { viewModel.shareTrack(currentTrack) },
             // Closes the player so the collection is not buried underneath it.

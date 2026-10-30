@@ -163,12 +163,6 @@ internal fun TrackActionsPopup(
             onViewQueue?.let { action ->
                 PopupActionRow(Icons.AutoMirrored.Rounded.List, "View Queue", slot++) { onDismiss(); action() }
             }
-            onDownload?.takeUnless { track.isLocal }?.let { action ->
-                PopupActionRow(Icons.Rounded.Download, "Download Offline", slot++) { onDismiss(); action() }
-            }
-            onRemoveDownload?.let { action ->
-                PopupActionRow(Icons.Rounded.Delete, "Remove Download", slot++) { onDismiss(); action() }
-            }
             onViewAlbum?.let { action ->
                 if (track.albumId.isNotBlank()) {
                     PopupActionRow(Icons.Rounded.Album, "View Album", slot++) { onDismiss(); action() }

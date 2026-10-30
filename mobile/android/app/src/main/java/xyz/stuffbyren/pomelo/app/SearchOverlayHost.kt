@@ -74,8 +74,8 @@ internal fun SearchOverlayHost(
         onPlayNext = viewModel::playNext,
         onAddToQueue = viewModel::addToQueue,
         onAddToPlaylist = { pickerTrack = it },
-        onDownloadTrack = viewModel::downloadTrack,
-        onRemoveDownloadTrack = viewModel::removeDownload,
+        onDownloadTrack = null,
+        onRemoveDownloadTrack = null,
         onShare = viewModel::shareTrack,
         onOpenDetail = { id ->
             commit()

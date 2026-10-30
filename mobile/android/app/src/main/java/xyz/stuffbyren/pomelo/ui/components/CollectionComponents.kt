@@ -104,15 +104,6 @@ fun CollectionTopBar(
         Box {
             ChromeAction(Icons.Rounded.MoreHoriz, "More options", { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                if (onDownload != null) {
-                    DropdownMenuItem(
-                        text = { Text(if (isDownloaded) "Remove download" else "Download $noun") },
-                        onClick = {
-                            menuOpen = false
-                            onDownload()
-                        },
-                    )
-                }
                 DropdownMenuItem(
                     text = { Text(if (isSaved) "Remove from library" else "Add to library") },
                     onClick = {
