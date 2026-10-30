@@ -35,7 +35,7 @@ using namespace std::chrono_literals;
 struct OrchardDiscordRpcHandle {
     OrchardDiscordRpcCallback callback = nullptr;
     void *context = nullptr;
-    uint64_t applicationId = 1531666622312353803ULL;
+    uint64_t applicationId = 1565624884455804988ULL;
     std::mutex mutex;
     std::condition_variable wake;
     std::thread worker;

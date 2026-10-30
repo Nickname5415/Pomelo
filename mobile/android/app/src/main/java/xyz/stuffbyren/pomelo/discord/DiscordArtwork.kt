@@ -21,8 +21,8 @@ package xyz.stuffbyren.pomelo.discord
 
 import java.net.URI
 
-const val DISCORD_APPLICATION_ID = 1531666622312353803L
-const val DISCORD_ORCHARD_PROJECT_URL = "https://sfg545.dev/orchard"
+const val DISCORD_APPLICATION_ID = 1565624884455804988L
+const val DISCORD_POMELO_PROJECT_URL = "https://github.com/Nickname5415/Pomelo"
 const val DISCORD_LISTENING = 2
 
 fun trimDiscordText(value: String?, fallback: String = "", maxLen: Int = 128): String {

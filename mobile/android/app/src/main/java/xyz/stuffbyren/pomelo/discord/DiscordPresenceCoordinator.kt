@@ -144,7 +144,7 @@ class DiscordPresenceCoordinator(
         artistImageUrl: String?,
     ) {
         val title = trimDiscordText(track.title, fallback = "Music")
-        val artist = trimDiscordText(track.artist, fallback = "Orchard")
+        val artist = trimDiscordText(track.artist, fallback = "Pomelo")
         val album = trimDiscordText(track.album)
 
         // Timestamps follow the wall clock at send time so the enhanced update stays aligned.
@@ -152,8 +152,12 @@ class DiscordPresenceCoordinator(
         val end = if (isPlaying && durationMs > positionMs) start + durationMs else 0L
 
         val buttons = buildList {
-            songLinks.trackUrl(track)?.takeIf(String::isNotBlank)?.let { add("Listen on YouTube Music" to it) }
-            add("View the Orchard Project" to DISCORD_ORCHARD_PROJECT_URL)
+            val trackUrl = songLinks.trackUrl(track)?.takeIf(String::isNotBlank)
+            if (trackUrl != null) {
+                val label = if (trackUrl.contains("tidal.com")) "Listen on TIDAL" else "Listen to Track"
+                add(label to trackUrl)
+            }
+            add("View Pomelo Project" to DISCORD_POMELO_PROJECT_URL)
         }
 
         DiscordNative.setPresence(

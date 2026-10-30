@@ -32,7 +32,7 @@
 #include <cmath>
 
 namespace {
-constexpr auto kApplicationId = "1531666622312353803";
+constexpr auto kApplicationId = "1565624884455804988";
 
 QString artworkUrl(const QVariantMap &track)
 {
