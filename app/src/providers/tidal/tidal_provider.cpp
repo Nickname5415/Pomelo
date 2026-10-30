@@ -97,32 +97,23 @@ QJsonObject TidalProvider::normalizeAlbum(const QJsonObject &raw) {
   const QString title = item.value(QStringLiteral("title")).toString(QStringLiteral("Untitled Album"));
   QString artistName;
   const QJsonArray artistsArr = item.value(QStringLiteral("artists")).toArray();
-  if (!artistsArr.isEmpty()) {
-    artistName = artistsArr.at(0).toObject().value(QStringLiteral("name")).toString();
-  } else {
+  if (!artistsArr.isEmpty()) artistName = artistsArr.at(0).toObject().value(QStringLiteral("name")).toString();
+  else {
     const QJsonObject artistObj = item.value(QStringLiteral("artist")).toObject();
     artistName = !artistObj.isEmpty() ? artistObj.value(QStringLiteral("name")).toString()
                                       : item.value(QStringLiteral("artistName")).toString(QStringLiteral("Unknown Artist"));
   }
-  return QJsonObject{
-    {QStringLiteral("id"), id}, {QStringLiteral("browseId"), id},
-    {QStringLiteral("title"), title}, {QStringLiteral("type"), QStringLiteral("album")},
-    {QStringLiteral("artist"), artistName},
-    {QStringLiteral("thumbnail"), artworkUrl(item.value(QStringLiteral("cover")).toString())},
-    {QStringLiteral("releaseDate"), item.value(QStringLiteral("releaseDate")).toString()}
-  };
+  return QJsonObject{{QStringLiteral("id"), id}, {QStringLiteral("browseId"), id}, {QStringLiteral("title"), title}, {QStringLiteral("type"), QStringLiteral("album")},
+                     {QStringLiteral("artist"), artistName}, {QStringLiteral("thumbnail"), artworkUrl(item.value(QStringLiteral("cover")).toString())},
+                     {QStringLiteral("releaseDate"), item.value(QStringLiteral("releaseDate")).toString()}};
 }
 
 QJsonObject TidalProvider::normalizeArtist(const QJsonObject &raw) {
   const QJsonObject item = raw.contains(QStringLiteral("item")) ? raw.value(QStringLiteral("item")).toObject() : raw;
   const QString id = item.value(QStringLiteral("id")).toVariant().toString();
   const QString name = item.value(QStringLiteral("name")).toString(QStringLiteral("Unknown Artist"));
-  return QJsonObject{
-    {QStringLiteral("id"), id}, {QStringLiteral("browseId"), id},
-    {QStringLiteral("title"), name}, {QStringLiteral("name"), name},
-    {QStringLiteral("type"), QStringLiteral("artist")},
-    {QStringLiteral("thumbnail"), artworkUrl(item.value(QStringLiteral("picture")).toString())}
-  };
+  return QJsonObject{{QStringLiteral("id"), id}, {QStringLiteral("browseId"), id}, {QStringLiteral("title"), name}, {QStringLiteral("name"), name},
+                     {QStringLiteral("type"), QStringLiteral("artist")}, {QStringLiteral("thumbnail"), artworkUrl(item.value(QStringLiteral("picture")).toString())}};
 }
 
 QJsonObject TidalProvider::normalizePlaylist(const QJsonObject &raw) {
@@ -164,10 +155,9 @@ void TidalProvider::saveSessionFile() {
   const QString path = sessionFilePath();
   QFileInfo(path).dir().mkpath(QStringLiteral("."));
   QFile file(path);
-  if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) return;
-  file.write(QJsonDocument(QJsonObject{
-    {QStringLiteral("access_token"), m_accessToken}, {QStringLiteral("refresh_token"), m_refreshToken},
-    {QStringLiteral("country_code"), m_countryCode}, {QStringLiteral("user_id"), m_userId}}).toJson(QJsonDocument::Indented));
+  if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    file.write(QJsonDocument(QJsonObject{{QStringLiteral("access_token"), m_accessToken}, {QStringLiteral("refresh_token"), m_refreshToken},
+                                         {QStringLiteral("country_code"), m_countryCode}, {QStringLiteral("user_id"), m_userId}}).toJson());
 }
 
 void TidalProvider::acquireClientCredentials() {
@@ -181,8 +171,7 @@ void TidalProvider::acquireClientCredentials() {
   connect(reply, &QNetworkReply::finished, this, [this, reply] {
     reply->deleteLater();
     if (reply->error() == QNetworkReply::NoError) {
-      const QJsonObject root = QJsonDocument::fromJson(reply->readAll()).object();
-      m_accessToken = root.value(QStringLiteral("access_token")).toString();
+      m_accessToken = QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("access_token")).toString();
       saveSessionFile();
       emit sessionUpdated();
     }
@@ -220,9 +209,7 @@ void TidalProvider::cancelAll() {
 
 quint64 TidalProvider::loadAccountProfile(const QJsonObject &) {
   const quint64 id = m_nextRequestId++;
-  const QJsonObject p{{QStringLiteral("userName"), QStringLiteral("Pomelo User")},
-                      {QStringLiteral("userHandle"), QStringLiteral("@pomelo")},
-                      {QStringLiteral("userEmail"), QStringLiteral("user@stuffbyren.xyz")}};
+  const QJsonObject p{{QStringLiteral("userName"), QStringLiteral("Pomelo User")}, {QStringLiteral("userHandle"), QStringLiteral("@pomelo")}, {QStringLiteral("userEmail"), QStringLiteral("user@stuffbyren.xyz")}};
   QMetaObject::invokeMethod(this, [this, id, p] { emit resultReady(id, p); }, Qt::QueuedConnection);
   return id;
 }
@@ -331,34 +318,69 @@ void TidalProvider::handleAlbum(quint64 requestId, const QString &albumId) {
         artist = t.value(QStringLiteral("artist")).toObject().value(QStringLiteral("name")).toString();
       }
     }
-    emit resultReady(requestId, QJsonObject{
-      {QStringLiteral("browseId"), albumId}, {QStringLiteral("id"), albumId},
-      {QStringLiteral("title"), title}, {QStringLiteral("artist"), artist},
-      {QStringLiteral("thumbnail"), artworkUrl(cover)}, {QStringLiteral("tracks"), tracks}});
+    emit resultReady(requestId, QJsonObject{{QStringLiteral("browseId"), albumId}, {QStringLiteral("id"), albumId},
+      {QStringLiteral("title"), title}, {QStringLiteral("artist"), artist}, {QStringLiteral("thumbnail"), artworkUrl(cover)}, {QStringLiteral("tracks"), tracks}});
   });
 }
 
 void TidalProvider::handleArtist(quint64 requestId, const QString &artistId) {
-  const QString url = QStringLiteral("%1/artists/%2/top-tracks?countryCode=%3&limit=25").arg(QLatin1String(kApiV1), artistId, m_countryCode);
-  QNetworkReply *reply = m_network.get(createRequest(QUrl(url)));
-  m_activeReplies.insert(reply, requestId);
-  connect(reply, &QNetworkReply::finished, this, [this, reply, requestId, artistId] {
-    m_activeReplies.remove(reply);
-    reply->deleteLater();
-    if (reply->error() != QNetworkReply::NoError) { emit requestFailed(requestId, reply->errorString()); return; }
-    const QJsonArray raw = QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("items")).toArray();
-    QJsonArray tracks; QString name;
-    for (const auto &v : raw) {
-      const QJsonObject t = v.toObject();
-      tracks.append(normalizeTrack(t));
-      if (name.isEmpty()) name = t.value(QStringLiteral("artist")).toObject().value(QStringLiteral("name")).toString();
+  const QString cc = m_countryCode.isEmpty() ? QStringLiteral("US") : m_countryCode;
+  struct State { int left{2}; QJsonObject pageRoot; QJsonArray toptracks; };
+  auto st = std::make_shared<State>();
+  auto checkDone = [this, requestId, artistId, st]() {
+    if (--st->left > 0) return;
+    QString name, picture, desc;
+    QJsonArray tracks = st->toptracks, sections;
+    QJsonObject latest;
+    for (const auto &rv : st->pageRoot.value(QStringLiteral("rows")).toArray()) {
+      for (const auto &mv : rv.toObject().value(QStringLiteral("modules")).toArray()) {
+        const QJsonObject mod = mv.toObject();
+        const QString mtype = mod.value(QStringLiteral("type")).toString();
+        const QString title = mod.value(QStringLiteral("title")).toString();
+        if (mtype == QStringLiteral("ARTIST_HEADER")) {
+          const QJsonObject a = mod.value(QStringLiteral("artist")).toObject();
+          name = a.value(QStringLiteral("name")).toString(); picture = a.value(QStringLiteral("picture")).toString();
+        } else if (mtype == QStringLiteral("TEXT_BLOCK")) desc = mod.value(QStringLiteral("text")).toString();
+        else if (mtype == QStringLiteral("TRACK_LIST") && tracks.isEmpty()) {
+          for (const auto &v : mod.value(QStringLiteral("pagedList")).toObject().value(QStringLiteral("items")).toArray()) tracks.append(normalizeTrack(v.toObject()));
+        } else if (mtype == QStringLiteral("ALBUM_LIST") || mtype == QStringLiteral("ARTIST_LIST") || mtype == QStringLiteral("MIXED_TYPES_LIST")) {
+          QJsonArray norm;
+          for (const auto &v : mod.value(QStringLiteral("pagedList")).toObject().value(QStringLiteral("items")).toArray()) {
+            if (mtype == QStringLiteral("ALBUM_LIST")) norm.append(normalizeAlbum(v.toObject()));
+            else if (mtype == QStringLiteral("ARTIST_LIST")) norm.append(normalizeArtist(v.toObject()));
+            else norm.append(normalizePlaylist(v.toObject()));
+          }
+          if (!norm.isEmpty()) {
+            const QString key = mtype == QStringLiteral("ALBUM_LIST") ? (title.contains(QStringLiteral("Single"), Qt::CaseInsensitive) || title.contains(QStringLiteral("EP"), Qt::CaseInsensitive) ? QStringLiteral("singles") : QStringLiteral("albums")) : (mtype == QStringLiteral("ARTIST_LIST") ? QStringLiteral("related") : QStringLiteral("playlists"));
+            sections.append(QJsonObject{{QStringLiteral("key"), key}, {QStringLiteral("title"), title}, {QStringLiteral("items"), norm}});
+            if (latest.isEmpty() && mtype == QStringLiteral("ALBUM_LIST") && key == QStringLiteral("albums")) latest = norm.at(0).toObject();
+          }
+        }
+      }
     }
-    emit resultReady(requestId, QJsonObject{
-      {QStringLiteral("browseId"), artistId}, {QStringLiteral("id"), artistId}, {QStringLiteral("title"), name},
-      {QStringLiteral("name"), name}, {QStringLiteral("tracks"), tracks},
-      {QStringLiteral("sections"), QJsonArray{QJsonObject{{QStringLiteral("title"), QStringLiteral("Top Songs")}, {QStringLiteral("items"), tracks}}}}
+    if (name.isEmpty() && !tracks.isEmpty()) name = tracks.at(0).toObject().value(QStringLiteral("artist")).toString();
+    if (name.isEmpty() && tracks.isEmpty() && sections.isEmpty()) { emit requestFailed(requestId, QStringLiteral("Artist not found")); return; }
+    QJsonObject res{{QStringLiteral("browseId"), artistId}, {QStringLiteral("id"), artistId}, {QStringLiteral("title"), name}, {QStringLiteral("name"), name},
+                    {QStringLiteral("thumbnail"), artworkUrl(picture)}, {QStringLiteral("heroArtwork"), artworkUrl(picture)},
+                    {QStringLiteral("description"), desc}, {QStringLiteral("tracks"), tracks}, {QStringLiteral("sections"), sections}};
+    if (!latest.isEmpty()) res.insert(QStringLiteral("latestRelease"), latest);
+    emit resultReady(requestId, res);
+  };
+  const QString pageUrl = QStringLiteral("%1/pages/artist?artistId=%2&locale=en_US&deviceType=PHONE&countryCode=%3").arg(QLatin1String(kApiV1), artistId, cc);
+  const QString ttUrl = QStringLiteral("%1/artists/%2/toptracks?countryCode=%3&limit=25").arg(QLatin1String(kApiV1), artistId, cc);
+  for (const auto &u : {pageUrl, ttUrl}) {
+    QNetworkReply *rep = m_network.get(createRequest(QUrl(u)));
+    m_activeReplies.insert(rep, requestId);
+    connect(rep, &QNetworkReply::finished, this, [this, rep, u, ttUrl, st, checkDone] {
+      m_activeReplies.remove(rep); rep->deleteLater();
+      if (rep->error() == QNetworkReply::NoError) {
+        const QJsonObject obj = QJsonDocument::fromJson(rep->readAll()).object();
+        if (u == ttUrl) { for (const auto &v : obj.value(QStringLiteral("items")).toArray()) st->toptracks.append(normalizeTrack(v.toObject())); }
+        else st->pageRoot = obj;
+      }
+      checkDone();
     });
-  });
+  }
 }
 
 void TidalProvider::handlePlaylist(quint64 requestId, const QString &playlistId) {
@@ -370,31 +392,25 @@ void TidalProvider::handlePlaylist(quint64 requestId, const QString &playlistId)
   QNetworkReply *reply = m_network.get(createRequest(QUrl(url)));
   m_activeReplies.insert(reply, requestId);
   connect(reply, &QNetworkReply::finished, this, [this, reply, requestId, playlistId] {
-    m_activeReplies.remove(reply);
-    reply->deleteLater();
+    m_activeReplies.remove(reply); reply->deleteLater();
     if (reply->error() != QNetworkReply::NoError) { emit requestFailed(requestId, reply->errorString()); return; }
-    const QJsonArray raw = QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("items")).toArray();
     QJsonArray tracks;
-    for (const auto &v : raw) tracks.append(normalizeTrack(v.toObject()));
-    emit resultReady(requestId, QJsonObject{
-      {QStringLiteral("browseId"), playlistId}, {QStringLiteral("id"), playlistId}, {QStringLiteral("tracks"), tracks}});
+    for (const auto &v : QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("items")).toArray()) tracks.append(normalizeTrack(v.toObject()));
+    emit resultReady(requestId, QJsonObject{{QStringLiteral("browseId"), playlistId}, {QStringLiteral("id"), playlistId}, {QStringLiteral("tracks"), tracks}});
   });
 }
 
 void TidalProvider::handlePlaylists(quint64 requestId) {
   if (m_userId.isEmpty()) { emit resultReady(requestId, QJsonArray{}); return; }
   const QString cc = m_countryCode.isEmpty() ? QStringLiteral("US") : m_countryCode;
-  const QString url = QStringLiteral("%1/users/%2/favorites/playlists?countryCode=%3&limit=50")
-      .arg(QLatin1String(kApiV1), m_userId, cc);
+  const QString url = QStringLiteral("%1/users/%2/favorites/playlists?countryCode=%3&limit=50").arg(QLatin1String(kApiV1), m_userId, cc);
   QNetworkReply *reply = m_network.get(createRequest(QUrl(url)));
   m_activeReplies.insert(reply, requestId);
   connect(reply, &QNetworkReply::finished, this, [this, reply, requestId] {
-    m_activeReplies.remove(reply);
-    reply->deleteLater();
+    m_activeReplies.remove(reply); reply->deleteLater();
     if (reply->error() != QNetworkReply::NoError) { emit resultReady(requestId, QJsonArray{}); return; }
-    const QJsonArray items = QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("items")).toArray();
     QJsonArray playlists;
-    for (const auto &v : items) playlists.append(normalizePlaylist(v.toObject()));
+    for (const auto &v : QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("items")).toArray()) playlists.append(normalizePlaylist(v.toObject()));
     emit resultReady(requestId, playlists);
   });
 }
