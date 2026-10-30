@@ -83,8 +83,16 @@ FullscreenPlayerForm {
         return parts.join(" · ");
     }
 
-    // Streamed songs: bitrate then codec, e.g. "128 kbps · Opus". Needs the bitrate setting.
+    // Streamed songs: bit/kHz or bitrate then codec, e.g. "24-bit / 96 kHz · FLAC".
     function streamQuality(track) {
+        if (!track)
+            return "";
+        if (track.bitDepth || track.sampleRate) {
+            const depth = track.bitDepth ? track.bitDepth + "-bit" : "";
+            const rate = track.sampleRate ? Number((track.sampleRate / 1000).toFixed(1)) + " kHz" : "";
+            const spec = [depth, rate].filter(Boolean).join(" / ");
+            return track.streamCodec ? spec + " · " + track.streamCodec : spec;
+        }
         if (!OrchardAppearance.showBitrate || OrchardPlayback.bitrate <= 0)
             return "";
         const kbps = Math.round(OrchardPlayback.bitrate >= 10000 ? OrchardPlayback.bitrate / 1000 : OrchardPlayback.bitrate);

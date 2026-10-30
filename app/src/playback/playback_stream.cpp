@@ -148,6 +148,16 @@ void PlaybackController::openPreparedStream(const QJsonObject &stream) {
   if (localUrl.isEmpty())
     return;
   m_preparedBitrate = stream.value("bitrate").toInt();
+  if (stream.contains(QStringLiteral("bitDepth")))
+    m_preparedTrack.insert(QStringLiteral("bitDepth"), stream.value(QStringLiteral("bitDepth")).toInt());
+  if (stream.contains(QStringLiteral("sampleRate")))
+    m_preparedTrack.insert(QStringLiteral("sampleRate"), stream.value(QStringLiteral("sampleRate")).toInt());
+  if (stream.contains(QStringLiteral("hires")))
+    m_preparedTrack.insert(QStringLiteral("hires"), stream.value(QStringLiteral("hires")).toBool());
+  if (stream.contains(QStringLiteral("streamCodec")))
+    m_preparedTrack.insert(QStringLiteral("streamCodec"), stream.value(QStringLiteral("streamCodec")).toString());
+  else if (!m_preparedTrack.contains(QStringLiteral("streamCodec")))
+    m_preparedTrack.insert(QStringLiteral("streamCodec"), QStringLiteral("FLAC"));
   rememberStreamTracking(m_preparedTrack.value("id").toString(), stream);
   m_nextPlayer->setSource(localUrl);
   m_nextPlayer->pause();
@@ -185,6 +195,12 @@ void PlaybackController::startResolvedStream(const QJsonObject &stream) {
     // Hand the bitrate to the track. Audiophiles rejoice!
     m_track.insert(QStringLiteral("bitrate"), streamBitrate);
   }
+  if (stream.contains(QStringLiteral("bitDepth")))
+    m_track.insert(QStringLiteral("bitDepth"), stream.value(QStringLiteral("bitDepth")).toInt());
+  if (stream.contains(QStringLiteral("sampleRate")))
+    m_track.insert(QStringLiteral("sampleRate"), stream.value(QStringLiteral("sampleRate")).toInt());
+  if (stream.contains(QStringLiteral("hires")))
+    m_track.insert(QStringLiteral("hires"), stream.value(QStringLiteral("hires")).toBool());
   if (stream.contains(QStringLiteral("streamCodec"))) {
     m_track.insert(QStringLiteral("streamCodec"), stream.value(QStringLiteral("streamCodec")).toString());
   } else if (!m_track.contains(QStringLiteral("streamCodec"))) {
