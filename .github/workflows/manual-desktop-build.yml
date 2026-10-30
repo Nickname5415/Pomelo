@@ -92,7 +92,6 @@ jobs:
         run: python scripts/build-qt-webview.py --qt-root "$QT_ROOT" --build-dir build/qt-webview
       - name: Build Orchard
         run: |
-          npm ci --prefix providers/youtube
           meson setup build/desktop --native-file scripts/release/linux-clang-mold.ini --buildtype release -Dtests=false -Dhost_rcc="$QT_RCC" -Dhost_qsb="$QT_QSB"
           meson compile -C build/desktop
       - name: Check Linux QML startup
@@ -218,8 +217,6 @@ jobs:
       - name: Build Orchard
         shell: pwsh
         run: |
-          npm ci --prefix providers/youtube
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           meson setup build/desktop --native-file scripts/release/windows-msvc-ccache.ini --buildtype release -Dtests=false "-Dhost_rcc=$env:QT_RCC" "-Dhost_qsb=$env:QT_QSB"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           meson compile -C build/desktop
