@@ -355,7 +355,7 @@ class OrchardAccountService private constructor(context: Context) {
     private class AccountHttpException(val status: Int, val code: String, message: String) : Exception(message)
 
     companion object {
-        private const val SERVICE_URL = "https://account.sfg545.dev"
+        private const val SERVICE_URL = "https://account.stuffbyren.xyz"
         private const val SIGN_IN_TIMEOUT_MS = 300_000L
         @Volatile private var instance: OrchardAccountService? = null
 

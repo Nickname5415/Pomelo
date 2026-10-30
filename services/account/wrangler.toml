@@ -1,41 +1,23 @@
-# Stunt double config: the real Worker keeps its ID badge in ignored JSONC.
-name = "replace-with-account-worker-name"
+name = "pomelo-account"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
-routes = [{ pattern = "account.example.com", custom_domain = true }]
+routes = [{ pattern = "account.stuffbyren.xyz", custom_domain = true }]
 
 [vars]
-PUBLIC_URL = "https://account.example.com"
-ARTWORK_PUBLIC_URL = "https://artwork.example.com"
-B2_REGION = "replace-with-b2-region"
-# B2 bucket names are case insensitive; S3-compatible requests use lowercase.
-B2_BUCKET = "replace-with-b2-bucket"
-# Google Cloud OAuth "Web application" client. The secret goes in via
-# `wrangler secret put GOOGLE_CLIENT_SECRET`, the signing key via
-# `npm run generate-key | wrangler secret put SIGNING_KEY`.
-GOOGLE_CLIENT_ID = "replace-with-google-oauth-client-id"
-# Optional Apple Music tokens: set APPLE_MUSIC_TEAM_ID, APPLE_MUSIC_KEY_ID,
-# and APPLE_MUSIC_PRIVATE_KEY through Wrangler secrets.
-# Bug reports become issues here. Secrets: GITHUB_TOKEN (Issues read/write on
-# this repo), GITHUB_CLIENT_SECRET, and optionally GITHUB_WEBHOOK_SECRET.
-GITHUB_REPOSITORY = "your-org/your-repo"
-# GitHub OAuth app used only to link accounts. Callback:
-# https://account.example.com/auth/github/callback
-GITHUB_CLIENT_ID = "replace-with-github-oauth-client-id"
+PUBLIC_URL = "https://account.stuffbyren.xyz"
+ARTWORK_PUBLIC_URL = "https://account.stuffbyren.xyz"
+GITHUB_REPOSITORY = "Nickname5415/Pomelo"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "replace-with-account-database"
-database_id = "00000000-0000-4000-8000-000000000000"
+database_name = "pomelo-account"
+database_id = "96eb2fa3-d1d3-4aa3-8b6c-3b6caf18668e"
 migrations_dir = "migrations"
 
 # Discord artwork lives at the root of B2. Set B2_KEY_ID and
 # B2_APPLICATION_KEY as Worker secrets.
 
-# Bug report screenshots, embedded publicly in their GitHub issues.
-[[r2_buckets]]
-binding = "SUPPORT_FILES"
-bucket_name = "replace-with-support-bucket"
+
 
 # Per-IP limit on sign-in and token requests.
 [[ratelimits]]
