@@ -51,7 +51,7 @@ QString TidalProvider::artworkUrl(const QString &hash) {
   if (hash.trimmed().isEmpty()) return QString();
   QString formatted = hash;
   formatted.replace(QLatin1Char('-'), QLatin1Char('/'));
-  return QStringLiteral("https://resources.tidal.com/images/%1/640x640.jpg").arg(formatted);
+  return QStringLiteral("https://resources.tidal.com/images/%1/750x750.jpg").arg(formatted);
 }
 
 QJsonObject TidalProvider::normalizeTrack(const QJsonObject &raw) {
@@ -132,10 +132,12 @@ QJsonObject TidalProvider::normalizePlaylist(const QJsonObject &raw) {
   const QString squareImage = item.value(QStringLiteral("squareImage")).toString();
   const int count = item.value(QStringLiteral("numberOfTracks")).toInt(0);
   QString thumb;
-  if (!image.isEmpty()) thumb = artworkUrl(image);
-  else if (!squareImage.isEmpty()) thumb = artworkUrl(squareImage);
-  else if (item.contains(QStringLiteral("images"))) {
+  if (!squareImage.isEmpty()) {
+    thumb = artworkUrl(squareImage);
+  } else if (item.contains(QStringLiteral("images"))) {
     thumb = item.value(QStringLiteral("images")).toObject().value(QStringLiteral("MEDIUM")).toObject().value(QStringLiteral("url")).toString();
+  } else if (!image.isEmpty()) {
+    thumb = QStringLiteral("https://resources.tidal.com/images/%1/1080x720.jpg").arg(QString(image).replace(QLatin1Char('-'), QLatin1Char('/')));
   }
   return QJsonObject{
     {QStringLiteral("id"), id}, {QStringLiteral("browseId"), id},
