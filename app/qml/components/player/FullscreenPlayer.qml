@@ -87,7 +87,7 @@ FullscreenPlayerForm {
     function streamQuality(track) {
         if (!OrchardAppearance.showBitrate || OrchardPlayback.bitrate <= 0)
             return "";
-        const kbps = Math.round(OrchardPlayback.bitrate >= 1000 ? OrchardPlayback.bitrate / 1000 : OrchardPlayback.bitrate);
+        const kbps = Math.round(OrchardPlayback.bitrate >= 10000 ? OrchardPlayback.bitrate / 1000 : OrchardPlayback.bitrate);
         return track && track.streamCodec ? kbps + " kbps · " + track.streamCodec : kbps + " kbps";
     }
 

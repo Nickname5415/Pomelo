@@ -104,7 +104,7 @@ Item {
         const num = Number(value || 0);
         if (!Number.isFinite(num) || num <= 0)
             return "";
-        return String(Math.round(num >= 1000 ? num / 1000 : num));
+        return String(Math.round(num >= 10000 ? num / 1000 : num));
     }
 
     // Untyped on purpose: a compiled binding reading the track map trips qmlcachegen.

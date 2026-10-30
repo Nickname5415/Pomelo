@@ -49,6 +49,7 @@ public:
   static QJsonObject normalizeTrack(const QJsonObject &item);
   static QJsonObject normalizeAlbum(const QJsonObject &item);
   static QJsonObject normalizeArtist(const QJsonObject &item);
+  static QJsonObject normalizePlaylist(const QJsonObject &item);
 
 signals:
   void resultReady(quint64 requestId, const QJsonValue &result);

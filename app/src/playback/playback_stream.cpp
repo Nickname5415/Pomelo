@@ -185,6 +185,11 @@ void PlaybackController::startResolvedStream(const QJsonObject &stream) {
     // Hand the bitrate to the track. Audiophiles rejoice!
     m_track.insert(QStringLiteral("bitrate"), streamBitrate);
   }
+  if (stream.contains(QStringLiteral("streamCodec"))) {
+    m_track.insert(QStringLiteral("streamCodec"), stream.value(QStringLiteral("streamCodec")).toString());
+  } else if (!m_track.contains(QStringLiteral("streamCodec"))) {
+    m_track.insert(QStringLiteral("streamCodec"), QStringLiteral("FLAC"));
+  }
   m_restoringPlayback = false;
   savePlaybackState();
   if (m_persistenceEnabled && playing())
