@@ -38,7 +38,7 @@ class SongLinksCoordinator(private val repository: SongLinksRepository) {
             SongShareState.Ready(title, subtitle, track.artworkUrl, track.explicit, url)
         } else {
             SongShareState.Error(title, subtitle, track.artworkUrl, track.explicit,
-                "This song has no public YouTube link to share.")
+                "This song has no public link to share.")
         }
     }
 
@@ -64,9 +64,9 @@ class SongLinksCoordinator(private val repository: SongLinksRepository) {
         is SongLinkTarget.Video -> LinkResolution.PlayTrack(
             Track(
                 id = target.videoId,
-                title = "YouTube Track",
+                title = "Track",
                 artist = "",
-                artworkUrl = "https://i.ytimg.com/vi/${target.videoId}/hqdefault.jpg",
+                artworkUrl = "",
             ),
         )
         null -> null

@@ -154,10 +154,8 @@ class DiscordPresenceCoordinator(
         val buttons = buildList {
             val trackUrl = songLinks.trackUrl(track)?.takeIf(String::isNotBlank)
             if (trackUrl != null) {
-                val label = if (trackUrl.contains("tidal.com")) "Listen on TIDAL" else "Listen to Track"
-                add(label to trackUrl)
+                add("Listen on your platform" to trackUrl)
             }
-            add("View Pomelo Project" to DISCORD_POMELO_PROJECT_URL)
         }
 
         DiscordNative.setPresence(

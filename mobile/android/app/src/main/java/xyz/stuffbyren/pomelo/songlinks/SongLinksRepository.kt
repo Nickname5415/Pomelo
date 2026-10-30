@@ -28,30 +28,20 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 class SongLinksRepository {
     fun trackUrl(track: Track): String? {
         val id = track.id.trim()
-        if (track.playbackSource.equals("local", ignoreCase = true) || track.isUpload) return null
-        if (track.playbackSource.equals("youtube", ignoreCase = true) || YOUTUBE_ID_REGEX.matches(id)) {
-            return "https://music.youtube.com/watch?v=$id"
-        }
-        if (track.playbackSource.equals("tidal", ignoreCase = true) || id.isNotBlank()) {
-            return "https://tidal.com/browse/track/$id"
-        }
-        return null
+        if (track.playbackSource.equals("local", ignoreCase = true) || track.isUpload || id.isBlank()) return null
+        return "https://tidal.com/track/$id/u"
     }
 
     fun collectionUrl(detail: BrowseDetail): String? {
-        if (detail.kind == CatalogKind.ARTIST) {
-            val id = detail.id.trim()
-            return id.takeIf { it.startsWith("UC") && PUBLIC_ID_REGEX.matches(it) }
-                ?.let { "https://music.youtube.com/channel/$it" }
-        }
-        if (detail.kind != CatalogKind.ALBUM && detail.kind != CatalogKind.PLAYLIST) return null
-
         val rawId = detail.audioPlaylistId.ifBlank { detail.id }.trim().substringBefore(':')
-        // VL is a browse wrapper, not part of the public playlist ID.
         val id = if (rawId.startsWith("VL")) rawId.removePrefix("VL") else rawId
-        return id.takeIf { PUBLIC_ID_REGEX.matches(it) &&
-            (it.startsWith("OLAK") || it.startsWith("PL") || it.startsWith("RD")) }
-            ?.let { "https://music.youtube.com/playlist?list=$it" }
+        if (id.isBlank() || id == "offline_downloads" || id.startsWith("MPREb_internal")) return null
+        return when (detail.kind) {
+            CatalogKind.ALBUM -> "https://tidal.com/album/$id/u"
+            CatalogKind.ARTIST -> "https://tidal.com/artist/$id/u"
+            CatalogKind.PLAYLIST -> "https://tidal.com/playlist/$id/u"
+            else -> "https://tidal.com/album/$id/u"
+        }
     }
 
     fun parseLink(rawInput: String): SongLinkTarget? {
@@ -59,16 +49,14 @@ class SongLinksRepository {
         val input = SHARED_URL_REGEX.find(rawInput)?.value?.trimEnd('.', ',', ')') ?: rawInput.trim()
         if (input.isBlank()) return null
 
-        if (input.startsWith("orchard:", ignoreCase = true)) {
+        if (input.startsWith("pomelo:", ignoreCase = true) || input.startsWith("orchard:", ignoreCase = true)) {
             val parts = input.substringAfter(':').removePrefix("//")
                 .substringBefore('?').substringBefore('#').split('/').filter(String::isNotBlank)
             val kind = parts.firstOrNull()?.lowercase() ?: return null
             val id = parts.getOrNull(1) ?: return null
             return when (kind) {
-                "video", "watch", "track" ->
-                    id.takeIf { YOUTUBE_ID_REGEX.matches(it) }?.let(SongLinkTarget::Video)
-                "album", "artist", "playlist" ->
-                    id.takeIf { PUBLIC_ID_REGEX.matches(it) }?.let { SongLinkTarget.Browse(kind, it) }
+                "track" -> id.takeIf { it.isNotBlank() }?.let(SongLinkTarget::Video)
+                "album", "artist", "playlist" -> id.takeIf { it.isNotBlank() }?.let { SongLinkTarget.Browse(kind, it) }
                 else -> null
             }
         }
@@ -82,6 +70,17 @@ class SongLinksRepository {
         }
         val url = candidate.toHttpUrlOrNull() ?: return null
         val host = url.host.lowercase().removePrefix("www.")
+
+        if (host == "tidal.com" || host == "listen.tidal.com") {
+            val segments = url.pathSegments.filter { it.isNotBlank() && it != "browse" && it != "u" }
+            val kind = segments.firstOrNull()?.lowercase() ?: return null
+            val id = segments.getOrNull(1) ?: return null
+            return when (kind) {
+                "track" -> SongLinkTarget.Video(id)
+                "album", "artist", "playlist" -> SongLinkTarget.Browse(kind, id)
+                else -> null
+            }
+        }
 
         if (host == "song.link" || host == "album.link") {
             if (url.pathSegments.size != 2 || url.pathSegments[0] != "y") return null
@@ -128,8 +127,11 @@ class SongLinksRepository {
         val YOUTUBE_ID_REGEX = Regex("^[a-zA-Z0-9_-]{11}$")
         val SHARED_URL_REGEX = Regex("https?://\\S+", RegexOption.IGNORE_CASE)
         val PUBLIC_ID_REGEX = Regex("^[a-zA-Z0-9_-]+$")
-        val KNOWN_HOSTS = setOf("song.link/", "album.link/", "youtu.be/", "youtube.com/",
-            "www.youtube.com/", "m.youtube.com/", "music.youtube.com/", "youtube-nocookie.com/")
+        val KNOWN_HOSTS = setOf(
+            "tidal.com/", "listen.tidal.com/",
+            "song.link/", "album.link/", "youtu.be/", "youtube.com/",
+            "www.youtube.com/", "m.youtube.com/", "music.youtube.com/", "youtube-nocookie.com/",
+        )
         val YOUTUBE_HOSTS = setOf("youtu.be", "youtube.com", "m.youtube.com", "music.youtube.com",
             "youtube-nocookie.com")
     }

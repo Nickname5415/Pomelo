@@ -31,17 +31,17 @@ class SongLinksRepositoryTest {
     private val repo = SongLinksRepository()
 
     @Test
-    fun buildsDesktopCompatibleLinksWithoutResolver() {
-        assertEquals("https://music.youtube.com/watch?v=dQw4w9WgXcQ",
-            repo.trackUrl(Track(id = "dQw4w9WgXcQ", title = "Song", artist = "Artist")))
-        assertEquals("https://music.youtube.com/playlist?list=OLAK5uy_sample",
-            repo.collectionUrl(BrowseDetail(id = "MPREb_internal", kind = CatalogKind.ALBUM,
-                title = "Album", audioPlaylistId = "OLAK5uy_sample")))
-        assertEquals("https://music.youtube.com/playlist?list=PL123456789",
-            repo.collectionUrl(BrowseDetail(id = "VLPL123456789", kind = CatalogKind.PLAYLIST,
+    fun buildsTidalUniversalLinks() {
+        assertEquals("https://tidal.com/track/228822578/u",
+            repo.trackUrl(Track(id = "228822578", title = "Song", artist = "Artist")))
+        assertEquals("https://tidal.com/album/459304950/u",
+            repo.collectionUrl(BrowseDetail(id = "459304950", kind = CatalogKind.ALBUM,
+                title = "Album")))
+        assertEquals("https://tidal.com/playlist/my-playlist-id/u",
+            repo.collectionUrl(BrowseDetail(id = "my-playlist-id", kind = CatalogKind.PLAYLIST,
                 title = "Playlist")))
-        assertEquals("https://music.youtube.com/channel/UC123456789",
-            repo.collectionUrl(BrowseDetail(id = "UC123456789", kind = CatalogKind.ARTIST,
+        assertEquals("https://tidal.com/artist/12345/u",
+            repo.collectionUrl(BrowseDetail(id = "12345", kind = CatalogKind.ARTIST,
                 title = "Artist")))
     }
 
@@ -56,7 +56,16 @@ class SongLinksRepositoryTest {
     }
 
     @Test
-    fun parsesPublicLinksAndYouTubeLinks() {
+    fun parsesPublicLinksAndTidalLinks() {
+        val tidalTrack = repo.parseLink("https://tidal.com/track/228822578/u")
+        assertTrue(tidalTrack is SongLinkTarget.Video)
+        assertEquals("228822578", (tidalTrack as SongLinkTarget.Video).videoId)
+
+        val tidalAlbum = repo.parseLink("https://tidal.com/album/459304950/u")
+        assertTrue(tidalAlbum is SongLinkTarget.Browse)
+        assertEquals("459304950", (tidalAlbum as SongLinkTarget.Browse).browseId)
+        assertEquals("album", tidalAlbum.kind)
+
         val song = repo.parseLink("https://song.link/y/dQw4w9WgXcQ")
         assertTrue(song is SongLinkTarget.Video)
         assertEquals("dQw4w9WgXcQ", (song as SongLinkTarget.Video).videoId)

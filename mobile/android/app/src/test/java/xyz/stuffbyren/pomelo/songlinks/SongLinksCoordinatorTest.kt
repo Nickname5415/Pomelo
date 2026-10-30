@@ -36,7 +36,7 @@ class SongLinksCoordinatorTest {
     @Test
     fun dismissClearsState() {
         val track = Track(
-            id = "dQw4w9WgXcQ",
+            id = "228822578",
             title = "Test Song",
             artist = "Test Artist",
             album = "Test Album",
@@ -45,7 +45,7 @@ class SongLinksCoordinatorTest {
         )
         coordinator.shareTrack(track)
         val ready = coordinator.shareState.value as SongShareState.Ready
-        assertEquals("https://music.youtube.com/watch?v=dQw4w9WgXcQ", ready.shareUrl)
+        assertEquals("https://tidal.com/track/228822578/u", ready.shareUrl)
 
         coordinator.dismissShare()
         assertNull(coordinator.shareState.value)
