@@ -87,7 +87,7 @@ class TidalStreamResolver(
     private suspend fun resolveViaWebPlayback(trackId: String): String? {
         val token = webSession?.getAccessToken() ?: return null
         val countryCode = auth.session()?.countryCode ?: "MX"
-        val qualities = listOf("LOSSLESS", "HIGH", "LOW")
+        val qualities = listOf("HI_RES", "LOSSLESS", "HIGH", "LOW")
 
         for (quality in qualities) {
             val url = "https://api.tidal.com/v1/tracks/$trackId/playbackinfopostpaywall" +
@@ -133,8 +133,8 @@ class TidalStreamResolver(
                             } catch (_: Exception) {}
                         }
                         val sampleRate = json.optInt("sampleRate", xmlSampleRate ?: 44100)
-                        val bitDepth = json.optInt("bitDepth", if (quality == "HI_RES_LOSSLESS") 24 else 16)
                         val audioQuality = json.optString("audioQuality", quality)
+                        val bitDepth = json.optInt("bitDepth", if (audioQuality.contains("HI_RES", ignoreCase = true)) 24 else 16)
                         val hiRes = audioQuality.contains("HI_RES", ignoreCase = true) || bitDepth > 16 || sampleRate > 48000
                         val effectiveBitrate = if (bandwidthKbps > 0) bandwidthKbps else if (codec == "FLAC") (if (hiRes) 2304 else 850) else 320
                         streamInfoCache[trackId] = TidalStreamInfo(
