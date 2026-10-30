@@ -29,3 +29,5 @@ dependencyResolutionManagement {
 
 rootProject.name = 'Orchard Mobile'
 include ':app'
+include ':desktop'
+project(':desktop').projectDir = new File(rootDir, '../../desktop')

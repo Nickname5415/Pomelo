@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+JAR="$DIR/desktop/build/compose/jars/pomelo-linux-x64-2.0.0.jar"
+
+if [ ! -f "$JAR" ]; then
+    echo "Building Pomelo Desktop standalone jar..."
+    "$DIR/mobile/android/gradlew" -p "$DIR/mobile/android" :desktop:packageUberJarForCurrentOS
+fi
+
+exec java -jar "$JAR" "$@"

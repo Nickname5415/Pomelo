@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Pomelo
+Comment=High-fidelity TIDAL Music Client
+Exec=/home/ren/Documents/antigravity/wonderful-hertz/pomelo-desktop
+Icon=/home/ren/Documents/antigravity/wonderful-hertz/mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Player;Music;
+StartupWMClass=xyz-stuffbyren-pomelo-desktop-MainKt

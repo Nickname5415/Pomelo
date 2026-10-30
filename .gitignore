@@ -1,4 +1,5 @@
 /build*/
+**/build/
 /third_party/.wraplock
 /target/
 /.cache/
