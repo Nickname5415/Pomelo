@@ -29,8 +29,8 @@
 #include <QUrlQuery>
 
 namespace {
-constexpr auto kClientId = "ZL6uNG7Udwi7M8C0";
-constexpr auto kClientSecret = "yEBhlvqwZF5ZBD6LExgOBcn3bvZfLlrg1VuRqX4qLu8=";
+constexpr auto kClientId = "6BDSRdpK9hqEBTgU";
+constexpr auto kClientSecret = "xeuPmY7nbpZ9IIbLAcQ93shka1VNheUAqN6IcszjTG8=";
 constexpr auto kApiV1 = "https://api.tidal.com/v1";
 constexpr auto kAuthTokenUrl = "https://auth.tidal.com/v1/oauth2/token";
 
