@@ -83,6 +83,12 @@ private:
         if (first.size() != 3 || first[1] != m_path) { reject(404); return; }
         const bool head = first[0] == "HEAD";
         if (!head && first[0] != "GET") { reject(405); return; }
+        if (m_stream.contains("manifestXml")) {
+            const QByteArray xml = m_stream.value("manifestXml").toString().toUtf8();
+            m_socket->write("HTTP/1.1 200 OK\r\nContent-Type: application/dash+xml\r\nContent-Length: " +
+                            QByteArray::number(xml.size()) + "\r\nConnection: close\r\n\r\n" + (head ? QByteArray() : xml));
+            return;
+        }
         m_length = static_cast<qint64>(m_stream.value("contentLength").toDouble());
         m_end = m_length - 1;
         bool ranged = false;
@@ -295,7 +301,8 @@ QUrl AudioStreamProxy::open(const QJsonObject &stream) {
     if (!m_server.isListening() && !m_server.listen(QHostAddress::LocalHost, 0)) return {};
     m_stream = stream;
     m_failed = false;
-    m_path = "/" + QUuid::createUuid().toString(QUuid::WithoutBraces).toLatin1();
+    const QByteArray ext = stream.contains("manifestXml") ? ".mpd" : "";
+    m_path = "/" + QUuid::createUuid().toString(QUuid::WithoutBraces).toLatin1() + ext;
     return QUrl("http://127.0.0.1:" + QString::number(m_server.serverPort()) + QString::fromLatin1(m_path));
 }
 void AudioStreamProxy::setSuspended(bool suspended) {

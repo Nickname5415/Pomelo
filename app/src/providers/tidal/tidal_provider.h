@@ -66,6 +66,7 @@ private:
   void handleArtist(quint64 requestId, const QString &artistId);
   void handlePlaylist(quint64 requestId, const QString &playlistId);
   void handlePlaylists(quint64 requestId);
+  void handleLibrary(quint64 requestId);
   void handleResolve(quint64 requestId, const QJsonObject &payload);
 
   QNetworkRequest createRequest(const QUrl &url) const;
