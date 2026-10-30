@@ -1,14 +1,11 @@
 <RCC>
   <qresource prefix="/licenses">
     <file alias="orchard.txt">../LICENSE</file>
-    <file alias="orchard-engine.txt">../LICENSE-POLYFORM-SHIELD</file>
     <file alias="lucide.txt">../app/qml/assets/lucide/LICENSE.txt</file>
     <file alias="quickjs.txt">../third_party/quickjs/LICENSE</file>
     <file alias="qtkeychain.txt">../third_party/qtkeychain/COPYING</file>
     <file alias="kawarp.txt">../third_party/kawarp/LICENSE</file>
     <file alias="liquidglass.txt">../third_party/liquidglass/LICENSE</file>
-    <file alias="oxc.txt">../crates/orchard-youtube-extractor/OXC_LICENSE</file>
-    <file alias="youtubejs.txt">../crates/orchard-youtube-extractor/YOUTUBEJS_LICENSE</file>
     <file alias="ai-music-detector.txt">../app/src/playback/slop_model/LICENSE</file>
     <file alias="inter.txt">../app/qml/assets/fonts/Inter-LICENSE.txt</file>
     <file alias="libdatachannel.txt">../third_party/libdatachannel/LICENSE</file>

@@ -19,7 +19,6 @@
 
 #include "apple_music.h"
 
-#include "providers/runtime/provider_runtime.h"
 
 #include <QCryptographicHash>
 #include <QJsonValue>
@@ -44,65 +43,11 @@ void AppleMusic::finishCall(quint64 requestId, const QJsonValue &result, const Q
 }
 
 void AppleMusic::configure(std::function<void(const QString &error)> done) {
-  withDeveloperToken([this, done = std::move(done)](const QString &developerToken, const QString &tokenError) {
-    if (developerToken.isEmpty()) {
-      done(tokenError);
-      return;
-    }
-    const QString key = sessionKey(developerToken, m_userToken);
-    if (key == m_configuredFor) {
-      done({});
-      return;
-    }
-    const auto setSession = [this, developerToken](const QString &storefront) {
-      return m_runtime->invoke(QStringLiteral("session.set"), QJsonObject{
-          {QStringLiteral("developerToken"), developerToken},
-          {QStringLiteral("userToken"), m_userToken},
-          {QStringLiteral("storefront"), storefront},
-          // The token's origin claim names the sign-in page's origin.
-          {QStringLiteral("origin"), QStringLiteral("https://appassets.androidplatform.net")},
-      });
-    };
-    const QString region = regionStorefront();
-    setSession(region);
-    const quint64 id = m_runtime->invoke(QStringLiteral("storefront.resolve"),
-                                         QJsonObject{{QStringLiteral("fallback"), region}});
-    m_calls.insert(id, [this, key, region, setSession, done](const QJsonValue &result, const QString &error) {
-      if (!error.isEmpty()) {
-        done(error);
-        return;
-      }
-      const QString storefront = result.toObject().value(QStringLiteral("storefront")).toString();
-      if (!storefront.isEmpty() && storefront != region)
-        setSession(storefront);
-      m_configuredFor = key;
-      done({});
-    });
-  });
+  if (done) done(QStringLiteral("Apple Music is not supported in Pomelo"));
 }
 
-void AppleMusic::call(const QString &method, const QJsonObject &payload, CallReply done, bool retry) {
-  configure([this, method, payload, done = std::move(done), retry](const QString &configureError) {
-    if (!configureError.isEmpty()) {
-      done({}, configureError);
-      return;
-    }
-    const quint64 id = m_runtime->invoke(method, payload);
-    m_calls.insert(id, [this, method, payload, done, retry](const QJsonValue &result, const QString &error) {
-      const QJsonObject failure = result.toObject().value(QStringLiteral("error")).toObject();
-      if (!error.isEmpty() || failure.isEmpty()) {
-        done(error.isEmpty() ? result : QJsonValue(), error);
-        return;
-      }
-      // A revoked or rotated key; fetch a fresh developer token once.
-      if (failure.value(QStringLiteral("code")).toString() == QStringLiteral("developer_token") && retry) {
-        forgetDeveloperToken();
-        call(method, payload, done, false);
-        return;
-      }
-      done({}, failure.value(QStringLiteral("message")).toString());
-    });
-  });
+void AppleMusic::call(const QString &, const QJsonObject &, CallReply done, bool) {
+  if (done) done({}, QStringLiteral("Apple Music is not supported in Pomelo"));
 }
 
 void AppleMusic::home(PageReply done) {

@@ -400,3 +400,14 @@ void AudioPipeline::flushPending() {
     m_pending.remove(0, written);
   }
 }
+
+double AudioPipeline::beginAdaptiveMix(const QMediaPlayer *, const QString &,
+                                       const QByteArray &, double, double) {
+  return -1.0;
+}
+
+void AudioPipeline::processAdaptiveBuffer(const QMediaPlayer *, const QAudioBuffer &) {}
+
+void AudioPipeline::rememberOutgoing(const QAudioBuffer &) {}
+
+void AudioPipeline::forgetOutgoing() {}

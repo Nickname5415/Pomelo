@@ -30,7 +30,6 @@ mod media_crypto;
 pub use audio_engine::*;
 pub use audio_tempo::*;
 pub use media_crypto::*;
-pub use orchard_youtube_extractor::ffi::*;
 
 use std::ffi::{CStr, CString, c_char, c_void};
 use std::ptr;
@@ -39,7 +38,8 @@ use std::slice;
 use orchard_system_media::{
     Command, MediaState, Options, RepeatMode, SystemMediaControls, TrackState,
 };
-use orchard_transition_core::MAX_SECONDS;
+
+const MAX_SECONDS: f64 = 12.0;
 
 /// Increment only when the C ABI changes incompatibly.
 #[unsafe(no_mangle)]
