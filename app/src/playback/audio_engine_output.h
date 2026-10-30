@@ -51,6 +51,9 @@ class AudioEngineOutput final : public QObject {
   Q_PROPERTY(double q READ q WRITE setQ NOTIFY configurationChanged)
   Q_PROPERTY(double balance READ balance WRITE setBalance NOTIFY configurationChanged)
   Q_PROPERTY(double trackGainDb READ trackGainDb WRITE setTrackGainDb NOTIFY configurationChanged)
+  Q_PROPERTY(double speed READ speed WRITE setSpeed NOTIFY configurationChanged)
+  Q_PROPERTY(double pitchSemitones READ pitchSemitones WRITE setPitchSemitones NOTIFY configurationChanged)
+  Q_PROPERTY(bool pitchFollowsSpeed READ pitchFollowsSpeed WRITE setPitchFollowsSpeed NOTIFY configurationChanged)
   Q_PROPERTY(QString activePreset READ activePreset NOTIFY configurationChanged)
   Q_PROPERTY(QString outputDeviceId READ outputDeviceId WRITE setOutputDeviceId NOTIFY outputDeviceChanged)
   Q_PROPERTY(QVariantList outputDevices READ outputDevices NOTIFY outputDevicesChanged)
@@ -71,6 +74,9 @@ public:
   double q() const { return m_q; }
   double balance() const { return m_balance; }
   double trackGainDb() const { return m_trackGainDb; }
+  double speed() const { return m_speed; }
+  double pitchSemitones() const { return m_pitchSemitones; }
+  bool pitchFollowsSpeed() const { return m_pitchFollowsSpeed; }
   QString activePreset() const;
   QString outputDeviceId() const { return m_outputDeviceId; }
   QVariantList outputDevices() const;
@@ -110,11 +116,16 @@ public:
   void setQ(double value);
   void setBalance(double value);
   void setTrackGainDb(double value);
+  void setSpeed(double value);
+  void setPitchSemitones(double value);
+  void setPitchFollowsSpeed(bool enabled);
   void setOutputDeviceId(const QString &deviceId);
 
   Q_INVOKABLE void setBandGain(int index, double gainDb);
   Q_INVOKABLE void applyPreset(const QString &name);
   Q_INVOKABLE void resetEngine();
+  Q_INVOKABLE void resetTempo();
+  Q_INVOKABLE void nudgeSpeed(int steps);
 
 signals:
   void configurationChanged();
@@ -135,6 +146,10 @@ private:
   void refreshDevices();
   void pushDevice();
   QAudioDevice selectedDevice() const;
+  // Speed and pitch applied to playback; unity while the engine is off.
+  double effectiveSpeed() const;
+  double effectiveSemitones() const;
+  void applyPlayerRates();
   OrchardAudioEngineConfig engineConfiguration() const;
   QString deviceIdFor(const QByteArray &id) const;
   // Queues work on the audio thread; it runs in call order with everything else there.
@@ -162,6 +177,9 @@ private:
   double m_q{1.1};
   double m_balance{0.0};
   double m_trackGainDb{0.0};
+  double m_speed{1.0};
+  double m_pitchSemitones{0.0};
+  bool m_pitchFollowsSpeed{false};
   QString m_outputDeviceId{QStringLiteral("default")};
   QString m_activeTrackId;
   QVariantMap m_trackGains;

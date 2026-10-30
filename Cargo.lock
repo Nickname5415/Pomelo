@@ -1423,6 +1423,7 @@ dependencies = [
  "orchard-transition-core",
  "orchard-youtube-extractor",
  "sha2",
+ "signalsmith-stretch",
 ]
 
 [[package]]

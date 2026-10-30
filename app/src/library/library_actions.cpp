@@ -49,22 +49,12 @@ LibraryActions::LibraryActions(YouTubeProvider *provider, AuthManager *auth,
   connect(m_provider, &YouTubeProvider::requestFailed, this, &LibraryActions::fail);
   // Fires on every position tick; syncTrack only acts when the track or its stream id moves.
   connect(m_playback, &PlaybackController::stateChanged, this, &LibraryActions::syncTrack);
-  const auto forgetAccount = [this] {
-    // A different account likes different songs. Probably. Taste is personal.
-    m_likeCache.clear();
-    m_likeKnown = false;
-    m_liked = false;
-    m_likeStatusRequest = 0;
-    m_targets.clear();
-    m_targetsTrackId.clear();
-    emit likeChanged();
-    emit targetsChanged();
-  };
-  connect(m_auth, &AuthManager::statusChanged, this, [this, forgetAccount] {
-    if (!m_auth->isSignedIn())
+  connect(m_auth, &AuthManager::statusChanged, this, [this] {
+    if (!m_auth->isSignedIn() && !appleMode())
       forgetAccount();
   });
-  connect(m_auth, &AuthManager::accountChanged, this, [this, forgetAccount] {
+  connect(m_auth, &AuthManager::accountChanged, this, [this] {
+    if (appleMode()) return;
     forgetAccount();
     // Ask the new account about the song that is already playing.
     m_trackId.clear();
@@ -73,9 +63,29 @@ LibraryActions::LibraryActions(YouTubeProvider *provider, AuthManager *auth,
   });
 }
 
+void LibraryActions::forgetAccount() {
+  // A different account likes different songs. Probably. Taste is personal.
+  m_likeCache.clear();
+  m_likeKnown = false;
+  m_liked = false;
+  m_likeStatusRequest = 0;
+  m_targets.clear();
+  m_targetsTrackId.clear();
+  emit likeChanged();
+  emit targetsChanged();
+}
+
+QString LibraryActions::likeKey(const QString &trackId) const {
+  if (trackId.isEmpty())
+    return {};
+  if (appleMode())
+    return local::isLocalTrackId(trackId) ? QString() : QStringLiteral("apple:") + trackId;
+  return m_playback->playbackVideoId(trackId);
+}
+
 void LibraryActions::syncTrack() {
   const QString id = trackIdOf(m_playback->shownTrack());
-  const QString videoId = id.isEmpty() ? QString() : m_playback->playbackVideoId(id);
+  const QString videoId = likeKey(id);
   if (id == m_trackId && videoId == m_likeVideoId)
     return;
 
@@ -98,7 +108,17 @@ void LibraryActions::syncTrack() {
 }
 
 void LibraryActions::requestLikeStatus() {
-  if (m_likeVideoId.isEmpty() || m_likeSetRequest || !m_auth->isSignedIn())
+  if (m_likeVideoId.isEmpty() || m_likeSetRequest)
+    return;
+  if (appleMode()) {
+    if (appleSignedIn())
+      m_likeStatusRequest = appleRequest(
+          QStringLiteral("library.like.status"),
+          {{QStringLiteral("track"), QJsonObject::fromVariantMap(PlaybackController::sanitizeTrack(m_playback->shownTrack()))}},
+          m_likeVideoId);
+    return;
+  }
+  if (!m_auth->isSignedIn())
     return;
   m_likeStatusRequest = m_provider->invoke(
       QStringLiteral("library.like.status"),
@@ -125,13 +145,13 @@ void LibraryActions::toggleCurrentLike() {
   const QVariantMap track = m_playback->shownTrack();
   if (trackIdOf(track).isEmpty() || m_likeSetRequest)
     return;
-  // Likes live on YouTube Music, and a file on your disk is not on YouTube Music.
+  // Likes live on the streaming service, and a file on your disk is not on it.
   if (local::isLocalTrack(track)) {
-    emit noticeRequested(tr("Likes are for YouTube Music songs. Add this one to a local playlist instead."));
+    emit noticeRequested(tr("Files on this computer can't be liked. Add this one to a local playlist instead."));
     return;
   }
-  if (!m_auth->isSignedIn()) {
-    emit noticeRequested(tr("Sign in to like songs."));
+  if (!(appleMode() ? appleSignedIn() : m_auth->isSignedIn())) {
+    emit noticeRequested(appleMode() ? tr("Connect Apple Music in Settings to love songs.") : tr("Sign in to like songs."));
     return;
   }
   // Optimistic; fail() puts it back if YouTube disagrees.
@@ -139,6 +159,15 @@ void LibraryActions::toggleCurrentLike() {
   m_likeKnown = true;
   m_likeStatusRequest = 0;
   m_likeSetTrackId = m_trackId;
+  if (appleMode()) {
+    m_likeSetRequest = appleRequest(
+        QStringLiteral("library.like.set"),
+        {{QStringLiteral("track"), QJsonObject::fromVariantMap(PlaybackController::sanitizeTrack(track))},
+         {QStringLiteral("liked"), m_liked}},
+        m_likeVideoId);
+    emit likeChanged();
+    return;
+  }
   QJsonObject payload = payloadFor(track);
   payload.insert(QStringLiteral("liked"), m_liked);
   m_likeSetRequest = m_provider->invoke(QStringLiteral("library.like.set"), payload);
@@ -149,8 +178,9 @@ void LibraryActions::loadPlaylistTargets(const QVariantMap &track) {
   const QString id = trackIdOf(track);
   if (id.isEmpty())
     return;
-  if (!m_auth->isSignedIn()) {
-    m_targetsError = tr("Sign in to add songs to playlists.");
+  if (!(appleMode() ? appleSignedIn() : m_auth->isSignedIn())) {
+    m_targetsError = appleMode() ? tr("Connect Apple Music in Settings to add songs to playlists.")
+                                 : tr("Sign in to add songs to playlists.");
     emit targetsChanged();
     return;
   }
@@ -159,8 +189,8 @@ void LibraryActions::loadPlaylistTargets(const QVariantMap &track) {
   m_targetsTrackId = id;
   m_targets.clear();
   m_targetsError.clear();
-  m_targetsRequest = m_provider->invoke(QStringLiteral("library.playlist.targets"),
-                                        payloadFor(track));
+  m_targetsRequest = appleMode() ? appleRequest(QStringLiteral("library.playlist.targets"), {})
+                                 : m_provider->invoke(QStringLiteral("library.playlist.targets"), payloadFor(track));
   emit targetsChanged();
 }
 
@@ -177,10 +207,19 @@ void LibraryActions::addToPlaylist(const QVariantMap &track, const QString &play
                                    const QString &title) {
   if (trackIdOf(track).isEmpty() || playlistId.isEmpty() || m_saveRequest)
     return;
+  m_saveCreates = false;
+  if (appleMode()) {
+    m_saveRequest = appleRequest(
+        QStringLiteral("library.playlist.add"),
+        {{QStringLiteral("track"), QJsonObject::fromVariantMap(PlaybackController::sanitizeTrack(track))},
+         {QStringLiteral("playlistId"), playlistId},
+         {QStringLiteral("title"), title}});
+    emit targetsChanged();
+    return;
+  }
   QJsonObject payload = payloadFor(track);
   payload.insert(QStringLiteral("playlistId"), playlistId);
   payload.insert(QStringLiteral("title"), title);
-  m_saveCreates = false;
   m_saveRequest = m_provider->invoke(QStringLiteral("library.playlist.add"), payload);
   emit targetsChanged();
 }
@@ -188,9 +227,17 @@ void LibraryActions::addToPlaylist(const QVariantMap &track, const QString &play
 void LibraryActions::createPlaylist(const QVariantMap &track, const QString &title) {
   if (trackIdOf(track).isEmpty() || title.trimmed().isEmpty() || m_saveRequest)
     return;
+  m_saveCreates = true;
+  if (appleMode()) {
+    m_saveRequest = appleRequest(
+        QStringLiteral("library.playlist.create"),
+        {{QStringLiteral("track"), QJsonObject::fromVariantMap(PlaybackController::sanitizeTrack(track))},
+         {QStringLiteral("title"), title.trimmed()}});
+    emit targetsChanged();
+    return;
+  }
   QJsonObject payload = payloadFor(track);
   payload.insert(QStringLiteral("title"), title.trimmed());
-  m_saveCreates = true;
   m_saveRequest = m_provider->invoke(QStringLiteral("library.playlist.create"), payload);
   emit targetsChanged();
 }
@@ -198,6 +245,17 @@ void LibraryActions::createPlaylist(const QVariantMap &track, const QString &tit
 void LibraryActions::createEmptyPlaylist(const QString &title) {
   if (title.trimmed().isEmpty() || m_saveRequest)
     return;
+  if (appleMode()) {
+    if (!appleSignedIn()) {
+      emit noticeRequested(tr("Connect Apple Music in Settings to create Apple Music playlists."));
+      return;
+    }
+    m_saveCreates = true;
+    m_saveRequest = appleRequest(QStringLiteral("library.playlist.create"),
+                                 {{QStringLiteral("title"), title.trimmed()}});
+    emit targetsChanged();
+    return;
+  }
   if (!m_auth->isSignedIn()) {
     emit noticeRequested(tr("Sign in to create YouTube Music playlists."));
     return;

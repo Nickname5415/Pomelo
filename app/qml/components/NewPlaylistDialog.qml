@@ -22,15 +22,17 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Names a new private playlist, on YouTube Music or on this computer. A seed
+// Names a new private playlist, on the catalog service or on this computer. A seed
 // song is optional: the picker passes one, the sidebar and library do not.
 // Created on demand, destroyed on close.
 Popup {
     id: root
 
     property var track: ({})
-    // "youtube" or "local". Only a song's own kind can seed a playlist.
-    property string source: root.seedIsLocal || OrchardNetwork.offline ? "local" : "youtube"
+    // "service" (YouTube Music or Apple Music, whichever is the catalog source) or "local".
+    // Only a song's own kind can seed a playlist.
+    property string source: root.seedIsLocal || OrchardNetwork.offline ? "local" : "service"
+    readonly property bool apple: OrchardHome.homeSource === "apple_music"
     readonly property bool hasSeed: Boolean(root.track && root.track.id)
     readonly property bool seedIsLocal: root.hasSeed && String(root.track.id).indexOf("local:") === 0
     readonly property bool local: root.source === "local"
@@ -58,6 +60,9 @@ Popup {
         if (root.local)
             return root.hasSeed ? qsTr("“%1” will be added to it.").arg(root.track.title || qsTr("This song"))
                                 : qsTr("Songs stay where they are on your computer. Orchard only remembers the list.");
+        if (root.apple)
+            return root.hasSeed ? qsTr("“%1” will be added to it in your Apple Music library.").arg(root.track.title || qsTr("This song"))
+                                : qsTr("Created in your Apple Music library.");
         return root.hasSeed ? qsTr("“%1” will be added to it. New playlists start private.").arg(root.track.title || qsTr("This song"))
                             : qsTr("Created on YouTube Music, private until you share it.");
     }
@@ -132,7 +137,7 @@ Popup {
             Layout.fillWidth: true
             spacing: 6
 
-            SourceChoice { text: qsTr("YouTube Music"); value: "youtube" }
+            SourceChoice { text: root.apple ? qsTr("Apple Music") : qsTr("YouTube Music"); value: "service" }
             SourceChoice { text: qsTr("On this computer"); value: "local" }
         }
 

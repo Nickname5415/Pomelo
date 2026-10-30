@@ -135,6 +135,13 @@ Menu {
         onTriggered: OrchardPlayback.enqueue(root.media)
     }
     Entry {
+        text: qsTr("Start mix")
+        visible: root.isSong && !root.isLocalSong
+        height: visible ? implicitHeight : 0
+        enabled: !root.media.unplayable && OrchardAuth.isSignedIn && !OrchardNetwork.offline
+        onTriggered: OrchardPlayback.startMix(root.media)
+    }
+    Entry {
         text: qsTr("Add to playlist…")
         visible: root.isSong
         height: visible ? implicitHeight : 0

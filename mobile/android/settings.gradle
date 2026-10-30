@@ -17,7 +17,10 @@ dependencyResolutionManagement {
         // Kawarp-AGSL is only published through JitPack. One repo, one tenant, no exceptions.
         maven {
             url = uri('https://jitpack.io')
-            content { includeGroup 'com.github.meowarex' }
+            content {
+                includeGroup 'com.github.meowarex'
+                includeGroupByRegex 'com\\.github\\.instacart.*'
+            }
         }
         // Discord Social SDK AAR (Java glue + prebuilt native + prefab headers).
         flatDir { dirs file('../../vendor/discord_social_sdk/lib/android') }

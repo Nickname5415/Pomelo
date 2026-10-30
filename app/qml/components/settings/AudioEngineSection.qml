@@ -40,11 +40,16 @@ AudioEngineSectionForm {
         : qsTr("Right %1%").arg(Math.round(engine.balance * 100))
     outputGainText: Number(engine.outputGainDb).toFixed(1) + " dB"
     trackGainText: Number(engine.trackGainDb).toFixed(1) + " dB"
+    speed: engine.speed
+    pitchSemitones: engine.pitchSemitones
+    speedText: Number(engine.speed).toFixed(2) + "x"
+    pitchText: (engine.pitchFollowsSpeed ? 12 * Math.log(engine.speed) / Math.LN2 : engine.pitchSemitones).toFixed(1) + " st"
 
     engineSwitch.onToggled: engine.enabled = engineSwitch.checked
     autoEqSwitch.onToggled: engine.autoEqEnabled = autoEqSwitch.checked
     eqSwitch.onToggled: engine.eqEnabled = eqSwitch.checked
     levelingSwitch.onToggled: engine.normalizationEnabled = levelingSwitch.checked
+    pitchLinkSwitch.onToggled: engine.pitchFollowsSpeed = pitchLinkSwitch.checked
     resetButton.onClicked: engine.resetEngine()
 
     preampSlider.onMoved: value => engine.preampDb = value
@@ -52,8 +57,22 @@ AudioEngineSectionForm {
     balanceSlider.onMoved: value => engine.balance = value
     gainSlider.onMoved: value => engine.outputGainDb = value
     trackGainSlider.onMoved: value => engine.trackGainDb = value
+    speedSlider.onMoved: value => engine.speed = value
+    pitchSlider.onMoved: value => engine.pitchSemitones = value
 
-    outputDevice.currentIndex: outputDevice.indexOfValue(engine.outputDeviceId)
+    // The model assignment resets currentIndex, so resync once it is populated.
+    function syncOutputDevice() {
+        const index = outputDevice.indexOfValue(engine.outputDeviceId);
+        if (index >= 0)
+            outputDevice.currentIndex = index;
+    }
+    outputDevice.onCountChanged: syncOutputDevice()
+    outputDevice.onModelChanged: syncOutputDevice()
+    Component.onCompleted: syncOutputDevice()
+    Connections {
+        target: root.engine
+        function onOutputDeviceChanged() { root.syncOutputDevice() }
+    }
     outputDevice.onActivated: engine.outputDeviceId = outputDevice.currentValue
 
     presetList.delegate: SettingsButton {

@@ -20,6 +20,7 @@
     <file alias="app/qml/components/settings/GeneralSection.qml">../app/qml/components/settings/GeneralSection.qml</file>
     <file alias="app/qml/components/settings/AboutSection.qml">../app/qml/components/settings/AboutSection.qml</file>
     <file alias="app/qml/components/settings/Discord.qml">../app/qml/components/settings/Discord.qml</file>
+    <file alias="app/qml/components/settings/DiscordCustomizePopup.qml">../app/qml/components/settings/DiscordCustomizePopup.qml</file>
     <file alias="app/qml/components/settings/LastFm.qml">../app/qml/components/settings/LastFm.qml</file>
     <file alias="app/qml/components/settings/AppleMusic.qml">../app/qml/components/settings/AppleMusic.qml</file>
     <file alias="app/qml/components/settings/AppleMusicForm.ui.qml">../app/qml/components/settings/AppleMusicForm.ui.qml</file>
@@ -135,6 +136,7 @@
     <file alias="app/qml/components/settings/AudioEngineSectionForm.ui.qml">../app/qml/components/settings/AudioEngineSectionForm.ui.qml</file>
     <file alias="app/qml/components/settings/ConfirmDialogBody.ui.qml">../app/qml/components/settings/ConfirmDialogBody.ui.qml</file>
     <file alias="app/qml/components/settings/CrossfadeModeForm.ui.qml">../app/qml/components/settings/CrossfadeModeForm.ui.qml</file>
+    <file alias="app/qml/components/settings/DiscordCustomizeForm.ui.qml">../app/qml/components/settings/DiscordCustomizeForm.ui.qml</file>
     <file alias="app/qml/components/settings/DiscordForm.ui.qml">../app/qml/components/settings/DiscordForm.ui.qml</file>
     <file alias="app/qml/components/settings/DownloadsSectionForm.ui.qml">../app/qml/components/settings/DownloadsSectionForm.ui.qml</file>
     <file alias="app/qml/components/settings/GeneralSectionForm.ui.qml">../app/qml/components/settings/GeneralSectionForm.ui.qml</file>

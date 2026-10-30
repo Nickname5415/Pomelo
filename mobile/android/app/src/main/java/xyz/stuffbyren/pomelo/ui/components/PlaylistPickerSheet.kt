@@ -1,0 +1,162 @@
+/*
+ * Copyright (C) 2026 SFG545
+ *
+ * This file is part of Orchard.
+ *
+ * Orchard is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * Orchard is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Orchard. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
+package xyz.stuffbyren.pomelo.ui.components
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyColumn as LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import xyz.stuffbyren.pomelo.model.Playlist
+import xyz.stuffbyren.pomelo.model.subtitle
+import xyz.stuffbyren.pomelo.model.Track
+import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
+import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
+
+/** Selects one of the user's saved playlists, keeping duplicate adds unavailable. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun PlaylistPickerSheet(
+    track: Track,
+    playlists: List<Playlist>,
+    onDismiss: () -> Unit,
+    onSelect: (Playlist) -> Unit,
+) {
+    var query by rememberSaveable(track.id) { mutableStateOf("") }
+    val matches = remember(playlists, query) { filterPlaylists(playlists, query) }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = CanopyColors.Surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+        ) {
+            Text("Add to playlist", style = MaterialTheme.typography.titleLarge, color = CanopyColors.Text)
+            Text(
+                track.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = CanopyColors.Muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(14.dp))
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Filter playlists") },
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(Icons.Rounded.Close, contentDescription = "Clear filter")
+                        }
+                    }
+                },
+            )
+            Spacer(Modifier.height(8.dp))
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                contentPadding = PaddingValues(bottom = 28.dp),
+            ) {
+                if (matches.isEmpty()) {
+                    item {
+                        Text(
+                            if (playlists.isEmpty()) "No saved playlists yet. Save or create a playlist first."
+                            else "No matching playlists. Try another name.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = CanopyColors.Muted,
+                            modifier = Modifier.padding(vertical = 16.dp),
+                        )
+                    }
+                } else {
+                    items(matches, key = { it.id }) { playlist ->
+                        val containsTrack = playlist.tracks.any { it.id == track.id }
+                        Surface(
+                            onClick = { if (!containsTrack) onSelect(playlist) },
+                            enabled = !containsTrack,
+                            color = Color.Transparent,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                ArtworkTile(playlist.artworkUrl, playlist.title, Modifier.size(42.dp), 8)
+                                Spacer(Modifier.width(14.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(playlist.title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium), color = CanopyColors.Text)
+                                    Text(
+                                        if (containsTrack) "Already added" else playlist.subtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = CanopyColors.Muted,
+                                    )
+                                }
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.PlaylistAdd,
+                                    contentDescription = null,
+                                    tint = if (containsTrack) CanopyColors.Muted else LocalAccent.current,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

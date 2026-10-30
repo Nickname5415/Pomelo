@@ -89,6 +89,11 @@ Item {
     readonly property bool video: presentation === "video"
     // Apple-style song row: small art, hairline separator, ellipsis menu.
     readonly property bool songlist: presentation === "songlist"
+    readonly property bool isArtist: root.media.type === "artist"
+    readonly property bool isPlaylist: presentation === "playlist"
+    readonly property bool insetArtwork: !plain && (isArtist || isPlaylist || root.media.type === "album")
+    readonly property real cardRadius: songlist ? 6 : 12
+    readonly property real artworkInset: 8
     // Cards without hover fill or lift, used by the Home layout.
     property bool plain: false
     property real preferredWidth: 290
@@ -117,7 +122,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: root.songlist ? 6 : 12
+        radius: root.cardRadius
         color: hover.hovered && (root.songlist || !root.plain) ? (root.songlist ? "#0dffffff" : "#16ffffff") : "transparent"
         border.color: root.activeFocus ? OrchardAppearance.accent : "transparent"
 
@@ -131,15 +136,15 @@ Item {
     Item {
         id: art
 
-        x: root.songlist ? 4 : 0
-        y: root.songlist ? 8 : root.plain || hover.hovered ? 0 : 2
-        width: root.songlist ? 44 : root.compact ? 64 : root.width
-        height: root.songlist ? 44 : root.compact ? 64 : root.landscape ? root.height - 4 : root.video ? Math.round(root.width * 9 / 16) : root.presentation === "playlist" ? 190 : root.width
+        x: root.songlist || root.insetArtwork ? root.artworkInset : 0
+        y: root.songlist || root.insetArtwork ? root.artworkInset : root.plain || hover.hovered ? 0 : 2
+        width: root.songlist ? 44 : root.compact ? 64 : root.insetArtwork ? root.width - 2 * root.artworkInset : root.width
+        height: root.songlist ? 44 : root.compact ? 64 : root.isArtist || root.media.type === "album" ? width : root.landscape ? root.height - 4 : root.video ? Math.round(root.width * 9 / 16) : root.isPlaylist && root.insetArtwork ? 174 : root.width
 
         RoundedArtwork {
             anchors.fill: parent
             source: root.media.thumbnail || ""
-            radius: root.songlist ? 4 : root.media.type === "artist" ? (root.plain ? width / 2 : 18) : root.plain ? 8 : 10
+            radius: root.isArtist ? width / 2 : (root.songlist || root.insetArtwork) ? Math.max(0, root.cardRadius - root.artworkInset) : root.plain ? 8 : 10
         }
 
         Timer {
@@ -215,9 +220,9 @@ Item {
     }
 
     Column {
-        x: root.songlist ? 60 : root.compact ? 78 : root.landscape ? 14 : 0
-        y: root.songlist ? Math.round((root.height - height) / 2) : root.compact ? 13 : root.landscape ? root.height - 53 : art.height + 10
-        width: root.width - x - (root.songlist ? 40 : root.landscape ? 14 : 4)
+        x: root.songlist ? 60 : root.compact ? 78 : root.landscape ? 14 : root.insetArtwork ? root.artworkInset : 0
+        y: root.songlist ? Math.round((root.height - height) / 2) : root.compact ? 13 : root.landscape ? root.height - 53 : root.insetArtwork ? art.y + art.height + 10 : art.height + 10
+        width: root.width - x - (root.songlist ? 40 : root.landscape ? 14 : root.insetArtwork ? root.artworkInset : 4)
         spacing: root.songlist ? 3 : 5
 
         Row {
@@ -241,7 +246,7 @@ Item {
 
         Text {
             width: parent.width
-            text: root.caption || (root.media.artists || []).join(", ") || root.media.artist || root.media.subtitle || root.media.type || ""
+            text: root.caption || (root.isArtist && !root.plain ? qsTr("Artist") : (root.media.artists || []).join(", ") || root.media.artist || root.media.subtitle || root.media.type || "")
             color: "#a4a9ad"
             font.family: "Inter"
             font.pixelSize: root.plain ? 12 : 11

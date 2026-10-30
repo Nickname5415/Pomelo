@@ -55,7 +55,10 @@ ColumnLayout {
                   keys: [{ label: "Esc" }] },
                 { name: qsTr("Toggle Maximize"), icon: "app-window",
                   desc: qsTr("Double click the title bar to expand or restore the window."),
-                  keys: [{ label: qsTr("Double Click Title Bar") }] }
+                  keys: [{ label: qsTr("Double Click Title Bar") }] },
+                { name: qsTr("Toggle Fullscreen"), icon: "maximize",
+                  desc: qsTr("Fill the screen with the window, or put it back."),
+                  keys: [{ label: "F11" }] }
             ]
         },
         {
@@ -67,6 +70,9 @@ ColumnLayout {
                 { name: qsTr("Seek Backward / Forward"), icon: "chevron-right",
                   desc: qsTr("Jump 5 seconds backward or forward in the active track."),
                   keys: [{ label: "←" }, { label: "→" }] },
+                { name: qsTr("Slower / Faster"), icon: "audio-lines",
+                  desc: qsTr("Change playback speed by 0.05x. Needs the Audio Engine."),
+                  keys: [{ label: "[" }, { label: "]" }] },
                 { name: qsTr("Previous / Next Track"), icon: "skip-forward",
                   desc: qsTr("Skip backward or forward through the queue using your keyboard media keys."),
                   keys: [{ label: "Media Prev" }, { label: "Media Next" }] },

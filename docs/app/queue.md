@@ -45,6 +45,13 @@ Click a played song to go back to it. The songs between it and the current song 
 
 The song menu is also available from the **More** button in the fullscreen player and the "More options" button on search results.
 
+## Start a mix from a song
+
+1. Right-click a song.
+2. Select **Start mix**.
+
+The queue is replaced with that song followed by similar songs from YouTube Music. This works with Autoplay off. It needs a signed-in account and a connection. On Android, use **Start Mix** in the song's menu.
+
 ## Play a song from the queue
 
 Click the song in the queue panel.

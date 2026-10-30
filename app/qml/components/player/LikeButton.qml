@@ -22,7 +22,7 @@ import QtQuick
 import QtQuick.Controls
 import Orchard
 
-// Likes the playing song on YouTube Music.
+// Likes the playing song on YouTube Music, or loves it on Apple Music.
 Button {
     id: root
 
@@ -42,7 +42,8 @@ Button {
     Accessible.checked: liked
     ToolTip.visible: hovered
     ToolTip.delay: 500
-    ToolTip.text: liked ? qsTr("Remove from liked songs") : qsTr("Like")
+    ToolTip.text: OrchardHome.homeSource === "apple_music" ? (liked ? qsTr("Unlove") : qsTr("Love"))
+                                                          : liked ? qsTr("Remove from liked songs") : qsTr("Like")
 
     background: Rectangle {
         radius: width / 2

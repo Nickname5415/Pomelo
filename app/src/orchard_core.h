@@ -42,6 +42,8 @@ typedef struct OrchardAudioEngineConfig {
     float q;
     float balance;
     float track_gain_db;
+    float speed;
+    float pitch_semitones;
 } OrchardAudioEngineConfig;
 
 OrchardAudioEngineHandle *orchard_audio_engine_create(uint32_t sample_rate,
@@ -51,6 +53,11 @@ uint8_t orchard_audio_engine_configure(OrchardAudioEngineHandle *handle,
 uint8_t orchard_audio_engine_process(OrchardAudioEngineHandle *handle,
                                      float *samples, size_t frame_count);
 void orchard_audio_engine_reset(OrchardAudioEngineHandle *handle);
+uint8_t orchard_audio_engine_tempo_active(const OrchardAudioEngineHandle *handle);
+// Writes at most output_capacity frames; capacity must cover frame_count / 0.5 + 2.
+size_t orchard_audio_engine_tempo_process(OrchardAudioEngineHandle *handle,
+                                          const float *input, size_t frame_count,
+                                          float *output, size_t output_capacity);
 uint8_t orchard_audio_engine_auto_gains(const OrchardAudioEngineHandle *handle,
                                         float gains[10]);
 uint8_t orchard_audio_engine_spectrum(const OrchardAudioEngineHandle *handle,

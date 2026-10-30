@@ -21,7 +21,6 @@
 
 #include "auth/auth_manager.h"
 #include "integrations/apple_music.h"
-#include "integrations/catalog_source.h"
 #include "providers/youtube/catalog/youtube_catalog.h"
 
 #include <QJsonArray>
@@ -63,22 +62,7 @@ HomeController::HomeController(YouTubeCatalog *catalog, AuthManager *auth,
   connect(m_catalog, &YouTubeCatalog::libraryReady, this,
           [this](quint64 requestId, const QJsonObject &library) {
     if (requestId != m_libraryRequestId) return;
-    m_libraryRequestId = 0;
-    m_libraryLoaded = true;
-    m_libraryError.clear();
-    m_librarySections = library.value(QStringLiteral("sections")).toArray().toVariantList();
-    // The sidebar and the library should agree on where the playlists live.
-    for (const auto &value : std::as_const(m_librarySections)) {
-      const auto section = value.toMap();
-      if (section.value(QStringLiteral("key")).toString() == QStringLiteral("playlists") &&
-          section.value(QStringLiteral("error")).toString().isEmpty()) {
-        m_playlistsRequestId = 0;
-        m_playlists = section.value(QStringLiteral("items")).toList();
-        m_playlistsError.clear();
-        emit playlistsChanged();
-      }
-    }
-    emit libraryChanged();
+    receiveLibrary(library);
   });
   connect(m_catalog, &YouTubeCatalog::requestFailed, this,
           &HomeController::receiveFailure);
@@ -86,15 +70,7 @@ HomeController::HomeController(YouTubeCatalog *catalog, AuthManager *auth,
   connect(m_auth, &AuthManager::sessionChanged, this, [this] {
     // A request using the previous credentials must not win this race.
     m_requestId = 0;
-    m_playlistsRequestId = 0;
-    m_playlists.clear();
-    m_playlistsError.clear();
-    emit playlistsChanged();
-    m_libraryRequestId = 0;
-    m_libraryLoaded = false;
-    m_librarySections.clear();
-    m_libraryError.clear();
-    emit libraryChanged();
+    resetLibrary();
     m_loading = false;
     m_sections.clear();
     m_artists.clear();
@@ -109,7 +85,78 @@ HomeController::HomeController(YouTubeCatalog *catalog, AuthManager *auth,
   });
 }
 
+void HomeController::resetLibrary() {
+  m_playlistsRequestId = 0;
+  m_playlists.clear();
+  m_playlistsError.clear();
+  emit playlistsChanged();
+  m_libraryRequestId = 0;
+  m_libraryLoaded = false;
+  m_librarySections.clear();
+  m_libraryError.clear();
+  emit libraryChanged();
+}
+
+void HomeController::receiveLibrary(const QJsonObject &library) {
+  m_libraryRequestId = 0;
+  m_libraryLoaded = true;
+  m_libraryError.clear();
+  m_librarySections = library.value(QStringLiteral("sections")).toArray().toVariantList();
+  // The sidebar and the library should agree on where the playlists live.
+  for (const auto &value : std::as_const(m_librarySections)) {
+    const auto section = value.toMap();
+    if (section.value(QStringLiteral("key")).toString() == QStringLiteral("playlists") &&
+        section.value(QStringLiteral("error")).toString().isEmpty()) {
+      m_playlistsRequestId = 0;
+      m_playlists = section.value(QStringLiteral("items")).toList();
+      m_playlistsError.clear();
+      emit playlistsChanged();
+    }
+  }
+  emit libraryChanged();
+}
+
+void HomeController::refreshApplePlaylists() {
+  if (m_playlistsRequestId)
+    return;
+  const quint64 id = nextAppleRequest();
+  m_playlistsRequestId = id;
+  m_playlistsError.clear();
+  emit playlistsChanged();
+  m_appleMusic->libraryPlaylists([this, id](const QJsonObject &result, const QString &error) {
+    if (id != m_playlistsRequestId) return;
+    m_playlistsRequestId = 0;
+    if (error.isEmpty())
+      m_playlists = result.value(QStringLiteral("items")).toArray().toVariantList();
+    m_playlistsError = error;
+    emit playlistsChanged();
+  });
+}
+
+void HomeController::refreshAppleLibrary() {
+  if (m_libraryRequestId)
+    return;
+  const quint64 id = nextAppleRequest();
+  m_libraryRequestId = id;
+  m_libraryError.clear();
+  emit libraryChanged();
+  m_appleMusic->library([this, id](const QJsonObject &library, const QString &error) {
+    if (id != m_libraryRequestId) return;
+    if (error.isEmpty()) {
+      receiveLibrary(library);
+      return;
+    }
+    m_libraryRequestId = 0;
+    m_libraryError = error;
+    emit libraryChanged();
+  });
+}
+
 void HomeController::refreshPlaylists() {
+  if (appleSource()) {
+    refreshApplePlaylists();
+    return;
+  }
   if (!m_auth->isSignedIn() || m_playlistsRequestId)
     return;
   m_playlistsError.clear();
@@ -127,7 +174,7 @@ void HomeController::refresh() {
   refreshPlaylists();
   m_loading = true;
   m_errorMessage.clear();
-  if (m_source && m_source->apple()) {
+  if (appleSource()) {
     if (!m_appleMusic || !m_appleMusic->connected()) {
       m_requestId = 0;
       m_loading = false;
@@ -135,7 +182,7 @@ void HomeController::refresh() {
       emit stateChanged();
       return;
     }
-    const quint64 id = (quint64{1} << 63) | ++m_appleRequests;
+    const quint64 id = nextAppleRequest();
     m_requestId = id;
     m_appleMusic->home([this, id](const QJsonObject &home, const QString &error) {
       if (m_requestId != id) return;
@@ -168,6 +215,7 @@ void HomeController::setAppleMusic(AppleMusic *appleMusic, CatalogSource *source
   connect(source, &CatalogSource::changed, this, [this] {
     m_requestId = 0;
     m_loading = false;
+    resetLibrary();
     m_sections.clear();
     m_artists.clear();
     m_hero.clear();
@@ -182,6 +230,7 @@ void HomeController::setAppleMusic(AppleMusic *appleMusic, CatalogSource *source
     if (m_source->apple()) {
       m_requestId = 0;
       m_loading = false;
+      resetLibrary();
       refresh();
     }
   });
@@ -204,6 +253,10 @@ void HomeController::loadLibrary() {
 
 void HomeController::refreshLibrary() {
   m_libraryRequested = true;
+  if (appleSource()) {
+    refreshAppleLibrary();
+    return;
+  }
   if (!m_auth->isSignedIn() || m_libraryRequestId)
     return;
 

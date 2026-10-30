@@ -1,14 +1,8 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/earmark",
-    "crates/orchard-adaptive-mix",
-    "crates/orchard-youtube-extractor",
     "crates/orchard-core-ffi",
-    "crates/orchard-system-media",
-    "crates/orchard-transition-core",
-    "crates/orchard-transition-planner",
-    "crates/orchard-transition-mobile"
+    "crates/orchard-system-media"
 ]
 
 [workspace.package]

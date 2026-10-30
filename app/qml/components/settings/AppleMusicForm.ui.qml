@@ -34,7 +34,7 @@ ColumnLayout {
     spacing: 20
 
     SettingsHint {
-        text: qsTr("Connect Apple Music for artist pages and personal recommendations. Choose Apple under Settings, General, Music source to use it across the app. Apple Music playback is not available yet.")
+        text: qsTr("Artist pages and recommendations from Apple Music. Pick Apple as the Music source in General to use it app-wide.")
     }
 
     RowLayout {

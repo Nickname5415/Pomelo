@@ -22,11 +22,13 @@
 #include "local/local_track.h"
 
 #include "auth/auth_manager.h"
+#include "integrations/apple_music.h"
 #include "playback/playback_controller.h"
 #include "providers/youtube/youtube_provider.h"
 
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QPointer>
 #include <utility>
 
 namespace {
@@ -82,8 +84,10 @@ void LyricsController::selectProvider(const QString &provider) {
 
 void LyricsController::invalidateProviders() {
   m_requestId = 0;
+  m_requestGeneration = 0;
   m_requestTrackId.clear();
   m_prefetchId = 0;
+  m_prefetchGeneration = 0;
   m_prefetchTrackId.clear();
   m_cache.clear();
   m_cacheOrder.clear();
@@ -97,6 +101,13 @@ void LyricsController::setLocalLibrary(LocalLibrary *library) {
     return;
   // Lyrics added or removed mid-song show up without a track change.
   connect(library, &LocalLibrary::changed, this, &LyricsController::refreshLocal);
+}
+
+void LyricsController::setAppleMusic(AppleMusic *appleMusic) {
+  m_appleMusic = appleMusic;
+  const auto sync = [this] { m_providerSettings.setAppleMusicConnected(m_appleMusic->connected()); };
+  connect(appleMusic, &AppleMusic::changed, this, sync);
+  sync();
 }
 
 void LyricsController::setActive(bool active) {
@@ -198,14 +209,14 @@ void LyricsController::syncTrack() {
 
 // Fetches the incoming song's lyrics while a mix plays, so they are cached by the handoff.
 void LyricsController::prefetchTransition() {
-  if (!m_active || m_prefetchId)
+  if (!m_active || !m_prefetchTrackId.isEmpty())
     return;
   const QVariantMap track = m_playback->transitionTrack();
   const QString id = track.value(QStringLiteral("id")).toString();
   if (id.isEmpty() || id == m_requestTrackId || m_cache.contains(id) || local::isLocalTrackId(id))
     return;
   m_prefetchTrackId = id;
-  m_prefetchId = m_provider->invoke(QStringLiteral("lyrics.resolve"), payload(track));
+  resolve(track, m_prefetchGeneration);
 }
 
 // Never leaves the machine: the user's own file, or tags inside the song.
@@ -213,6 +224,7 @@ void LyricsController::requestLocal(const QVariantMap &track) {
   const QString id = track.value(QStringLiteral("id")).toString();
   m_requestTrackId.clear();
   m_requestId = 0;
+  m_requestGeneration = 0;
   apply(id, m_local ? m_local->lyricsFor(id) : QVariantMap());
 }
 
@@ -241,10 +253,45 @@ void LyricsController::request(const QVariantMap &track) {
   // A prefetch already on its way answers for the track it fetched.
   if (id == m_prefetchTrackId) {
     m_requestId = std::exchange(m_prefetchId, 0);
+    m_requestGeneration = std::exchange(m_prefetchGeneration, 0);
     m_prefetchTrackId.clear();
     return;
   }
-  m_requestId = m_provider->invoke(QStringLiteral("lyrics.resolve"), payload(track));
+  m_requestId = 0;
+  resolve(track, m_requestGeneration);
+}
+
+void LyricsController::resolve(const QVariantMap &track, quint64 &generation) {
+  generation = ++m_resolveGeneration;
+  QJsonObject request = payload(track);
+  const auto start = [this, current = generation](QJsonObject request) {
+    const quint64 requestId = m_provider->invoke(QStringLiteral("lyrics.resolve"), request);
+    if (current == m_requestGeneration)
+      m_requestId = requestId;
+    else if (current == m_prefetchGeneration)
+      m_prefetchId = requestId;
+  };
+  const QString id = track.value(QStringLiteral("id")).toString();
+  if (!m_appleMusic || !m_appleMusic->connected() || !providersForTrack(id).contains(QStringLiteral("apple"))) {
+    start(request);
+    return;
+  }
+  const QJsonObject song = request.value(QStringLiteral("track")).toObject();
+  const QJsonObject query{
+      {QStringLiteral("appleId"), track.value(QStringLiteral("appleId")).toString()},
+      {QStringLiteral("isrc"), track.value(QStringLiteral("isrc")).toString()},
+      {QStringLiteral("title"), song.value(QStringLiteral("title"))},
+      {QStringLiteral("artist"), song.value(QStringLiteral("artist"))},
+      {QStringLiteral("album"), song.value(QStringLiteral("album"))},
+  };
+  m_appleMusic->lyrics(query, [self = QPointer(this), current = generation, request, start](
+                                  const QJsonObject &result, const QString &) mutable {
+    if (!self || (current != self->m_requestGeneration && current != self->m_prefetchGeneration))
+      return;
+    // A miss still runs the chain; the resolver skips Apple without its TTML.
+    request.insert(QStringLiteral("appleTtml"), result.value(QStringLiteral("ttml")).toString());
+    start(request);
+  });
 }
 
 QJsonObject LyricsController::payload(const QVariantMap &track) const {
@@ -278,14 +325,16 @@ void LyricsController::remember(const QString &trackId, const QVariantMap &resul
 }
 
 void LyricsController::receive(quint64 requestId, const QJsonValue &result) {
-  if (requestId == m_prefetchId) {
+  if (requestId != 0 && requestId == m_prefetchId) {
     m_prefetchId = 0;
+    m_prefetchGeneration = 0;
     remember(std::exchange(m_prefetchTrackId, QString()), result.toObject().toVariantMap());
     return;
   }
-  if (requestId != m_requestId)
+  if (requestId == 0 || requestId != m_requestId)
     return;
   m_requestId = 0;
+  m_requestGeneration = 0;
   const QString id = std::exchange(m_requestTrackId, QString());
   const QVariantMap data = result.toObject().toVariantMap();
   remember(id, data);
@@ -296,14 +345,16 @@ void LyricsController::receive(quint64 requestId, const QJsonValue &result) {
 }
 
 void LyricsController::fail(quint64 requestId, const QString &) {
-  if (requestId == m_prefetchId) {
+  if (requestId != 0 && requestId == m_prefetchId) {
     m_prefetchId = 0;
+    m_prefetchGeneration = 0;
     m_prefetchTrackId.clear();
     return;
   }
-  if (requestId != m_requestId)
+  if (requestId == 0 || requestId != m_requestId)
     return;
   m_requestId = 0;
+  m_requestGeneration = 0;
   const QString id = std::exchange(m_requestTrackId, QString());
   if (id == m_trackId)
     reset(id, QStringLiteral("unavailable"));

@@ -117,7 +117,7 @@ Handle *handle(jlong value) { return reinterpret_cast<Handle *>(value); }
 
 } // namespace
 
-#define CONNECT_JNI(name) Java_dev_sfg_orchard_mobile_connect_ConnectNative_##name
+#define CONNECT_JNI(name) Java_xyz_stuffbyren_pomelo_connect_ConnectNative_##name
 
 extern "C" {
 

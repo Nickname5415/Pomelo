@@ -24,9 +24,10 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include "integrations/catalog_source.h"
+
 class AuthManager;
 class AppleMusic;
-class CatalogSource;
 class YouTubeCatalog;
 
 class HomeController final : public QObject {
@@ -82,6 +83,13 @@ private:
   void receiveFailure(quint64 requestId, const QString &message);
   void chooseHero();
   void fetchNormalHome();
+  [[nodiscard]] bool appleSource() const { return m_source && m_source->apple(); }
+  [[nodiscard]] quint64 nextAppleRequest() { return (quint64{1} << 63) | ++m_appleRequests; }
+  void refreshApplePlaylists();
+  void refreshAppleLibrary();
+  void receiveLibrary(const QJsonObject &library);
+  // Drops playlists and library from another source or account.
+  void resetLibrary();
   [[nodiscard]] static bool usefulItem(const QVariantMap &item);
 
   YouTubeCatalog *m_catalog;

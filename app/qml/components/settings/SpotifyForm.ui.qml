@@ -39,29 +39,10 @@ ColumnLayout {
     property alias cookieField: cookieField
     property alias saveButton: saveButton
 
-    spacing: 22
+    spacing: 16
 
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: 4
-
-        Text {
-            text: qsTr("Spotify Canvas")
-            color: "#f0eee7"
-            font.family: "Inter"
-            font.pixelSize: 14
-            font.weight: Font.Medium
-        }
-
-        SettingsHint {
-            text: qsTr("Show Spotify's looping song videos as moving artwork when the other mirrors have none. Spotify only serves them to signed-in listeners, so this uses your Spotify login.")
-        }
-    }
-
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.preferredHeight: 1
-        color: "#12ffffff"
+    SettingsHint {
+        text: qsTr("Use Spotify Canvas loops as moving artwork when other sources have none. Requires a Spotify login.")
     }
 
     RowLayout {

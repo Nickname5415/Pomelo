@@ -28,6 +28,7 @@
 #include <QVariantMap>
 #include "lyrics_provider_settings.h"
 
+class AppleMusic;
 class AuthManager;
 class LocalLibrary;
 class PlaybackController;
@@ -68,6 +69,8 @@ public:
   void setDiscordLyricsEnabled(bool enabled);
   // Songs from the local library read their lyrics here instead of online.
   void setLocalLibrary(LocalLibrary *library);
+  // While connected, Apple Music's lyrics replace the mirrors that copy them.
+  void setAppleMusic(AppleMusic *appleMusic);
   Q_INVOKABLE void reload();
 
 signals:
@@ -85,6 +88,8 @@ private:
   void requestLocal(const QVariantMap &track);
   void refreshLocal();
   void request(const QVariantMap &track);
+  // Sets [generation] and fills m_requestId or m_prefetchId once the provider call starts.
+  void resolve(const QVariantMap &track, quint64 &generation);
   QJsonObject payload(const QVariantMap &track) const;
   void remember(const QString &trackId, const QVariantMap &result);
   void receive(quint64 requestId, const QJsonValue &result);
@@ -100,6 +105,7 @@ private:
   AuthManager *m_auth;
   PlaybackController *m_playback;
   LocalLibrary *m_local{nullptr};
+  AppleMusic *m_appleMusic{nullptr};
   QHash<QString, QVariantMap> m_cache;
   QStringList m_cacheOrder;
   QVariantList m_lines;
@@ -111,6 +117,10 @@ private:
   quint64 m_requestId{0};
   QString m_prefetchTrackId;
   quint64 m_prefetchId{0};
+  // Apple lyrics arrive before the provider call; generations tie that call to its request.
+  quint64 m_resolveGeneration{0};
+  quint64 m_requestGeneration{0};
+  quint64 m_prefetchGeneration{0};
   bool m_active{false};
   bool m_followIncoming{false};
   bool m_discordLyricsEnabled{false};

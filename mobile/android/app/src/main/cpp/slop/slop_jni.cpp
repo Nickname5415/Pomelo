@@ -31,7 +31,7 @@ SlopFingerprintDetector *detector(jlong handle) {
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_create(
+Java_xyz_stuffbyren_pomelo_playback_slop_SlopNative_create(
     JNIEnv *env, jobject, jint rate, jint channels, jbyteArray model) {
   if (!model || env->GetArrayLength(model) != 3586 * 4) return 0;
   std::vector<jbyte> bytes(3586 * 4);
@@ -48,7 +48,7 @@ Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_create(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_push(
+Java_xyz_stuffbyren_pomelo_playback_slop_SlopNative_push(
     JNIEnv *env, jobject, jlong handle, jfloatArray samples, jint count) {
   if (!handle || !samples || count <= 0 || count > env->GetArrayLength(samples) || count % 2) return;
   // Copy before DSP so the VM can move objects while the FFT is running.
@@ -58,12 +58,12 @@ Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_push(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_full(JNIEnv *, jobject, jlong handle) {
+Java_xyz_stuffbyren_pomelo_playback_slop_SlopNative_full(JNIEnv *, jobject, jlong handle) {
   return handle && detector(handle)->isFull();
 }
 
 extern "C" JNIEXPORT jfloatArray JNICALL
-Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_verdict(JNIEnv *env, jobject, jlong handle) {
+Java_xyz_stuffbyren_pomelo_playback_slop_SlopNative_verdict(JNIEnv *env, jobject, jlong handle) {
   if (!handle) return nullptr;
   const auto value = detector(handle)->verdict();
   if (!value) return nullptr;
@@ -74,6 +74,6 @@ Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_verdict(JNIEnv *env, jobjec
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_dev_sfg_orchard_mobile_playback_slop_SlopNative_free(JNIEnv *, jobject, jlong handle) {
+Java_xyz_stuffbyren_pomelo_playback_slop_SlopNative_free(JNIEnv *, jobject, jlong handle) {
   delete detector(handle);
 }

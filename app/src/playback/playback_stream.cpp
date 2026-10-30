@@ -18,11 +18,13 @@
  */
 
 #include "playback_controller.h"
+#include "autoplay_select.h"
 #include "playback_helpers.h"
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSettings>
+#include <utility>
 
 void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   if (receiveNonMusicSegments(id, result))
@@ -58,26 +60,37 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   }
   if (id == m_autoplayRequest && m_autoplayRequest) {
     m_autoplayRequest = 0;
-    QSet<QString> known{m_track.value("id").toString(), m_autoplaySeed};
+    const bool mix = std::exchange(m_mixRequest, false);
+    // Drop generated rows that repeat an earlier row before refilling.
+    QList<QVariantMap> rows;
     for (const auto &value : m_queue)
-      known.insert(value.toMap().value("id").toString());
+      rows.append(value.toMap());
+    const auto stale = autoplay::duplicateGeneratedIndices(rows);
+    for (auto it = stale.crbegin(); it != stale.crend(); ++it) {
+      m_orderedQueue.removeOne(m_queue.at(*it));
+      m_queue.removeAt(*it);
+      rows.removeAt(*it);
+    }
+    QList<QVariantMap> existing{m_track, QVariantMap{{"id", m_autoplaySeed}}};
+    existing += rows;
     for (const auto &value : m_history)
-      known.insert(value.toMap().value("id").toString());
-    int added = 0;
+      existing.append(value.toMap());
+    QList<QVariantMap> candidates;
     for (const auto &value : result.toArray()) {
       auto track = value.toObject().toVariantMap();
-      const auto key = track.value("id").toString();
       const auto type = track.value("type").toString();
-      if (key.isEmpty() || known.contains(key) ||
-          track.value("unplayable").toBool() ||
+      if (track.value("unplayable").toBool() ||
           (type != "song" && type != "track" && type != "video"))
         continue;
-      known.insert(key);
-      track.insert("autoplayGenerated", true);
+      candidates.append(track);
+    }
+    const auto picked = autoplay::select(existing, candidates, mix ? 40 : 20);
+    const int added = picked.size();
+    for (auto track : picked) {
+      if (!mix)
+        track.insert("autoplayGenerated", true);
       m_queue.append(track);
       m_orderedQueue.append(track);
-      if (++added == 20)
-        break;
     }
     if (!added)
       m_autoplayError = tr("No more recommendations were found.");

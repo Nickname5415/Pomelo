@@ -15,6 +15,9 @@ keywords:
   - volume normalization
   - output device
   - track gain
+  - playback speed
+  - pitch
+  - tempo
   - reset engine
 platforms:
   - desktop
@@ -76,10 +79,20 @@ Turn on **Dynamic leveling**. Its description reads "Reduce sudden volume jumps 
 
 Drag the **Track gain** slider while the song plays. It goes from -12 dB to +12 dB in 0.5 dB steps. Orchard remembers the value for that song and applies it each time the song plays. A value of 0 dB removes the saved setting. The slider needs the Audio Engine on and a loaded song.
 
+## Change playback speed and pitch
+
+Drag the **Playback speed** slider. It goes from 0.5x to 2.0x in 0.05x steps and starts at 1.00x. Speed changes how fast the song plays and keeps the original pitch. The song position, lyrics, and time left follow the new speed.
+
+Drag the **Pitch** slider to raise or lower pitch. It goes from -12.0 to +12.0 semitones in 0.1 steps and starts at 0.0 st. Pitch works at any speed.
+
+Turn on **Pitch follows speed** to raise or lower pitch with speed, like a turntable. The **Pitch** slider is disabled while this switch is on.
+
+The speed and pitch controls need the Audio Engine switch on. With the Audio Engine off, songs play at 1.00x. Press `[` or `]` to change speed from the keyboard. See [Keyboard shortcuts](shortcuts.md). Orchard remembers speed and pitch between sessions.
+
 ## Choose the audio output device
 
 Pick a device in the **Output device** list. Its description reads "Route Orchard to a specific system audio output." The default is the system default output.
 
 ## Reset the Audio Engine
 
-Select **Reset engine** at the bottom of the group. Reset engine turns the Audio Engine on, turns Automatic EQ, Manual equalizer, and Dynamic leveling off, sets every band, preamp, Global gain, and balance to their starting values, sets Band width to Q 1.1, clears every saved Track gain, and returns the output device to the system default.
+Select **Reset engine** at the bottom of the group. Reset engine turns the Audio Engine on, turns Automatic EQ, Manual equalizer, and Dynamic leveling off, sets every band, preamp, Global gain, and balance to their starting values, sets Band width to Q 1.1, sets speed to 1.00x and pitch to 0.0 st, turns Pitch follows speed off, clears every saved Track gain, and returns the output device to the system default.

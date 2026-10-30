@@ -70,6 +70,12 @@ RowLayout {
             leftPadding: 8
             hoverEnabled: true
             Accessible.name: qsTr("Orchard Account")
+            // Falls back to the YouTube Music profile when no Orchard account is signed in.
+            readonly property bool useYoutube: !OrchardAccount.isSignedIn && OrchardAuth.isSignedIn
+            readonly property string profileName: OrchardAccount.isSignedIn ? OrchardAccount.userName
+                : useYoutube ? (OrchardAuth.userName || "") : ""
+            readonly property string profilePicture: OrchardAccount.isSignedIn ? OrchardAccount.userPicture
+                : useYoutube ? (OrchardAuth.userAvatar || "") : ""
 
             contentItem: RowLayout {
                 spacing: 14
@@ -84,7 +90,7 @@ RowLayout {
                     Text {
                         anchors.centerIn: parent
                         visible: avatar.status !== Image.Ready
-                        text: (OrchardAccount.userName || "O").charAt(0).toUpperCase()
+                        text: (profileButton.profileName || "O").charAt(0).toUpperCase()
                         color: "#ffffff"
                         font.family: "Inter"
                         font.pixelSize: 22
@@ -94,7 +100,7 @@ RowLayout {
                     Image {
                         id: avatar
                         anchors.fill: parent
-                        source: OrchardAccount.userPicture
+                        source: profileButton.profilePicture
                         fillMode: Image.PreserveAspectCrop
                         sourceSize: Qt.size(112, 112)
                         visible: status === Image.Ready
@@ -107,7 +113,7 @@ RowLayout {
 
                     Text {
                         Layout.fillWidth: true
-                        text: OrchardAccount.isSignedIn && OrchardAccount.userName ? OrchardAccount.userName : qsTr("Orchard")
+                        text: profileButton.profileName || qsTr("Orchard")
                         color: "#ffffff"
                         font.family: "Inter"
                         font.pixelSize: 15
@@ -117,7 +123,8 @@ RowLayout {
 
                     Text {
                         Layout.fillWidth: true
-                        text: OrchardAccount.isSignedIn ? qsTr("Orchard Account") : qsTr("Not signed in")
+                        text: OrchardAccount.isSignedIn ? qsTr("Orchard Account")
+            : profileButton.useYoutube ? qsTr("YouTube Music") : qsTr("Not signed in")
                         color: "#b9bfba"
                         font.family: "Inter"
                         font.pixelSize: 12

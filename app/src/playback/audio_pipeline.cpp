@@ -285,11 +285,12 @@ void AudioPipeline::processBuffer(const QMediaPlayer *source, const QAudioBuffer
   if (!engine)
     return;
   ensureSink();
-  QByteArray bytes(reinterpret_cast<const char *>(buffer.constData<float>()),
-                   buffer.byteCount());
+  QByteArray bytes = tempoBytes(engine, buffer);
+  if (bytes.isEmpty())
+    return;
   auto *samples = reinterpret_cast<float *>(bytes.data());
   if (!orchard_audio_engine_process(engine, samples,
-                                    static_cast<size_t>(buffer.frameCount())))
+                                    static_cast<size_t>(bytes.size() / kFrameBytes)))
     return;
   if (m_crossfadeActive) {
     if (outgoing)
@@ -306,6 +307,20 @@ void AudioPipeline::processBuffer(const QMediaPlayer *source, const QAudioBuffer
     m_pending.remove(0, m_pending.size() - maximumQueued);
   }
   flushPending();
+}
+
+QByteArray AudioPipeline::tempoBytes(OrchardAudioEngineHandle *engine,
+                                     const QAudioBuffer &buffer) const {
+  const auto frames = static_cast<size_t>(buffer.frameCount());
+  const auto *input = buffer.constData<float>();
+  if (!orchard_audio_engine_tempo_active(engine))
+    return QByteArray(reinterpret_cast<const char *>(input), buffer.byteCount());
+  // Capacity for the slowest supported speed (0.5x doubles the frame count).
+  QByteArray out(static_cast<qsizetype>((frames * 2 + 2) * kFrameBytes), Qt::Uninitialized);
+  const size_t written = orchard_audio_engine_tempo_process(
+      engine, input, frames, reinterpret_cast<float *>(out.data()), frames * 2 + 2);
+  out.truncate(static_cast<qsizetype>(written * kFrameBytes));
+  return out;
 }
 
 void AudioPipeline::mixCrossfadePending() {
@@ -360,8 +375,10 @@ double AudioPipeline::audiblePosition() const {
   qint64 queued = m_pending.size();
   if (m_sink && m_sinkDevice)
     queued += std::max<qint64>(0, m_sink->bufferSize() - m_sink->bytesFree());
+  // Queued output seconds span speed times as much track time.
+  const double speed = m_config.speed > 0.0f ? m_config.speed : 1.0;
   return std::max(0.0, (m_outgoingEndUs + m_clockCorrectionUs) / 1000000.0 -
-                           double(queued / kFrameBytes) / kSampleRate);
+                           double(queued / kFrameBytes) / kSampleRate * speed);
 }
 
 void AudioPipeline::flushPending() {

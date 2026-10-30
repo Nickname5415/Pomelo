@@ -17,6 +17,7 @@
  * along with Orchard. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use crate::audio_tempo::TempoStretcher;
 use biquad::{Biquad, Coefficients, DirectForm1, ToHertz, Type};
 use std::slice;
 
@@ -36,6 +37,8 @@ pub struct OrchardAudioEngineConfig {
     pub q: f32,
     pub balance: f32,
     pub track_gain_db: f32,
+    pub speed: f32,
+    pub pitch_semitones: f32,
 }
 
 #[derive(Clone, Copy)]
@@ -128,10 +131,11 @@ fn analyzer_coefficients(sample_rate: f32, frequency: f32) -> Coefficients<f32> 
 }
 
 pub struct OrchardAudioEngineHandle {
-    engine: AudioEngine,
+    pub(crate) engine: AudioEngine,
+    pub(crate) tempo: TempoStretcher,
 }
 
-struct AudioEngine {
+pub(crate) struct AudioEngine {
     sample_rate: f32,
     channels: usize,
     config: Config,
@@ -190,6 +194,10 @@ impl AudioEngine {
             smoothed_gain: 1.0,
             smoothed_balance: 0.0,
         })
+    }
+
+    pub(crate) fn channel_count(&self) -> usize {
+        self.channels
     }
 
     fn configure(&mut self, config: Config) {
@@ -401,7 +409,10 @@ pub extern "C" fn orchard_audio_engine_create(
 ) -> *mut OrchardAudioEngineHandle {
     std::panic::catch_unwind(|| {
         AudioEngine::new(sample_rate, channels as usize)
-            .map(|engine| Box::into_raw(Box::new(OrchardAudioEngineHandle { engine })))
+            .map(|engine| {
+                let tempo = TempoStretcher::new(sample_rate, channels as usize);
+                Box::into_raw(Box::new(OrchardAudioEngineHandle { engine, tempo }))
+            })
             .unwrap_or(std::ptr::null_mut())
     })
     .unwrap_or(std::ptr::null_mut())
@@ -424,6 +435,7 @@ pub unsafe extern "C" fn orchard_audio_engine_configure(
         let handle = unsafe { &mut *handle };
         let config = unsafe { &*config };
         handle.engine.configure(Config::from_ffi(config));
+        handle.tempo.configure(config.speed, config.pitch_semitones);
         1
     }))
     .unwrap_or(0)
@@ -465,7 +477,9 @@ pub unsafe extern "C" fn orchard_audio_engine_reset(handle: *mut OrchardAudioEng
         return;
     }
     let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        unsafe { &mut *handle }.engine.reset();
+        let handle = unsafe { &mut *handle };
+        handle.engine.reset();
+        handle.tempo.reset();
     }));
 }
 

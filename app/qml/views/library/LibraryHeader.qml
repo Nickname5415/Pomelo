@@ -142,7 +142,7 @@ Column {
                 }
             }
 
-            // YouTube Music or this computer, chosen in the dialog.
+            // The catalog service or this computer, chosen in the dialog.
             LibraryPill {
                 text: root.width < 720 ? "" : qsTr("New playlist")
                 iconName: "plus"
@@ -150,7 +150,7 @@ Column {
                 onClicked: newPlaylist.createObject(Overlay.overlay).open()
             }
 
-            // Its own button: files on this computer never touch YouTube Music.
+            // Its own button: files on this computer never touch the streaming service.
             LibraryPill {
                 id: localPill
                 text: root.width < 720 ? "" : qsTr("Add local files")

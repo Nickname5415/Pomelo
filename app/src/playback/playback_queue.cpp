@@ -340,6 +340,7 @@ void PlaybackController::resolveTrackAlbum() {
 
 void PlaybackController::cancelAutoplay() {
   m_autoplayRequest = 0;
+  m_mixRequest = false;
   m_autoplaySeed.clear();
   m_autoplayError.clear();
   m_waitingForAutoplay = false;
@@ -370,6 +371,26 @@ void PlaybackController::retryAutoplay() {
   cancelAutoplay();
   m_autoplaySuppressed.clear();
   ensureAutoplay();
+}
+
+void PlaybackController::startMix(const QVariantMap &track) {
+  if (forwardRemote(QStringLiteral("play_track"), {{QStringLiteral("track"), track}}))
+    return;
+  startTrack(track, true);
+  // Fetch the radio even with Autoplay off; the rows are plain queue entries.
+  if (m_track.value("id") != track.value("id") || local::isLocalTrack(track) || offlineMode())
+    return;
+  if (m_autoplayRequest) {
+    // Autoplay already requested this seed while the track started.
+    m_mixRequest = m_autoplaySeed == track.value("id").toString();
+    return;
+  }
+  m_autoplaySeed = track.value("id").toString();
+  m_autoplayError.clear();
+  m_mixRequest = true;
+  m_autoplayRequest = m_provider->invoke(
+      "catalog.upNext", QJsonObject{{"videoId", m_autoplaySeed}, {"session", m_auth->sessionObject()}});
+  emit stateChanged();
 }
 
 void PlaybackController::ensureAutoplay() {

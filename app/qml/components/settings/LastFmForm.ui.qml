@@ -38,7 +38,7 @@ ColumnLayout {
     property alias cancelButton: cancelButton
     property alias disconnectButton: disconnectButton
 
-    spacing: 22
+    spacing: 16
 
     RowLayout {
         Layout.fillWidth: true
@@ -49,7 +49,7 @@ ColumnLayout {
             spacing: 4
 
             Text {
-                text: qsTr("Last.fm scrobbling")
+                text: qsTr("Scrobbling")
                 color: "#f0eee7"
                 font.family: "Inter"
                 font.pixelSize: 14
@@ -57,7 +57,7 @@ ColumnLayout {
             }
 
             SettingsHint {
-                text: qsTr("Send now-playing updates and finished listens to your Last.fm profile.")
+                text: qsTr("Send listens to your Last.fm profile.")
             }
         }
 

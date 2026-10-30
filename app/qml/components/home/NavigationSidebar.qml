@@ -208,7 +208,7 @@ Item {
             color: "#919b9f"
         }
 
-        // Opens the YouTube-or-local chooser. The dialog destroys itself on close.
+        // Opens the catalog-service-or-local chooser. The dialog destroys itself on close.
         Button {
             id: newPlaylistButton
 
@@ -268,7 +268,7 @@ Item {
             height: Math.max(0, mainColumn.height - y)
             clip: true
             spacing: 4
-            // Playlists from this computer lead; YouTube's follow. Offline, only what is saved here.
+            // Playlists from this computer lead; the catalog service's follow. Offline, only what is saved here.
             model: OrchardNetwork.offline ? OrchardOffline.playlists
                 : (OrchardLocal.playlists || []).concat((OrchardHome.playlists || []).filter((p) => {
                     return p.title !== "New playlist";

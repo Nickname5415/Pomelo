@@ -6,6 +6,7 @@
 #include "lyrics/lyrics_provider_settings.h"
 
 #include <QSettings>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QVariantMap>
@@ -28,7 +29,25 @@ private slots:
   void defaultOrder() {
     LyricsProviderSettings settings;
     QCOMPARE(settings.enabledProviders(), (QStringList{"bini", "betterlyrics", "lyricsplus", "lrclib", "youtube"}));
+    QCOMPARE(settings.label(QStringLiteral("apple")), QStringLiteral("Apple Music"));
     QCOMPARE(settings.label(QStringLiteral("betterlyrics")), QStringLiteral("BetterLyrics"));
+  }
+
+  void appleMusicReplacesItsMirrorsWhileConnected() {
+    QSettings().setValue(QStringLiteral("lyrics/providers"), QVariantList{
+        QVariantMap{{"id", "lrclib"}, {"enabled", true}},
+        QVariantMap{{"id", "bini"}, {"enabled", true}},
+    });
+    LyricsProviderSettings settings;
+    QSignalSpy changed(&settings, &LyricsProviderSettings::changed);
+    settings.setAppleMusicConnected(true);
+    QCOMPARE(changed.count(), 1);
+    QCOMPARE(settings.enabledProviders(), (QStringList{"apple", "lrclib", "youtube"}));
+    QCOMPARE(settings.label(QStringLiteral("apple")), QStringLiteral("Apple Music"));
+    settings.moveProvider(0, 2);
+    QCOMPARE(settings.enabledProviders(), (QStringList{"lrclib", "youtube", "apple"}));
+    settings.setAppleMusicConnected(false);
+    QCOMPARE(settings.enabledProviders(), (QStringList{"lrclib", "bini", "betterlyrics", "lyricsplus", "youtube"}));
   }
 
   void persistsOrderAndDisabledProviders() {

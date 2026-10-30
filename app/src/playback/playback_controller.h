@@ -235,6 +235,7 @@ public:
   }
 
   Q_INVOKABLE void playSong(const QVariantMap &track);
+  Q_INVOKABLE void startMix(const QVariantMap &track);
   Q_INVOKABLE void playCollection(const QVariantList &tracks,
                                   int startIndex = 0, bool shuffle = false,
                                   const QString &playlistId = {},
@@ -317,6 +318,7 @@ private:
   void cancelAutoplay();
   void resolveTrackAlbum();
   bool m_autoplayEnabled{true};
+  bool m_mixRequest{false};
   QString m_streamQuality{QStringLiteral("high")};
   bool m_qobuzWasReachable{false};
   // Temporarily store position so quality hopping doesn't send the user back to
@@ -341,6 +343,7 @@ private:
   void receiveStream(quint64 id, const QJsonValue &result);
   void ensurePlaybackBackend();
   void wirePlayer(QMediaPlayer *source);
+  void scheduleTrackEnd(QMediaPlayer *source);
   void wireStreamProxy(AudioStreamProxy *proxy);
   void scheduleStreamRecovery(bool retryable, const QString &message);
   void applyPendingResume();

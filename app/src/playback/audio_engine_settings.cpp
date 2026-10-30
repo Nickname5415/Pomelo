@@ -20,6 +20,7 @@
 #include "audio_engine_output.h"
 #include "audio_pipeline.h"
 
+#include <QMediaPlayer>
 #include <QSettings>
 
 #include <algorithm>
@@ -162,6 +163,62 @@ void AudioEngineOutput::setTrackGainDb(double value) {
   emit configurationChanged();
 }
 
+double AudioEngineOutput::effectiveSpeed() const { return m_enabled ? m_speed : 1.0; }
+
+double AudioEngineOutput::effectiveSemitones() const {
+  if (!m_enabled)
+    return 0.0;
+  return m_pitchFollowsSpeed ? std::clamp(12.0 * std::log2(m_speed), -12.0, 12.0)
+                             : m_pitchSemitones;
+}
+
+// The decoder runs at the playback rate; the engine stretches it back to real time.
+void AudioEngineOutput::applyPlayerRates() {
+  const double rate = effectiveSpeed();
+  for (auto player = m_bufferOutputs.cbegin(); player != m_bufferOutputs.cend(); ++player)
+    player.key()->setPlaybackRate(rate);
+}
+
+void AudioEngineOutput::setSpeed(double value) {
+  value = std::round(finiteClamp(value, 0.5, 2.0, 1.0) * 20.0) / 20.0;
+  if (qFuzzyCompare(m_speed, value))
+    return;
+  m_speed = value;
+  persistConfiguration();
+  applyConfiguration();
+  emit configurationChanged();
+}
+
+void AudioEngineOutput::setPitchSemitones(double value) {
+  value = std::round(finiteClamp(value, -12.0, 12.0, 0.0) * 10.0) / 10.0;
+  if (qFuzzyCompare(m_pitchSemitones + 13.0, value + 13.0))
+    return;
+  m_pitchSemitones = value;
+  persistConfiguration();
+  applyConfiguration();
+  emit configurationChanged();
+}
+
+void AudioEngineOutput::setPitchFollowsSpeed(bool enabled) {
+  if (m_pitchFollowsSpeed == enabled)
+    return;
+  m_pitchFollowsSpeed = enabled;
+  persistConfiguration();
+  applyConfiguration();
+  emit configurationChanged();
+}
+
+void AudioEngineOutput::nudgeSpeed(int steps) { setSpeed(m_speed + 0.05 * steps); }
+
+void AudioEngineOutput::resetTempo() {
+  m_speed = 1.0;
+  m_pitchSemitones = 0.0;
+  m_pitchFollowsSpeed = false;
+  persistConfiguration();
+  applyConfiguration();
+  emit configurationChanged();
+}
+
 void AudioEngineOutput::setOutputDeviceId(const QString &deviceId) {
   const QString target = deviceId.isEmpty() ? QStringLiteral("default") : deviceId;
   if (m_outputDeviceId == target)
@@ -212,6 +269,9 @@ void AudioEngineOutput::resetEngine() {
   m_balance = 0.0;
   m_trackGains.clear();
   m_trackGainDb = 0.0;
+  m_speed = 1.0;
+  m_pitchSemitones = 0.0;
+  m_pitchFollowsSpeed = false;
   QSettings settings;
   settings.remove(QStringLiteral("playback/audioEngine"));
   m_outputDeviceId = QStringLiteral("default");
@@ -239,6 +299,9 @@ void AudioEngineOutput::loadSettings() {
   m_q = finiteClamp(settings.value(QStringLiteral("q"), 1.1).toDouble(), 0.4, 2.4, 1.1);
   m_balance = finiteClamp(settings.value(QStringLiteral("balance"), 0.0).toDouble(), -1.0, 1.0, 0.0);
   m_normalizationEnabled = settings.value(QStringLiteral("normalizationEnabled"), false).toBool();
+  m_speed = std::round(finiteClamp(settings.value(QStringLiteral("speed"), 1.0).toDouble(), 0.5, 2.0, 1.0) * 20.0) / 20.0;
+  m_pitchSemitones = finiteClamp(settings.value(QStringLiteral("pitchSemitones"), 0.0).toDouble(), -12.0, 12.0, 0.0);
+  m_pitchFollowsSpeed = settings.value(QStringLiteral("pitchFollowsSpeed"), false).toBool();
   m_outputDeviceId = settings.value(QStringLiteral("outputDeviceId"), QStringLiteral("default")).toString();
   m_trackGains = settings.value(QStringLiteral("trackGains")).toMap();
   settings.endGroup();
@@ -256,6 +319,9 @@ void AudioEngineOutput::persistConfiguration() {
   settings.setValue(QStringLiteral("q"), m_q);
   settings.setValue(QStringLiteral("balance"), m_balance);
   settings.setValue(QStringLiteral("normalizationEnabled"), m_normalizationEnabled);
+  settings.setValue(QStringLiteral("speed"), m_speed);
+  settings.setValue(QStringLiteral("pitchSemitones"), m_pitchSemitones);
+  settings.setValue(QStringLiteral("pitchFollowsSpeed"), m_pitchFollowsSpeed);
   settings.setValue(QStringLiteral("outputDeviceId"), m_outputDeviceId);
   settings.setValue(QStringLiteral("trackGains"), m_trackGains);
   settings.endGroup();
@@ -272,10 +338,13 @@ OrchardAudioEngineConfig AudioEngineOutput::engineConfiguration() const {
   config.output_gain_db = static_cast<float>(m_outputGainDb);
   config.q = static_cast<float>(m_q);
   config.balance = static_cast<float>(m_balance);
+  config.speed = static_cast<float>(effectiveSpeed());
+  config.pitch_semitones = static_cast<float>(effectiveSemitones());
   return config;
 }
 
 void AudioEngineOutput::applyConfiguration() {
+  applyPlayerRates();
   // Track gains travel as a map: the pipeline may switch tracks before this side hears of it.
   post([pipeline = m_pipeline, config = engineConfiguration(), gains = m_trackGains] {
     pipeline->configure(config, gains);

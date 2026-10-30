@@ -167,3 +167,38 @@ void AppleMusic::artwork(const QJsonObject &query, PageReply done) {
   call(QStringLiteral("catalog.artwork"), query,
        [done](const QJsonValue &result, const QString &error) { done(result.toObject(), error); });
 }
+
+void AppleMusic::library(PageReply done) {
+  if (!connected()) {
+    done({}, tr("Connect Apple Music in Settings to see your library."));
+    return;
+  }
+  call(QStringLiteral("library"), {},
+       [done](const QJsonValue &result, const QString &error) { done(result.toObject(), error); });
+}
+
+void AppleMusic::libraryPlaylists(PageReply done) {
+  if (!connected()) {
+    done({}, tr("Connect Apple Music in Settings to see your playlists."));
+    return;
+  }
+  call(QStringLiteral("library.playlists"), {},
+       [done](const QJsonValue &result, const QString &error) { done(result.toObject(), error); });
+}
+
+void AppleMusic::lyrics(const QJsonObject &track, PageReply done) {
+  if (!connected()) {
+    done({}, {});
+    return;
+  }
+  call(QStringLiteral("lyrics"), track,
+       [done](const QJsonValue &result, const QString &error) { done(result.toObject(), error); });
+}
+
+void AppleMusic::libraryAction(const QString &method, const QJsonObject &payload, PageReply done) {
+  if (!connected()) {
+    done({}, tr("Connect Apple Music in Settings first."));
+    return;
+  }
+  call(method, payload, [done](const QJsonValue &result, const QString &error) { done(result.toObject(), error); });
+}

@@ -27,13 +27,16 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+class AppleMusic;
 class AuthManager;
+class CatalogSource;
 class HomeController;
 class PlaybackController;
 class YouTubeProvider;
 
-// Likes and playlist additions. Every write targets the video id playback
-// opens, so a music-video row is saved as the album audio it plays as.
+// Likes and playlist additions. Every YouTube write targets the video id playback
+// opens, so a music-video row is saved as the album audio it plays as. While Apple
+// Music is the catalog source, writes go to the Apple Music library instead.
 class LibraryActions final : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool currentLiked READ currentLiked NOTIFY likeChanged)
@@ -64,10 +67,11 @@ public:
   Q_INVOKABLE void addToPlaylist(const QVariantMap &track, const QString &playlistId,
                                  const QString &title);
   Q_INVOKABLE void createPlaylist(const QVariantMap &track, const QString &title);
-  // A new private YouTube Music playlist with nothing in it yet.
+  // A new playlist on the catalog service with nothing in it yet.
   Q_INVOKABLE void createEmptyPlaylist(const QString &title);
   Q_INVOKABLE void removeFromPlaylist(const QVariantMap &track, const QString &playlistId,
                                       const QString &title);
+  void setAppleMusic(AppleMusic *appleMusic, CatalogSource *source);
 
 signals:
   void likeChanged();
@@ -78,7 +82,15 @@ signals:
                            const QString &videoId);
 
 private:
+  void forgetAccount();
   void syncTrack();
+  // Cache key for a track's like: the YouTube video id, or the track id in Apple Music mode.
+  QString likeKey(const QString &trackId) const;
+  // library_actions_apple.cpp
+  [[nodiscard]] bool appleMode() const;
+  [[nodiscard]] bool appleSignedIn() const;
+  // Runs an Apple Music library call whose answer arrives through receive() or fail().
+  quint64 appleRequest(const QString &method, const QJsonObject &payload, const QString &likeKey = {});
   void requestLikeStatus();
   QJsonObject payloadFor(const QVariantMap &track) const;
   void receive(quint64 requestId, const QJsonValue &result);
@@ -88,6 +100,10 @@ private:
   AuthManager *m_auth;
   PlaybackController *m_playback;
   HomeController *m_home;
+  AppleMusic *m_appleMusic{nullptr};
+  CatalogSource *m_source{nullptr};
+  quint64 m_appleRequests{0};
+  bool m_appleConnected{false};
   QString m_trackId;
   QString m_likeVideoId;
   QString m_likeSetTrackId;

@@ -133,6 +133,7 @@ void AudioEngineOutput::attachPlayer(QMediaPlayer *player) {
   auto *output = new QAudioBufferOutput(AudioPipeline::format(), this);
   m_bufferOutputs.insert(player, output);
   player->setAudioBufferOutput(output);
+  player->setPlaybackRate(effectiveSpeed());
   // Qt emits from its decoder threads; the pipeline context queues each buffer
   // straight onto the audio thread.
   connect(output, &QAudioBufferOutput::audioBufferReceived, m_pipeline,

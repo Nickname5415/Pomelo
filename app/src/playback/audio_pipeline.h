@@ -95,6 +95,8 @@ private:
   void rebuildSink();
   void resetCrossfade();
   void mixCrossfadePending();
+  // Raw stereo float frames after the tempo and pitch stage; empty on failure.
+  QByteArray tempoBytes(OrchardAudioEngineHandle *engine, const QAudioBuffer &buffer) const;
   void processAdaptiveBuffer(const QMediaPlayer *source, const QAudioBuffer &buffer);
   void rememberOutgoing(const QAudioBuffer &buffer);
   void forgetOutgoing();

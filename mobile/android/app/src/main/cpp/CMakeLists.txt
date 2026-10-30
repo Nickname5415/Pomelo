@@ -6,7 +6,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(orchard_native LANGUAGES C CXX)
 
-add_subdirectory(js)
 add_subdirectory(connect)
 add_subdirectory(discord)
 add_subdirectory(translation)

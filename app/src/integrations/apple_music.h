@@ -75,6 +75,14 @@ public:
   void artwork(const QJsonObject &query, PageReply done);
   // Catalog search grouped into sections like YouTube's; filter is "all", "songs", "albums"...
   void search(const QString &query, const QString &filter, PageReply done);
+  // The listener's library as sections keyed like YouTube's: artists, albums, songs, playlists.
+  void library(PageReply done);
+  // {items}: every playlist in the listener's library.
+  void libraryPlaylists(PageReply done);
+  // A library write or read for LibraryActions: library.like.*, library.playlist.targets/add/create.
+  void libraryAction(const QString &method, const QJsonObject &payload, PageReply done);
+  // {ttml} for a track from any service (appleId, isrc or title/artist/album); empty when Apple has none.
+  void lyrics(const QJsonObject &track, PageReply done);
 
 signals:
   void changed();

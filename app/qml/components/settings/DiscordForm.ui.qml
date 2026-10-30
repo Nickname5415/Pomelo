@@ -39,21 +39,13 @@ ColumnLayout {
         lastError: ""
     })
     property bool accountSignedIn: false
-    readonly property var platformValues: ["YouTube Music", "Orchard V3"]
-    readonly property var activityValues: ["listening", "playing", "watching", "competing"]
-    readonly property var statusDisplayValues: ["name", "details", "state"]
     property alias enableSwitch: enableSwitch
     property alias lyricsSwitch: lyricsSwitch
-    property alias activityField: activityField
-    property alias detailsField: detailsField
-    property alias stateField: stateField
-    property alias platformSelect: platformSelect
-    property alias activitySelect: activitySelect
-    property alias statusSelect: statusSelect
     property alias projectSwitch: projectSwitch
     property alias animatedSwitch: animatedSwitch
+    property alias customizeButton: customizeButton
 
-    spacing: 22
+    spacing: 16
 
     RowLayout {
         Layout.fillWidth: true
@@ -63,16 +55,16 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: 4
 
-            Text {
-                text: qsTr("Discord Rich Presence")
-                color: "#f0eee7"
-                font.family: "Inter"
-                font.pixelSize: 14
-                font.weight: Font.Medium
+            SettingsFieldLabel {
+                text: qsTr("Rich Presence")
             }
 
             SettingsHint {
-                text: qsTr("Show your current track, artwork, and a link in Discord.")
+                text: !root.discord.enabled ? qsTr("Show your current track in Discord.")
+                    : root.discord.connected ? qsTr("Connected to Discord.")
+                    : root.discord.lastError ? qsTr("Discord is unavailable: %1").arg(root.discord.lastError)
+                    : qsTr("Connecting to Discord…")
+                color: root.discord.enabled && root.discord.lastError ? "#e6a197" : "#8d968e"
             }
         }
 
@@ -97,10 +89,6 @@ ColumnLayout {
         enabled: root.discord.enabled
         opacity: enabled ? 1.0 : 0.46
 
-        SettingsHint {
-            text: qsTr("The selected platform is shown in Discord as ‘Listening to …’. The activity text below defaults to the song name, but you can customize it.")
-        }
-
         RowLayout {
             Layout.fillWidth: true
             spacing: 20
@@ -124,117 +112,6 @@ ColumnLayout {
                 padding: 0
                 checked: root.discord.showSyncedLyrics
                 Accessible.name: qsTr("Show Synced Lyrics")
-            }
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 8
-
-            SettingsFieldLabel {
-                text: qsTr("Activity text template")
-            }
-
-            SettingsTextField {
-                id: activityField
-                text: root.discord.activityText
-                placeholderText: qsTr("{song}")
-                Accessible.name: qsTr("Discord activity text template")
-            }
-
-            SettingsHint {
-                text: qsTr("Variables: {song}, {artist}, {album}, {platform}, {status}, {app}, {position}, {duration}, {url}")
-                font.pixelSize: 11
-            }
-        }
-
-        GridLayout {
-            Layout.fillWidth: true
-            columns: 2
-            columnSpacing: 16
-            rowSpacing: 20
-            // Equal preferred widths keep both columns the same size regardless of content.
-            uniformCellWidths: true
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                SettingsFieldLabel {
-                    text: qsTr("Secondary text template")
-                }
-
-                SettingsTextField {
-                    id: detailsField
-                    text: root.discord.detailsText
-                    placeholderText: qsTr("Optional")
-                    Accessible.name: qsTr("Discord secondary text template")
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                SettingsFieldLabel {
-                    text: qsTr("State template")
-                }
-
-                SettingsTextField {
-                    id: stateField
-                    text: root.discord.stateText
-                    placeholderText: qsTr("Optional")
-                    Accessible.name: qsTr("Discord state template")
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                SettingsFieldLabel {
-                    text: qsTr("Platform")
-                }
-
-                SettingsSelect {
-                    id: platformSelect
-                    model: [qsTr("YouTube Music"), qsTr("Orchard V3")]
-                    Accessible.name: qsTr("Platform shown in Discord")
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                SettingsFieldLabel {
-                    text: qsTr("Activity type")
-                }
-
-                SettingsSelect {
-                    id: activitySelect
-                    model: [qsTr("Listening"), qsTr("Playing"), qsTr("Watching"), qsTr("Competing")]
-                    Accessible.name: qsTr("Discord activity type")
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                SettingsFieldLabel {
-                    text: qsTr("Member-list display")
-                }
-
-                SettingsSelect {
-                    id: statusSelect
-                    model: [qsTr("Platform"), qsTr("Details"), qsTr("State")]
-                    Accessible.name: qsTr("Discord member-list display")
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
             }
         }
 
@@ -295,12 +172,10 @@ ColumnLayout {
             }
         }
 
-        SettingsHint {
-            text: !root.discord.enabled ? qsTr("Discord Rich Presence is off.")
-                : root.discord.connected ? qsTr("Connected to Discord.")
-                : root.discord.lastError ? qsTr("Discord is unavailable: %1").arg(root.discord.lastError)
-                : qsTr("Connecting to Discord…")
-            color: root.discord.lastError ? "#e6a197" : "#8d968e"
+        SettingsButton {
+            id: customizeButton
+            Layout.alignment: Qt.AlignLeft
+            text: qsTr("Customize text and display")
         }
     }
 }

@@ -29,15 +29,20 @@ Item {
     id: root
 
     property string filter: "all"
-    // Applies to the songs table; empty keeps the order YouTube Music sent.
+    // Applies to the songs table; empty keeps the order the service sent.
     property string sortKey: ""
     property bool sortDescending: false
     readonly property string query: header.query.trim().toLowerCase()
+    readonly property bool apple: OrchardHome.homeSource === "apple_music"
     readonly property var categories: [
-        { key: "artists", title: qsTr("Subscribed artists"), empty: qsTr("Artists you subscribe to on YouTube will appear here.") },
-        { key: "albums", title: qsTr("Albums"), empty: qsTr("Albums you save to your YouTube Music library will appear here.") },
-        { key: "songs", title: qsTr("Songs"), empty: qsTr("Songs you save to your YouTube Music library will appear here.") },
-        { key: "playlists", title: qsTr("Playlists"), empty: qsTr("Playlists you create or save on YouTube Music will appear here.") },
+        { key: "artists", title: root.apple ? qsTr("Artists") : qsTr("Subscribed artists"),
+          empty: root.apple ? qsTr("Artists from songs in your Apple Music library will appear here.") : qsTr("Artists you subscribe to on YouTube will appear here.") },
+        { key: "albums", title: qsTr("Albums"),
+          empty: root.apple ? qsTr("Albums you add to your Apple Music library will appear here.") : qsTr("Albums you save to your YouTube Music library will appear here.") },
+        { key: "songs", title: qsTr("Songs"),
+          empty: root.apple ? qsTr("Songs you add to your Apple Music library will appear here.") : qsTr("Songs you save to your YouTube Music library will appear here.") },
+        { key: "playlists", title: qsTr("Playlists"),
+          empty: root.apple ? qsTr("Playlists in your Apple Music library will appear here.") : qsTr("Playlists you create or save on YouTube Music will appear here.") },
         { key: "localPlaylists", title: qsTr("Local playlists"), empty: qsTr("Playlists made from files on this computer will appear here.") },
         { key: "localSongs", title: qsTr("Local songs"), empty: qsTr("Use Add local files to bring in music from this computer.") }
     ]
@@ -57,7 +62,7 @@ Item {
     signal playlistRequested(var playlist)
     signal unsupportedRequested(var media)
 
-    // YouTube's sections come from the home controller; local ones from this computer's library.
+    // The catalog service's sections come from the home controller; local ones from this computer's library.
     function sectionData(key) {
         if (key === "localPlaylists")
             return { items: OrchardLocal.playlists };

@@ -105,7 +105,7 @@ PartyPeer *peer(jlong value) { return reinterpret_cast<PartyPeer *>(value); }
 
 } // namespace
 
-#define PARTY_JNI(name) Java_dev_sfg_orchard_mobile_social_PartyPeerNative_##name
+#define PARTY_JNI(name) Java_xyz_stuffbyren_pomelo_social_PartyPeerNative_##name
 
 extern "C" {
 

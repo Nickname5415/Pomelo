@@ -9,6 +9,7 @@
 
 LyricsProviderSettings::LyricsProviderSettings(QObject *parent) : QObject(parent) {
   const QVariantList defaults{
+      QVariantMap{{"id", "apple"}, {"name", "Apple Music"}, {"enabled", true}},
       QVariantMap{{"id", "bini"}, {"name", "Bini Lyrics"}, {"enabled", true}},
       QVariantMap{{"id", "betterlyrics"}, {"name", "BetterLyrics"}, {"enabled", true}},
       QVariantMap{{"id", "lyricsplus"}, {"name", "LyricsPlus"}, {"enabled", true}},
@@ -30,13 +31,42 @@ LyricsProviderSettings::LyricsProviderSettings(QObject *parent) : QObject(parent
       break;
     }
   }
-  for (const auto &item : defaults)
-    if (!seen.contains(item.toMap().value(QStringLiteral("id")).toString())) m_providers.append(item);
+  for (const auto &item : defaults) {
+    const QString id = item.toMap().value(QStringLiteral("id")).toString();
+    if (seen.contains(id)) continue;
+    // Apple Music's own lyrics lead when they first appear; other additions join the end.
+    if (id == QStringLiteral("apple")) m_providers.prepend(item);
+    else m_providers.append(item);
+  }
+}
+
+bool LyricsProviderSettings::shown(const QVariant &provider) const {
+  static const QStringList appleMirrors{QStringLiteral("bini"), QStringLiteral("betterlyrics"),
+                                        QStringLiteral("lyricsplus")};
+  const QString id = provider.toMap().value(QStringLiteral("id")).toString();
+  if (id == QStringLiteral("apple"))
+    return m_appleMusicConnected;
+  return !m_appleMusicConnected || !appleMirrors.contains(id);
+}
+
+QVariantList LyricsProviderSettings::providers() const {
+  QVariantList result;
+  for (const auto &provider : m_providers)
+    if (shown(provider))
+      result.append(provider);
+  return result;
+}
+
+void LyricsProviderSettings::setAppleMusicConnected(bool connected) {
+  if (m_appleMusicConnected == connected) return;
+  m_appleMusicConnected = connected;
+  emit changed();
 }
 
 QStringList LyricsProviderSettings::enabledProviders() const {
   QStringList result;
   for (const auto &entry : m_providers) {
+    if (!shown(entry)) continue;
     const auto provider = entry.toMap();
     if (provider.value(QStringLiteral("enabled")).toBool())
       result.append(provider.value(QStringLiteral("id")).toString());
@@ -66,8 +96,11 @@ void LyricsProviderSettings::setEnabled(const QString &id, bool enabled) {
 }
 
 void LyricsProviderSettings::moveProvider(int from, int to) {
-  if (from < 0 || to < 0 || from >= m_providers.size() || to >= m_providers.size() || from == to) return;
-  m_providers.move(from, to);
+  QList<qsizetype> visible;
+  for (qsizetype index = 0; index < m_providers.size(); ++index)
+    if (shown(m_providers.at(index))) visible.append(index);
+  if (from < 0 || to < 0 || from >= visible.size() || to >= visible.size() || from == to) return;
+  m_providers.move(visible.at(from), visible.at(to));
   save();
 }
 

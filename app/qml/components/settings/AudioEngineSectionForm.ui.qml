@@ -44,11 +44,15 @@ SettingsSection {
     property string balanceText: qsTr("Center")
     property string outputGainText: "0.0 dB"
     property string trackGainText: "0.0 dB"
+    property string speedText: "1.00x"
+    property string pitchText: "0.0 st"
     property real preampDb: 0
     property real q: 1
     property real balance: 0
     property real outputGainDb: 0
     property real trackGainDb: 0
+    property real speed: 1
+    property real pitchSemitones: 0
     readonly property var bands: [
         { label: "31 Hz", index: 0 },
         { label: "62 Hz", index: 1 },
@@ -82,6 +86,9 @@ SettingsSection {
     property alias gainSlider: gainSlider
     property alias levelingSwitch: levelingSwitch
     property alias trackGainSlider: trackGainSlider
+    property alias speedSlider: speedSlider
+    property alias pitchSlider: pitchSlider
+    property alias pitchLinkSwitch: pitchLinkSwitch
     property alias outputDevice: outputDevice
     property alias resetButton: resetButton
 
@@ -312,6 +319,49 @@ SettingsSection {
             from: -12
             to: 12
             stepSize: 0.5
+        }
+    }
+
+    SettingsRow {
+        enabled: root.engine.enabled
+
+        AppearanceSlider {
+            id: speedSlider
+            Layout.fillWidth: true
+            label: qsTr("Playback speed")
+            displayValue: root.speedText
+            value: root.speed
+            from: 0.5
+            to: 2
+            stepSize: 0.05
+        }
+    }
+
+    SettingsRow {
+        iconName: "audio-lines"
+        title: qsTr("Pitch follows speed")
+        description: qsTr("Raise or lower pitch with speed, like a turntable. When off, speed keeps the original pitch.")
+        enabled: root.engine.enabled
+
+        SettingsSwitch {
+            id: pitchLinkSwitch
+            checked: root.engine.pitchFollowsSpeed
+            Accessible.name: qsTr("Pitch follows speed")
+        }
+    }
+
+    SettingsRow {
+        enabled: root.engine.enabled && !root.engine.pitchFollowsSpeed
+
+        AppearanceSlider {
+            id: pitchSlider
+            Layout.fillWidth: true
+            label: qsTr("Pitch")
+            displayValue: root.pitchText
+            value: root.pitchSemitones
+            from: -12
+            to: 12
+            stepSize: 0.1
         }
     }
 

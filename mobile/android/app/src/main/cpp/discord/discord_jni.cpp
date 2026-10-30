@@ -199,7 +199,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
   return JNI_VERSION_1_6;
 }
 
-JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_discord_DiscordNative_start(
+JNIEXPORT void JNICALL Java_xyz_stuffbyren_pomelo_discord_DiscordNative_start(
     JNIEnv *env, jclass clazz, jlong applicationId) {
   std::lock_guard lock(g_mutex);
   if (g_worker.joinable()) return;
@@ -211,7 +211,7 @@ JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_discord_DiscordNative_start(
   g_worker = std::thread(runWorker, static_cast<uint64_t>(applicationId));
 }
 
-JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_discord_DiscordNative_stop(JNIEnv *, jclass) {
+JNIEXPORT void JNICALL Java_xyz_stuffbyren_pomelo_discord_DiscordNative_stop(JNIEnv *, jclass) {
   std::thread worker;
   {
     std::lock_guard lock(g_mutex);
@@ -223,11 +223,11 @@ JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_discord_DiscordNative_stop(JN
   worker.join();
 }
 
-JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_discord_DiscordNative_clearPresence(JNIEnv *, jclass) {
+JNIEXPORT void JNICALL Java_xyz_stuffbyren_pomelo_discord_DiscordNative_clearPresence(JNIEnv *, jclass) {
   post(std::nullopt);
 }
 
-JNIEXPORT void JNICALL Java_dev_sfg_orchard_mobile_discord_DiscordNative_setPresence(
+JNIEXPORT void JNICALL Java_xyz_stuffbyren_pomelo_discord_DiscordNative_setPresence(
     JNIEnv *env, jclass, jint type, jstring name, jstring details, jstring state, jlong startMs, jlong endMs,
     jstring largeImage, jstring largeText, jstring smallImage, jstring smallText, jobjectArray labels,
     jobjectArray urls) {

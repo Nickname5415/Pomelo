@@ -18,10 +18,14 @@
  */
 
 #include "playback_controller.h"
+#include <QDebug>
 
 void PlaybackController::wireStreamProxy(AudioStreamProxy *proxy) {
   connect(proxy, &AudioStreamProxy::streamFailed, this,
           [this, proxy](int status, const QString &message) {
+            if (qEnvironmentVariableIsSet("ORCHARD_PLAYBACK_TIMING"))
+              qInfo() << "Playback:" << (proxy == m_proxy ? "current" : "preload")
+                      << "stream failed with HTTP" << status << message;
             if (proxy != m_proxy) {
               const auto generation = m_generation;
               const auto source = m_nextPlayer ? m_nextPlayer->source() : QUrl();

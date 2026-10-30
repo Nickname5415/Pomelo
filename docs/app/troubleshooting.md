@@ -70,7 +70,7 @@ If the artwork still does not move, select **Reset mirror order** to try the def
 ## Discord does not show my song
 
 1. Start the Discord desktop app. The Discord card says "Connecting to Discord…" while Orchard waits for a presence update response.
-2. Turn on **Discord Rich Presence** in Settings, Integrations.
+2. Turn on **Rich Presence** in the Discord card in Settings, Integrations.
 3. Read the status line at the bottom of the Discord card. "Discord is unavailable:" is followed by the reason.
 
 See [Integrations](integrations.md).
@@ -89,7 +89,7 @@ See [Integrations](integrations.md).
 
 ## Last.fm connected but nothing is scrobbled
 
-Turn on the **Last.fm scrobbling** switch. The card reads "Connected as" followed by your user name and "Scrobbling is paused." while the switch is off. Orchard does not scrobble live streams.
+Turn on the **Scrobbling** switch. The card reads "Connected as" followed by your user name and "Scrobbling is paused." while the switch is off. Orchard does not scrobble live streams.
 
 ## The Home page or Your library is empty
 

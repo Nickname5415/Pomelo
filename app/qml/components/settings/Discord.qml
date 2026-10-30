@@ -30,24 +30,10 @@ DiscordForm {
     lyricsSwitch.onToggled: discord.showSyncedLyrics = lyricsSwitch.checked
     projectSwitch.onToggled: discord.projectButtonEnabled = projectSwitch.checked
     animatedSwitch.onToggled: discord.animatedArtworkEnabled = animatedSwitch.checked
+    customizeButton.onClicked: customizePopup.open()
 
-    activityField.onTextChanged: {
-        if (activityField.activeFocus)
-            discord.activityText = activityField.text;
+    DiscordCustomizePopup {
+        id: customizePopup
+        discord: root.discord
     }
-    detailsField.onTextChanged: {
-        if (detailsField.activeFocus)
-            discord.detailsText = detailsField.text;
-    }
-    stateField.onTextChanged: {
-        if (stateField.activeFocus)
-            discord.stateText = stateField.text;
-    }
-
-    platformSelect.currentIndex: platformValues.indexOf(discord.platform)
-    platformSelect.onActivated: index => discord.platform = platformValues[index]
-    activitySelect.currentIndex: activityValues.indexOf(discord.activityType)
-    activitySelect.onActivated: index => discord.activityType = activityValues[index]
-    statusSelect.currentIndex: statusDisplayValues.indexOf(discord.statusDisplay)
-    statusSelect.onActivated: index => discord.statusDisplay = statusDisplayValues[index]
 }

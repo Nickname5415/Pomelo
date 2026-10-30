@@ -36,6 +36,10 @@ inline void shuffleTracks(QVariantList &tracks, int first = 0) {
     tracks.swapItemsAt(
         i, first + QRandomGenerator::global()->bounded(i - first + 1));
 }
+// Autoplay may append while Best Mix runs; any edit inside the captured prefix invalidates it.
+inline bool queueExtendsSnapshot(const QVariantList &queue, const QVariantList &snapshot) {
+  return queue.size() >= snapshot.size() && queue.mid(0, snapshot.size()) == snapshot;
+}
 inline bool retainedBestMixOrder(const QVariantList &current, const QVariantList &sorted) {
   int cursor = 0;
   bool appended = false;

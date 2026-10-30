@@ -18,3 +18,4 @@ orchard-system-media = { path = "../orchard-system-media" }
 orchard-transition-core = { path = "../orchard-transition-core" }
 orchard-youtube-extractor = { path = "../orchard-youtube-extractor" }
 sha2 = "0.10.9"
+signalsmith-stretch = "0.1.3"

@@ -129,12 +129,12 @@ PlaybackController::PlaybackController(YouTubeProvider *provider,
       m_bestMixSortedQueue.clear();
       emit bestMixStateChanged();
     }
-    if (m_bestMix.busy() && m_queue.mid(0, 50) != m_bestMix.snapshot())
+    if (m_bestMix.busy() && !queueExtendsSnapshot(m_queue, m_bestMix.snapshot()))
       m_bestMix.cancel();
   });
   connect(&m_bestMix, &BestMixController::orderReady, this,
           [this](const QVariantList &snapshot, const QList<int> &order) {
-            if (m_queue.mid(0, 50) != snapshot) return;
+            if (!queueExtendsSnapshot(m_queue, snapshot)) return;
             m_bestMixOriginal = m_queue;
             QVariantList sorted;
             for (int index : order) sorted.append(snapshot.at(index));

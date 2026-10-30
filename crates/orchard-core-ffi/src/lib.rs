@@ -24,9 +24,11 @@
 //! to prove that the real transition crate is linked into the application.
 
 mod audio_engine;
+mod audio_tempo;
 mod media_crypto;
 
 pub use audio_engine::*;
+pub use audio_tempo::*;
 pub use media_crypto::*;
 pub use orchard_youtube_extractor::ffi::*;
 
