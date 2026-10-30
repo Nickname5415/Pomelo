@@ -212,7 +212,7 @@ fun OrchardApp(viewModel: OrchardViewModel) {
                 val isFoldable = xyz.stuffbyren.pomelo.ui.foldable.isFoldableOrWideLayout()
                 if (!chromeHidden) {
                     if (isFoldable) {
-                        xyz.stuffbyren.pomelo.ui.foldable.OrchardNavigationRail(
+                        xyz.stuffbyren.pomelo.ui.foldable.PomeloNavigationRail(
                             currentRoute = chromeRoute,
                             onSelect = selectTopLevel,
                             modifier = Modifier.align(Alignment.CenterStart),

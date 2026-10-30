@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import xyz.stuffbyren.pomelo.R
 
 @Composable
-fun OrchardMark(
+fun PomeloMark(
     modifier: Modifier = Modifier,
     contentDescription: String? = "Pomelo",
 ) {
@@ -47,10 +47,23 @@ fun OrchardMark(
 }
 
 @Composable
-fun OrchardWordmark(modifier: Modifier = Modifier) {
+fun PomeloWordmark(modifier: Modifier = Modifier) {
     Row(modifier) {
-        OrchardMark(Modifier.size(28.dp))
+        PomeloMark(Modifier.size(28.dp))
         Spacer(Modifier.width(9.dp))
         Text("Pomelo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
     }
+}
+
+@Composable
+fun OrchardMark(
+    modifier: Modifier = Modifier,
+    contentDescription: String? = "Pomelo",
+) {
+    PomeloMark(modifier, contentDescription)
+}
+
+@Composable
+fun OrchardWordmark(modifier: Modifier = Modifier) {
+    PomeloWordmark(modifier)
 }

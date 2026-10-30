@@ -19,6 +19,11 @@
   <!-- Updater Permissions -->
   <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+  <!-- Chromebook and large screen device compatibility -->
+  <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+  <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+  <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
+
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW" />
@@ -55,8 +60,14 @@
       android:name=".app.MainActivity"
       android:exported="true"
       android:launchMode="singleTask"
-      android:configChanges="orientation|screenSize|smallestScreenSize"
+      android:resizeableActivity="true"
+      android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden"
       android:windowSoftInputMode="adjustResize">
+      <layout
+        android:defaultWidth="1024dp"
+        android:defaultHeight="768dp"
+        android:minWidth="360dp"
+        android:minHeight="480dp" />
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />

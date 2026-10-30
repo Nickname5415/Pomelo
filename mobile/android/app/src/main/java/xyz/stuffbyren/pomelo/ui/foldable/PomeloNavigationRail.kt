@@ -71,7 +71,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xyz.stuffbyren.pomelo.ui.components.OrchardMark
+import xyz.stuffbyren.pomelo.ui.components.PomeloMark
 import xyz.stuffbyren.pomelo.ui.glass.GlassTone
 import xyz.stuffbyren.pomelo.ui.glass.LocalGlass
 import xyz.stuffbyren.pomelo.ui.glass.glassPane
@@ -92,11 +92,10 @@ private val NavRailShape = RoundedCornerShape(28.dp)
 
 /**
  * Vertical navigation rail designed for foldable devices (unfolded) and tablets.
- * Sits elegantly along the left edge, replacing the bottom bar and freeing up
- * valuable vertical screen real estate.
+ * Sits along the left edge, replacing the bottom bar and freeing up vertical screen space.
  */
 @Composable
-fun OrchardNavigationRail(
+fun PomeloNavigationRail(
     currentRoute: String?,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -166,7 +165,7 @@ fun OrchardNavigationRail(
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                OrchardMark(Modifier.size(34.dp))
+                PomeloMark(Modifier.size(34.dp))
             }
 
             Spacer(Modifier.height(8.dp))
@@ -238,4 +237,14 @@ fun OrchardNavigationRail(
             }
         }
     }
+}
+
+@Composable
+@Deprecated("Use PomeloNavigationRail instead", ReplaceWith("PomeloNavigationRail(currentRoute, onSelect, modifier)"))
+fun OrchardNavigationRail(
+    currentRoute: String?,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    PomeloNavigationRail(currentRoute, onSelect, modifier)
 }
