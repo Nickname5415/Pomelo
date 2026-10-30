@@ -160,16 +160,10 @@ std::optional<discordpp::Activity> orchardDiscordActivity(const QJsonObject &p)
     const QString listen = url(field(p, "listenUrl"));
     if (!listen.isEmpty()) {
         QString label = discordText(expand(field(p, "listenButtonText"), p));
-        if (label.isEmpty()) label = discordText(expand(QStringLiteral("Listen on {platform}"), p));
+        if (label.isEmpty()) label = discordText(QStringLiteral("Listen on your platform"));
         discordpp::ActivityButton button;
         button.SetLabel(utf8(label));
         button.SetUrl(utf8(listen));
-        activity.AddButton(button);
-    }
-    if (p.value(QLatin1String("projectButton")).toBool()) {
-        discordpp::ActivityButton button;
-        button.SetLabel("View the Orchard Project");
-        button.SetUrl("https://sfg545.dev/orchard");
         activity.AddButton(button);
     }
     return activity;
