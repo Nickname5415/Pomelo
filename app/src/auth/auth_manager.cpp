@@ -146,7 +146,7 @@ AuthManager::AuthManager(YouTubeProvider *youtubeProvider, bool embeddedWebAuth,
   }
   // If we restored a signed-in session, kick off the refresh timer and do
   // one immediate check once the event loop is running.
-  if (isSignedIn() && !m_embeddedWebAuth) {
+  if (isSignedIn() && !m_embeddedWebAuth && (!m_youtubeProvider || !m_youtubeProvider->isAuthenticated())) {
     scheduleCookieRefresh();
     QTimer::singleShot(0, this, &AuthManager::refreshSession);
   }
@@ -163,6 +163,17 @@ QString AuthManager::channelSwitcherUrl() const {
 }
 
 void AuthManager::startLogin() {
+  if (m_youtubeProvider && m_youtubeProvider->isAuthenticated()) {
+    m_userName = QStringLiteral("Pomelo User");
+    m_userHandle = QStringLiteral("@pomelo");
+    m_userEmail = QStringLiteral("user@stuffbyren.xyz");
+    m_userAvatar = QStringLiteral("qrc:/qt/qml/Orchard/app/qml/assets/orchard-logo.png");
+    setStatus(QStringLiteral("signed_in"));
+    emit userChanged();
+    emit sessionChanged();
+    emit loginCompleted();
+    return;
+  }
   authDiagnostic(
       QStringLiteral("login-request embedded=%1").arg(m_embeddedWebAuth));
   setErrorMessage(QString());

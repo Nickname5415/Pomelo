@@ -62,6 +62,7 @@ void AuthManager::restoreSession() {
     m_userName = QStringLiteral("Pomelo User");
     m_userHandle = QStringLiteral("@pomelo");
     m_userEmail = QStringLiteral("user@stuffbyren.xyz");
+    m_userAvatar = QStringLiteral("qrc:/qt/qml/Orchard/app/qml/assets/orchard-logo.png");
     m_status = QStringLiteral("signed_in");
     emit statusChanged();
     emit userChanged();
@@ -74,6 +75,7 @@ void AuthManager::restoreSession() {
       m_userName = QStringLiteral("Pomelo User");
       m_userHandle = QStringLiteral("@pomelo");
       m_userEmail = QStringLiteral("user@stuffbyren.xyz");
+      m_userAvatar = QStringLiteral("qrc:/qt/qml/Orchard/app/qml/assets/orchard-logo.png");
       m_status = QStringLiteral("signed_in");
       emit statusChanged();
       emit userChanged();
@@ -203,6 +205,18 @@ void AuthManager::deleteSecretSession() {
 }
 
 void AuthManager::startProfileResolution() {
+  if (m_youtubeProvider && m_youtubeProvider->isAuthenticated()) {
+    m_profileLoading = false;
+    m_userName = QStringLiteral("Pomelo User");
+    m_userHandle = QStringLiteral("@pomelo");
+    m_userEmail = QStringLiteral("user@stuffbyren.xyz");
+    m_userAvatar = QStringLiteral("qrc:/qt/qml/Orchard/app/qml/assets/orchard-logo.png");
+    setStatus(QStringLiteral("signed_in"));
+    emit userChanged();
+    emit sessionChanged();
+    emit loginCompleted();
+    return;
+  }
   const auto cookies = parseCookieString(m_cookie);
   if (!m_authWebViewActive && !cookies.contains(QStringLiteral("SID")) &&
       !cookies.contains(QStringLiteral("__Secure-3PSID")) &&
@@ -335,6 +349,10 @@ QString AuthManager::delegatedSessionIdFromPageAuth(const QString &dataSyncId,
 }
 
 void AuthManager::refreshSession() {
+  if (m_youtubeProvider && m_youtubeProvider->isAuthenticated()) {
+    emit cookieRefreshCompleted(true);
+    return;
+  }
   if (m_embeddedWebAuth || m_authWebViewActive || m_profileLoading)
     return;
   if (!isSignedIn() || m_cookie.isEmpty())
