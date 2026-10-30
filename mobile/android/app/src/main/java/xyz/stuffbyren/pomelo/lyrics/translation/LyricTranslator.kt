@@ -362,7 +362,7 @@ class LyricTranslator(
         val mask = remoteMask(texts, target)
         val wanted = texts.filterIndexed { index, text -> mask[index] && text.isNotEmpty() }.distinct()
         val base = LyricTranslationState(LyricTranslationState.Status.TRANSLATING,
-            message = "Translating with Orchard Account", lines = lines, translations = List(lines.size) { null })
+            message = "Translating with Pomelo Account", lines = lines, translations = List(lines.size) { null })
         if (wanted.isEmpty()) {
             mutableState.value = base.copy(status = LyricTranslationState.Status.IDLE,
                 message = "Lyrics are already in the selected language")
@@ -370,11 +370,11 @@ class LyricTranslator(
         }
         mutableState.value = base
         try {
-            check(account.state.value.signedIn) { "Sign in to Orchard to translate lyrics." }
+            check(account.state.value.signedIn) { "Sign in to Pomelo to translate lyrics." }
             val output = accountRemote.translate(songId, wanted, target.key)
             val translations = wanted.zip(output).toMap()
             mutableState.value = base.copy(status = LyricTranslationState.Status.READY,
-                message = "Translated with Orchard Account",
+                message = "Translated with Pomelo Account",
                 translations = texts.map { text -> translations[text]?.let { shown(text, it) } })
         } catch (cancelled: CancellationException) {
             throw cancelled

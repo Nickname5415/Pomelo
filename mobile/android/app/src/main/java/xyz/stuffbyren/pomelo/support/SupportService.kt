@@ -72,7 +72,7 @@ class SupportService private constructor(context: Context) {
 
     private fun failure(e: Exception): String = when (e) {
         is SupportHttpException -> e.message.orEmpty()
-        else -> "Could not reach the Orchard account service."
+        else -> "Could not reach the Pomelo account service."
     }
 
     /** [minAgeMs] skips the call when the last refresh is newer, for lifecycle resumes. */
@@ -216,7 +216,7 @@ class SupportService private constructor(context: Context) {
                 }
                 val json = call { supportRequest(account.serviceUrl, "POST", "/support/reports", it, form.build(),
                     "multipart/form-data; boundary=${form.boundary}") }
-                    ?: throw SupportHttpException(401, "invalid_token", "Sign in to your Orchard account first.")
+                    ?: throw SupportHttpException(401, "invalid_token", "Sign in to your Pomelo account first.")
                 if (generation.get() != attempt) return@launch
                 val report = SupportJson.report(json.getJSONObject("report"))
                 _state.update { it.copy(reports = listOf(report) + it.reports, draft = SupportDraft(), active = report, events = emptyList()) }

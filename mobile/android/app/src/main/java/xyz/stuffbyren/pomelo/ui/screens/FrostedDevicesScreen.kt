@@ -110,15 +110,15 @@ internal fun FrostedDevicesScreenContent(
                 Spacer(Modifier.height(14.dp))
             }
 
-            FrostedSectionHeader(title = "Orchard Connect")
+            FrostedSectionHeader(title = "Pomelo Connect")
             Spacer(Modifier.height(8.dp))
             when {
                 !connect.available -> FrostedMessageBanner(
-                    "Sign in to your Orchard account in Settings to play on your other devices.",
+                    "Sign in to your Pomelo account in Settings to play on your other devices.",
                 )
-                !connect.online -> FrostedMessageBanner("Reaching Orchard Connect…")
+                !connect.online -> FrostedMessageBanner("Reaching Pomelo Connect…")
                 availableDevices.isEmpty() -> FrostedMessageBanner(
-                    "No other devices are online. Open Orchard on your computer and sign in to the same Orchard account.",
+                    "No other devices are online. Open Pomelo on your computer or tablet and sign in to the same Pomelo account.",
                 )
             }
             if (availableDevices.isNotEmpty()) {

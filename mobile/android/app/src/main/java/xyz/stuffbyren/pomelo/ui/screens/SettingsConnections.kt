@@ -50,7 +50,7 @@ internal enum class ConnectionService(val title: String, val blurb: String) {
     Lastfm("Last.fm", "Send now-playing updates and completed listens"),
     ListenBrainz("ListenBrainz", "Send listens with your user token"),
     Spotify("Spotify", "Canvas videos in the player"),
-    Orchard("Orchard Account", "Use your account across devices"),
+    Orchard("Pomelo Account", "Use your account across devices"),
 }
 
 /** One-line state for a service; [summary] doubles as the row subtitle. */

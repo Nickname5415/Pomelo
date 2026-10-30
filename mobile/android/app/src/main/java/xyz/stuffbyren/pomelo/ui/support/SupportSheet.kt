@@ -129,17 +129,17 @@ internal fun SupportSheet(ui: SupportUi, page: String) {
             when {
                 !accountState.signedIn -> Gate(
                     title = "Sign in to report a bug",
-                    text = "Reports go through your Orchard account, so Orchard can tell you when someone replies, a fix lands, or the report closes.",
+                    text = "Reports go through your Pomelo account, so Pomelo can tell you when someone replies, a fix lands, or the report closes.",
                     action = if (accountState.signingIn) "Cancel" else "Sign in with Google",
                     onAction = if (accountState.signingIn) account::cancelSignIn else account::signIn,
                     error = accountState.error,
                 )
                 state.github == null -> Gate(
                     title = "Link your GitHub account",
-                    text = "Reports become public GitHub issues under your name, so maintainers can ask you questions. Orchard only reads your GitHub username and avatar.",
+                    text = "Reports become public GitHub issues under your name, so maintainers can ask you questions. Pomelo only reads your GitHub username and avatar.",
                     action = if (state.linking) "Cancel" else "Link GitHub",
                     onAction = if (state.linking) ui.service::cancelGithubLink else ui.service::linkGithub,
-                    hint = if (state.linking) "Finish in your browser. Orchard picks it up on its own." else "",
+                    hint = if (state.linking) "Finish in your browser. Pomelo picks it up on its own." else "",
                     error = state.error,
                 )
                 ui.screen == SupportScreen.List -> ReportList(state, onNew = { ui.screen = SupportScreen.Compose },

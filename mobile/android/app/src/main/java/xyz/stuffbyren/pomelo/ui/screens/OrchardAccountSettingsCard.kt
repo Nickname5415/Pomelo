@@ -55,7 +55,7 @@ fun OrchardAccountSettingsCard() {
     Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
         Text(
             if (state.signedIn) state.name.ifBlank { state.email } else
-                "Sign in with Google to use your Orchard account on this device.",
+                "Sign in with Google to use your Pomelo account on this device.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

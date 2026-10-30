@@ -41,6 +41,8 @@ export const MAX_DEVICES_PER_USER = 50;
 const PLATFORMS = new Set(["linux", "windows", "macos", "android", "ios"]);
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
 const ANDROID_SCHEMES = new Set([
+  "xyz.stuffbyren.pomelo:", "xyz.stuffbyren.pomelo.debug:",
+  "xyz.stuffbyren.pomelo.canary:", "xyz.stuffbyren.pomelo.canaryx86:",
   "dev.sfg.orchard.mobile:", "dev.sfg.orchard.mobile.debug:",
   "dev.sfg.orchard.mobile.canary:", "dev.sfg.orchard.mobile.canaryx86:",
 ]);

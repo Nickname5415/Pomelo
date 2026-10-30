@@ -91,7 +91,7 @@ internal fun LyricTranslationSection(
         SettingsRow(
             title = "Translate lyrics to",
             subtitle = if (provider == LyricTranslationProvider.LOCAL)
-                "Local models translate to English on this phone. Choose an API or Orchard Account for other target languages."
+                "Local models translate to English on this phone. Choose an API or Pomelo Account for other target languages."
             else if (provider == LyricTranslationProvider.ORCHARD)
                 "Gemma 4. ${quota?.description() ?: "Translation allowance unavailable."} Resets at 00:00 UTC. Cached songs are free."
             else "Sends lyric lines to ${provider.label}; your provider may charge for requests.",
