@@ -1,66 +1,42 @@
-<div align="center">
+# Pomelo
 
-# Pomelo / Pomelo Mobile
+An unofficial TIDAL client for Android, based on Orchard by SFG5453.
 
-**UI-first fork of [Orchard](https://github.com/SFG5453/Orchard)**
+Pomelo is a project focused mainly on the visual side of music streaming. The idea is to build a music player that not only works well, but also looks and feels good to use.
 
-[Mobile build notes](mobile/README.md) · [Upstream Orchard](https://github.com/SFG5453/Orchard)
+## What is Pomelo?
 
-[![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
+Pomelo takes inspiration and its initial foundation from [Orchard](https://github.com/SFG5453/Orchard), but with a different direction.
 
-</div>
+The main focus is the UI, animations, transitions, artwork presentation and all those little details that make using a music player enjoyable.
 
----
+It's built around TIDAL, with the goal of creating a dedicated alternative way to interact with its music catalog and playback.
 
-## Credit: Orchard
+## A little transparency
 
-**[Orchard](https://github.com/SFG5453/Orchard)** is by **SFG545** and **Julian-FF2000**. That project owns the hard parts: YouTube Music providers, playback, queueing, lyrics, caching, Orchard Connect, and the native stacks behind them.
+Pomelo is vibecoded.
 
-**Pomelo** and **Pomelo Mobile** start from Orchard’s codebase under the [GNU AGPL-3.0-or-later](LICENSE). If audio plays, a library loads, or Connect pairs, that’s Orchard’s work. Pomelo changes branding, copy, and—especially on Android—a lot of **interface** code.
+Most of its code is written and modified with the help of AI coding tools. I'm not going to pretend otherwise or claim that every line was manually written by me.
 
-Official Orchard:
+That doesn't mean the project is generated and forgotten, though. There's still plenty of testing, debugging, reviewing and making questionable decisions involved.
 
-- Source: [github.com/SFG5453/Orchard](https://github.com/SFG5453/Orchard)
-- Site: [sfg545.dev/orchard](https://sfg545.dev/orchard)
+I'm sharing this because I think it's important to be honest about how the project is made.
 
-Use upstream when you want maintained releases, full feature set, and support from the original authors.
+## Credits
 
-## What this fork is (and isn’t)
+- [Orchard](https://github.com/SFG5453/Orchard) by SFG5453: original project and foundation.
+- TIDAL: music catalog and playback platform.
 
-| | Pomelo / Pomelo Mobile | Orchard |
-| --- | --- | --- |
-| **Goal** | Look and feel, Material You, experiments | Complete music client |
-| **Strength** | Compose UI, themes, motion | Playback, providers, Connect |
-| **Expectation** | Hobby / vibe project | Production-oriented |
+Pomelo is an independent project and is not affiliated with or endorsed by TIDAL or Block, Inc.
 
-This is **not** a competing product claim. It’s a skin and UX pass on top of Orchard, with some proprietary upstream pieces removed in this tree (Adaptive Mix, related ML tooling) in favor of standard crossfade and gapless paths.
+## Status
 
-## Vibecoded
-
-Most Pomelo-specific changes were made **fast**, with **AI-assisted editing** (e.g. Cursor). That means:
-
-- UI can be ahead of testing in places.
-- Refactors may be broad rather than surgical.
-- Comments and docs might lag the code.
-
-Treat this repo as **“looks cool, ymmv on edge cases.”** Report bugs upstream when they’re really Orchard behavior; report here when it’s clearly the Pomelo UI layer.
-
-## Focus: UI, not new features
-
-**Pomelo Mobile** (under `mobile/`) is the main reason this fork exists:
-
-- Material 3 and Material You–style surfaces across screens.
-- Haptics, typography, and layout polish in Jetpack Compose.
-- Pomelo identity in the shell (name, icons, about text).
-
-It does **not** aim to out-feature Orchard on streaming, audio engines, or Connect protocol work. New capabilities should usually go upstream; Pomelo is for **how it feels in your hand**.
-
-Desktop pieces in this monorepo may still carry Pomelo naming and docs updates, but the active “fork story” is the Android UI work.
-
-## Maintainer
-
-Community fork maintained by **Nickname5415**. Not affiliated with, sponsored by, or endorsed by SFG545, Julian-FF2000, the Orchard team, Google, YouTube, or Qobuz.
+Currently under development. Things might break, change, or disappear without warning. There is no release date yet.
 
 ## License
 
-Pomelo is distributed under **AGPL-3.0-or-later**. You must comply with AGPL when you run modified versions and when you convey source. See [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+See the [LICENSE](LICENSE) file for licensing information.
+
+---
+
+Made with ❤️ and way too many tokens.
