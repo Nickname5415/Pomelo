@@ -7,6 +7,7 @@ routes = [{ pattern = "account.stuffbyren.xyz", custom_domain = true }]
 PUBLIC_URL = "https://account.stuffbyren.xyz"
 ARTWORK_PUBLIC_URL = "https://account.stuffbyren.xyz"
 GITHUB_REPOSITORY = "Nickname5415/Pomelo"
+GOOGLE_CLIENT_ID = "803047319656-2h2audjj8blrpduqf4ln7mva8riq1q06.apps.googleusercontent.com"
 
 [[d1_databases]]
 binding = "DB"
