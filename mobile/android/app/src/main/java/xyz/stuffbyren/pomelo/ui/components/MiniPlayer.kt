@@ -51,7 +51,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
+import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -79,25 +80,22 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import xyz.stuffbyren.pomelo.model.PlaybackSnapshot
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
-import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
+import xyz.stuffbyren.pomelo.ui.theme.PomeloArtwork
+import xyz.stuffbyren.pomelo.ui.theme.PomeloShapes
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
 import xyz.stuffbyren.pomelo.ui.motion.pressScale
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private val MiniPlayerShape = RoundedCornerShape(16.dp)
+private val MiniPlayerShape = PomeloShapes.lg
+private val MiniArtworkSize = 44.dp
 
 /** Expressive floating mini-player component matching SimpMusic design. */
 @Composable
@@ -142,8 +140,7 @@ fun MiniPlayer(
         val end = (marker?.startMs ?: head.durationMs).coerceAtLeast(1)
         (head.positionMs.toFloat() / end).coerceIn(0f, 1f)
     }
-    // The pill picks up the cover's colours so it reads as part of the artwork.
-    val palette = rememberArtworkPalette(track.artworkUrl)
+    val scheme = MaterialTheme.colorScheme
 
     val dragModifier = Modifier.draggable(
         orientation = Orientation.Vertical,
@@ -176,40 +173,29 @@ fun MiniPlayer(
 
     Card(
         shape = MiniPlayerShape,
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent,
-        ),
+        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .padding(
+                horizontal = PomeloSpacing.miniPlayerHorizontalPadding,
+                vertical = PomeloSpacing.miniPlayerVerticalPadding,
+            )
             .offset { IntOffset(0, currentOffsetY.roundToInt()) }
             .alpha(dismissAlpha)
             .then(dragModifier)
-            .glassPane(MiniPlayerShape, GlassTone.CHROME)
             .clip(MiniPlayerShape)
             .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            lerp(palette.accent, Color.White, 0.18f),
-                            lerp(palette.bottom, Color.White, 0.06f),
-                        ),
-                    ),
-                    // Left as a wash over the pane rather than an opaque fill, so the frost the
-                    // pill is cut from is still the thing you see.
-                    alpha = 0.28f,
-                ),
+                .height(PomeloSpacing.miniPlayerContentHeight),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 10.dp),
+                    .padding(horizontal = PomeloSpacing.miniPlayerHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AnimatedContent(
@@ -223,9 +209,9 @@ fun MiniPlayer(
                         url = artUrl,
                         description = artTitle,
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(MiniArtworkSize)
                             .onGloballyPositioned { onArtworkBounds?.invoke(it.boundsInRoot()) },
-                        radius = 10
+                        radius = PomeloArtwork.tileRadiusInt(MiniArtworkSize),
                     )
                 }
                 Spacer(Modifier.width(10.dp))
@@ -242,21 +228,20 @@ fun MiniPlayer(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = CanopyColors.Text,
+                            color = scheme.onSurface,
                             maxLines = 1,
                             modifier = Modifier.basicMarquee()
                         )
                         Text(
                             text = artist,
                             style = MaterialTheme.typography.bodySmall,
-                            color = CanopyColors.Muted,
+                            color = scheme.onSurfaceVariant,
                             maxLines = 1
                         )
                     }
                 }
                 SlopBadge(track.id)
-                Spacer(Modifier.width(6.dp))
-                val buttonColor = lerp(palette.accent, Color.White, 0.62f)
+                Spacer(Modifier.width(PomeloSpacing.explicitBadgeGap))
                 val toggleSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                 IconButton(
                     onClick = onTogglePlay,
@@ -264,7 +249,7 @@ fun MiniPlayer(
                     modifier = Modifier
                         .pressScale(toggleSource, 0.82f)
                         .size(40.dp)
-                        .background(buttonColor, CircleShape)
+                        .background(scheme.primary, CircleShape)
                 ) {
                     // Glyphs scale past each other so play and pause never just blink.
                     AnimatedContent(
@@ -278,8 +263,7 @@ fun MiniPlayer(
                         Icon(
                             imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                             contentDescription = if (playing) "Pause" else "Play",
-                            // Keep the glyph readable whatever hue the cover produced.
-                            tint = if (buttonColor.luminance() > 0.5f) Color.Black else Color.White,
+                            tint = scheme.onPrimary,
                             modifier = Modifier.size(24.dp),
                         )
                     }
@@ -300,8 +284,8 @@ fun MiniPlayer(
                         .fillMaxWidth()
                         .height(3.dp)
                         .onSizeChanged { barWidthPx = it.width.toFloat() },
-                    color = LocalAccent.current,
-                    trackColor = Color.Transparent,
+                    color = scheme.primary,
+                    trackColor = scheme.outlineVariant.copy(alpha = 0.35f),
                     strokeCap = StrokeCap.Round,
                 )
                 if (glow > 0.01f) {
