@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -113,7 +114,7 @@ internal fun SettingsSwitch(
 /** Slider tinted like the switch; ticks hidden so stepped sliders still read as continuous. */
 @Composable
 internal fun settingsSliderColors(): SliderColors = SliderDefaults.colors(
-    thumbColor = SettingsStyle.SageSoft,
+    thumbColor = MaterialTheme.colorScheme.primaryContainer,
     activeTrackColor = SettingsStyle.SwitchOn,
     inactiveTrackColor = SettingsStyle.SwitchOff,
     activeTickColor = Color.Transparent,

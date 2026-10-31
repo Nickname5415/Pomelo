@@ -140,7 +140,7 @@ fun SettingsScreen(
         },
     )
 
-    CompositionLocalProvider(LocalAccent provides SettingsStyle.Sage) {
+    CompositionLocalProvider(LocalAccent provides MaterialTheme.colorScheme.primary) {
         // No fill: the app-level cover backdrop shows through the panels.
         Column(Modifier.fillMaxSize()) {
             SettingsHeader(
@@ -221,7 +221,7 @@ fun SettingsScreen(
                         }
                         Text(
                             versionText,
-                            color = SettingsStyle.Caption,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelMedium,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth(),
@@ -275,20 +275,20 @@ private fun SettingsHeader(
                     .clickable(role = Role.Button, onClickLabel = "Back", onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = SettingsStyle.Title)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
             }
         }
         Text(
             title,
             style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp, fontWeight = FontWeight.SemiBold),
-            color = SettingsStyle.Title,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(start = 4.dp),
         )
         if (blurb.isNotEmpty()) {
             Text(
                 blurb,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-                color = SettingsStyle.Description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp, top = 6.dp),
             )
         }

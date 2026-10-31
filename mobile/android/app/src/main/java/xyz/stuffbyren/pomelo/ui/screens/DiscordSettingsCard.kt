@@ -65,17 +65,17 @@ fun DiscordSettingsCard(
                 DiscordPresenceStatus.Unavailable -> Text(
                     "Install and sign in to the Discord app to share what you’re listening to.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 is DiscordPresenceStatus.Error -> Text(
                     discordStatus.message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = CanopyColors.Danger,
+                    color = MaterialTheme.colorScheme.error,
                 )
                 else -> Text(
                     "Uses the Discord app on this device.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -84,7 +84,7 @@ fun DiscordSettingsCard(
                 Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(CanopyColors.Rule)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
             )
             Spacer(Modifier.height(12.dp))
 
@@ -116,13 +116,13 @@ private fun DiscordToggleRow(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(CanopyColors.Canvas, RoundedCornerShape(10.dp)),
+                .background(MaterialTheme.colorScheme.surfaceContainerLow, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 icon,
                 contentDescription = null,
-                tint = if (enabled) LocalAccent.current else CanopyColors.Muted,
+                tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -131,12 +131,12 @@ private fun DiscordToggleRow(
             Text(
                 title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = if (enabled) CanopyColors.Text else CanopyColors.Muted,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = CanopyColors.Muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         SettingsSwitch(

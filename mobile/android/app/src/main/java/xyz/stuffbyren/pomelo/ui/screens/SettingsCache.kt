@@ -85,7 +85,7 @@ internal fun CacheSizeRow(settings: OrchardSettings, onSettings: (OrchardSetting
             Text(
                 formatCacheSize(steps[index]),
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                color = SettingsStyle.SageSoft,
+                color = MaterialTheme.colorScheme.primaryContainer,
             )
         }
         Column(Modifier.padding(start = 52.dp)) {
@@ -100,19 +100,19 @@ internal fun CacheSizeRow(settings: OrchardSettings, onSettings: (OrchardSetting
             Row(Modifier.fillMaxWidth()) {
                 Text(
                     formatCacheSize(steps.first()),
-                    color = SettingsStyle.Caption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
                     formatCacheSize(steps.last()),
-                    color = SettingsStyle.Caption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
             Text(
                 "A new limit applies next time playback starts",
-                color = SettingsStyle.Caption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -137,8 +137,8 @@ internal fun ClearCacheRow(
         title = "Clear cache",
         subtitle = "Downloads and your library stay intact ($formattedSize in cache)",
         icon = Icons.Rounded.Delete,
-        titleColor = CanopyColors.Danger,
-        iconTint = CanopyColors.Danger,
+        titleColor = MaterialTheme.colorScheme.error,
+        iconTint = MaterialTheme.colorScheme.error,
         enabled = !isClearing,
         modifier = Modifier.clickable(enabled = !isClearing) { showConfirmDialog = true },
     ) {
@@ -146,7 +146,7 @@ internal fun ClearCacheRow(
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
                 strokeWidth = 2.dp,
-                color = SettingsStyle.Sage,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -157,7 +157,7 @@ internal fun ClearCacheRow(
             title = {
                 Text(
                     "Clear cache?",
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                 )
             },
@@ -166,12 +166,12 @@ internal fun ClearCacheRow(
                     Text(
                         "This will free up $formattedSize of cached audio streams, album artwork, and temporary files.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         "Your downloaded offline songs and library will remain intact.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             },
@@ -184,17 +184,17 @@ internal fun ClearCacheRow(
                 ) {
                     Text(
                         "Clear",
-                        color = CanopyColors.Danger,
+                        color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold,
                     )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Cancel", color = CanopyColors.Muted)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = CanopyColors.Surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
             shape = RoundedCornerShape(16.dp),
         )
     }

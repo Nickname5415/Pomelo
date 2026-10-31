@@ -244,7 +244,7 @@ private fun ColourSourceRow(settings: OrchardSettings, onSettings: (OrchardSetti
                 onSelect = { onSettings(settings.copy(useSystemColors = it)) },
             )
             if (swatches.isEmpty()) {
-                Text("System colours need Android 12 or newer", color = SettingsStyle.Description, fontSize = 13.sp)
+                Text("System colours need Android 12 or newer", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     swatches.forEach {
@@ -286,7 +286,7 @@ internal fun StoragePage(
             Text(
                 CacheManager.formatStorageSize(cacheSizeBytes),
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             RowSubtitle("Temporary audio, artwork and network cache")
         }

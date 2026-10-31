@@ -192,7 +192,7 @@ private fun SearchResults(query: String, onOpen: (SettingsPage) -> Unit) {
             Text(
                 "No settings match \"${query.trim()}\"",
                 style = MaterialTheme.typography.bodyMedium,
-                color = SettingsStyle.Description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 12.dp),
             )
             return
@@ -218,8 +218,8 @@ private fun SettingsSearchField(query: String, onQuery: (String) -> Unit) {
         value = query,
         onValueChange = onQuery,
         singleLine = true,
-        textStyle = TextStyle(color = SettingsStyle.Title, fontSize = 15.sp),
-        cursorBrush = SolidColor(SettingsStyle.SageSoft),
+        textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = "Search settings" },
@@ -234,10 +234,10 @@ private fun SettingsSearchField(query: String, onQuery: (String) -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(Icons.Rounded.Search, contentDescription = null, tint = SettingsStyle.Description, modifier = Modifier.size(20.dp))
+                Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 Box(Modifier.weight(1f)) {
                     if (query.isEmpty()) {
-                        Text("Search settings", color = SettingsStyle.Description, fontSize = 15.sp)
+                        Text("Search settings", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
                     }
                     field()
                 }
@@ -246,7 +246,7 @@ private fun SettingsSearchField(query: String, onQuery: (String) -> Unit) {
                         Modifier.size(48.dp).clickable(role = Role.Button) { onQuery("") },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = "Clear search", tint = SettingsStyle.Description, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.Close, contentDescription = "Clear search", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -278,19 +278,19 @@ private fun QuickTile(
         Icon(
             icon,
             contentDescription = null,
-            tint = if (on) SettingsStyle.SageSoft else SettingsStyle.Description,
+            tint = if (on) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(22.dp),
         )
         Column {
             Text(
                 label,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 if (on) "On" else "Off",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-                color = SettingsStyle.Description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -334,7 +334,7 @@ private fun AccountCard(
                         AuthState.SignedOut -> AccountText("Not signed in", "Sync your library and recommendations")
                         // displayName falls back to the literal "TIDAL", so the subtitle must not repeat it.
                         is AuthState.SignedIn -> AccountText(auth.displayName, "Signed in with TIDAL")
-                        is AuthState.Error -> AccountText("Sign-in failed", auth.message, CanopyColors.Danger)
+                        is AuthState.Error -> AccountText("Sign-in failed", auth.message, MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -354,7 +354,7 @@ private fun AccountCard(
 }
 
 @Composable
-private fun AccountText(title: String, subtitle: String, titleColor: Color = SettingsStyle.Title) {
+private fun AccountText(title: String, subtitle: String, titleColor: Color = MaterialTheme.colorScheme.onSurface) {
     Text(
         title,
         style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
@@ -363,6 +363,6 @@ private fun AccountText(title: String, subtitle: String, titleColor: Color = Set
     Text(
         subtitle,
         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-        color = SettingsStyle.Description,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }

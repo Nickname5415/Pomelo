@@ -82,7 +82,7 @@ internal fun SectionLabel(value: String, index: Int = 0) {
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 0.9.sp,
         ),
-        color = SettingsStyle.Caption,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.padding(start = 6.dp, top = 26.dp, bottom = 8.dp).riseIn(index, distance = 14f),
@@ -129,11 +129,11 @@ internal fun RowIcon(icon: ImageVector, tint: Color = SettingsStyle.TileIcon, fi
 }
 
 @Composable
-internal fun RowTitle(text: String, enabled: Boolean = true, color: Color = SettingsStyle.Title) {
+internal fun RowTitle(text: String, enabled: Boolean = true, color: Color = MaterialTheme.colorScheme.onSurface) {
     Text(
         text,
         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium),
-        color = if (enabled) color else SettingsStyle.Caption,
+        color = if (enabled) color else MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -142,7 +142,7 @@ internal fun RowSubtitle(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-        color = SettingsStyle.Description,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 3.dp),
     )
 }
@@ -155,7 +155,7 @@ internal fun SettingsRow(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     enabled: Boolean = true,
-    titleColor: Color = SettingsStyle.Title,
+    titleColor: Color = MaterialTheme.colorScheme.onSurface,
     iconTint: Color = SettingsStyle.TileIcon,
     leading: (@Composable () -> Unit)? = null,
     trailing: @Composable RowScope.() -> Unit = {},
@@ -226,12 +226,12 @@ internal fun ActionRow(
         modifier = Modifier.clickable(interactionSource = source, indication = ripple(), onClick = onClick),
     ) {
         if (value != null) {
-            Text(value, color = SettingsStyle.SageSoft, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp))
+            Text(value, color = MaterialTheme.colorScheme.primaryContainer, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp))
         }
         Icon(
             Icons.AutoMirrored.Rounded.KeyboardArrowRight,
             contentDescription = null,
-            tint = SettingsStyle.Chevron,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.offset { IntOffset(nudge.roundToPx(), 0) }.size(20.dp),
         )
     }
@@ -269,7 +269,7 @@ internal fun <T> SettingsSegmented(
                 Text(
                     label,
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium),
-                    color = if (isSelected) SettingsStyle.Title else SettingsStyle.SegmentIdle,
+                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else SettingsStyle.SegmentIdle,
                 )
             }
         }
@@ -295,7 +295,7 @@ internal fun SettingsPill(
             Text(
                 label,
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.Medium),
-                color = if (destructive) CanopyColors.Danger else SettingsStyle.Title,
+                color = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             )
         }
     }

@@ -137,7 +137,7 @@ private fun ConnectionRow(
             Icon(
                 Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 contentDescription = null,
-                tint = SettingsStyle.Chevron,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
             // Display-only: the whole row opens the detail page.
@@ -149,7 +149,7 @@ private fun ConnectionRow(
                 Text(
                     "Connect",
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp),
-                    color = SettingsStyle.Title,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                 )
             }
@@ -163,15 +163,15 @@ internal fun ConnectionChip(status: ConnectionStatus, modifier: Modifier = Modif
     val lit = status.connected
     Surface(
         shape = CircleShape,
-        color = if (lit) SettingsStyle.Sage.copy(alpha = 0.18f) else SettingsStyle.ButtonFill,
-        border = BorderStroke(1.dp, if (lit) SettingsStyle.Sage.copy(alpha = 0.3f) else SettingsStyle.ButtonBorder),
+        color = if (lit) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else SettingsStyle.ButtonFill,
+        border = BorderStroke(1.dp, if (lit) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else SettingsStyle.ButtonBorder),
         modifier = modifier,
     ) {
         Box(Modifier.defaultMinSize(minHeight = 28.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
             Text(
                 if (lit) "Connected" else "Not connected",
                 style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp),
-                color = if (lit) SettingsStyle.SageSoft else SettingsStyle.Description,
+                color = if (lit) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

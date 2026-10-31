@@ -85,13 +85,13 @@ fun SpotifySettingsCard(
         var input by remember { mutableStateOf(settings.spotifySpdc) }
         AlertDialog(
             onDismissRequest = { showSpdcDialog = false },
-            title = { Text("Spotify sp_dc Cookie", color = CanopyColors.Text) },
+            title = { Text("Spotify sp_dc Cookie", color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Column {
                     Text(
                         "Paste your sp_dc cookie value from spotify.com browser session:",
                         style = MaterialTheme.typography.bodySmall,
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
@@ -109,15 +109,15 @@ fun SpotifySettingsCard(
                     onSettings(settings.copy(spotifySpdc = extracted))
                     showSpdcDialog = false
                 }) {
-                    Text("Save", color = LocalAccent.current)
+                    Text("Save", color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSpdcDialog = false }) {
-                    Text("Cancel", color = CanopyColors.Muted)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = CanopyColors.Surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
         )
     }
 }
@@ -137,12 +137,12 @@ private fun SpotifyToggleRow(
             Text(
                 title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = CanopyColors.Text,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = CanopyColors.Muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         SettingsSwitch(

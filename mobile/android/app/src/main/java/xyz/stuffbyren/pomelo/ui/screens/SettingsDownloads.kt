@@ -73,8 +73,8 @@ internal fun DeleteDownloadsRow(downloadedBytes: Long, onDelete: () -> Unit) {
         title = "Delete all downloads",
         subtitle = "Removes offline songs and motion covers ($formattedSize used)",
         icon = Icons.Rounded.DeleteForever,
-        titleColor = CanopyColors.Danger,
-        iconTint = CanopyColors.Danger,
+        titleColor = MaterialTheme.colorScheme.error,
+        iconTint = MaterialTheme.colorScheme.error,
         modifier = Modifier.clickable { showConfirmDialog = true },
     )
 
@@ -82,19 +82,19 @@ internal fun DeleteDownloadsRow(downloadedBytes: Long, onDelete: () -> Unit) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
             title = {
-                Text("Delete all downloads?", color = CanopyColors.Text, fontWeight = FontWeight.Bold)
+                Text("Delete all downloads?", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         "This frees $formattedSize and cancels downloads in progress.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         "Songs remain in your library and can be downloaded again.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             },
@@ -105,15 +105,15 @@ internal fun DeleteDownloadsRow(downloadedBytes: Long, onDelete: () -> Unit) {
                         onDelete()
                     },
                 ) {
-                    Text("Delete", color = CanopyColors.Danger, fontWeight = FontWeight.Bold)
+                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Cancel", color = CanopyColors.Muted)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = CanopyColors.Surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
             shape = RoundedCornerShape(16.dp),
         )
     }

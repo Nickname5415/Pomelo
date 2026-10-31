@@ -73,13 +73,13 @@ internal fun CrossfadeRow(settings: OrchardSettings, onSettings: (OrchardSetting
                     Row(Modifier.fillMaxWidth()) {
                         Text(
                             "${OrchardSettings.MIN_CROSSFADE_SECONDS}s",
-                            color = SettingsStyle.Caption,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelMedium,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
                             "${OrchardSettings.MAX_CROSSFADE_SECONDS}s",
-                            color = SettingsStyle.Caption,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }

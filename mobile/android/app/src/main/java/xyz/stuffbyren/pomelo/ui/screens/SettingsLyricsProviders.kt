@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -54,10 +55,10 @@ internal fun LyricsProvidersSection(
                     RowSubtitle(if (config.enabled) "Priority ${index + 1}" else "Disabled")
                 }
                 IconButton(onClick = { move(index, index - 1) }, enabled = index > 0) {
-                    Icon(Icons.Rounded.ArrowUpward, "Move ${config.provider.label} up", tint = SettingsStyle.Description)
+                    Icon(Icons.Rounded.ArrowUpward, "Move ${config.provider.label} up", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 IconButton(onClick = { move(index, index + 1) }, enabled = index < providers.lastIndex) {
-                    Icon(Icons.Rounded.ArrowDownward, "Move ${config.provider.label} down", tint = SettingsStyle.Description)
+                    Icon(Icons.Rounded.ArrowDownward, "Move ${config.provider.label} down", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 SettingsSwitch(
                     checked = config.enabled,

@@ -19,6 +19,7 @@
 
 package xyz.stuffbyren.pomelo.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyColumn as LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -38,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import xyz.stuffbyren.pomelo.model.BuiltInHomeSection
 import xyz.stuffbyren.pomelo.model.HomeSectionConfig
 import xyz.stuffbyren.pomelo.model.OrchardSettings
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
 import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
 import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
 import xyz.stuffbyren.pomelo.auth.AuthState
@@ -64,23 +65,23 @@ fun SettingsHomeLayout(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CanopyColors.Chrome,
-                    titleContentColor = CanopyColors.Text,
-                    navigationIconContentColor = CanopyColors.Text
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
-        containerColor = CanopyColors.Chrome
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             PrimaryTabRow(
                 selectedTabIndex = selectedTabIndex,
-                containerColor = CanopyColors.Chrome,
-                contentColor = CanopyColors.Text,
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 indicator = {
                     TabRowDefaults.SecondaryIndicator(
                         Modifier.tabIndicatorOffset(selectedTabIndex, matchContentSize = true),
-                        color = LocalAccent.current
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             ) {
@@ -89,8 +90,8 @@ fun SettingsHomeLayout(
                         selected = selectedTabIndex == index,
                         onClick = { selectedTabIndex = index },
                         text = { Text(title, fontWeight = FontWeight.SemiBold) },
-                        selectedContentColor = LocalAccent.current,
-                        unselectedContentColor = CanopyColors.Muted
+                        selectedContentColor = MaterialTheme.colorScheme.primary,
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -117,7 +118,7 @@ fun SettingsHomeLayout(
                 item {
                     Text(
                         "Reorder and toggle sections for the Home screen.",
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -172,7 +173,7 @@ private fun SectionItemRow(
     Surface(
         color = Color.Transparent,
         shape = shape,
-        modifier = Modifier.fillMaxWidth().glassPane(shape)
+        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -183,14 +184,14 @@ private fun SectionItemRow(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = CanopyColors.Text
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             IconButton(onClick = onMoveUp, enabled = !isFirst) {
-                Icon(Icons.Rounded.ArrowUpward, contentDescription = "Move Up", tint = if (isFirst) CanopyColors.Muted else CanopyColors.Text)
+                Icon(Icons.Rounded.ArrowUpward, contentDescription = "Move Up", tint = if (isFirst) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
             }
             IconButton(onClick = onMoveDown, enabled = !isLast) {
-                Icon(Icons.Rounded.ArrowDownward, contentDescription = "Move Down", tint = if (isLast) CanopyColors.Muted else CanopyColors.Text)
+                Icon(Icons.Rounded.ArrowDownward, contentDescription = "Move Down", tint = if (isLast) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
             }
             SettingsSwitch(
                 checked = config.enabled,
