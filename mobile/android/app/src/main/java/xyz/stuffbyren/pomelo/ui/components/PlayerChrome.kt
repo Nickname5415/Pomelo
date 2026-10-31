@@ -24,16 +24,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,7 +38,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
@@ -60,22 +58,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
-import xyz.stuffbyren.pomelo.ui.glass.LocalGlass
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
 import xyz.stuffbyren.pomelo.ui.motion.popOnChange
 import xyz.stuffbyren.pomelo.ui.navigation.Routes
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
-import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
 
 data class BottomDestination(val route: String, val label: String, val icon: ImageVector)
 
@@ -93,12 +86,13 @@ private val settingsDestination = BottomDestination(Routes.SETTINGS, "Settings",
  */
 val OrchardChromeHeight = 132.dp
 
-private val BottomBarShape = RoundedCornerShape(26.dp)
-/** Bottom navigation bar: a frosted floating pane, inset from the sides and fully rounded. */
+private val BottomBarShape = RoundedCornerShape(PomeloSpacing.bottomBarCorner)
+private val BottomBarIndicatorShape = RoundedCornerShape(PomeloSpacing.bottomBarIndicatorCorner)
+
+/** Bottom navigation bar: flat floating pane on surfaceContainer. */
 @Composable
 fun OrchardBottomBar(currentRoute: String?, onSelect: (String) -> Unit, showSettings: Boolean = false) {
-    val glassTint = LocalGlass.current.tint
-    // 0 to 1 as the Settings tab grows in and out of the row.
+    val scheme = MaterialTheme.colorScheme
     val settingsReveal by animateFloatAsState(
         targetValue = if (showSettings) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
@@ -118,50 +112,32 @@ fun OrchardBottomBar(currentRoute: String?, onSelect: (String) -> Unit, showSett
     }
     val activeIndex = selectedIndex ?: lastKnownIndex
 
-    val tintColor = if (glassTint != Color.Unspecified && glassTint.alpha > 0f) glassTint else LocalAccent.current
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .glassPane(BottomBarShape, GlassTone.CHROME)
-            .background(
-                brush = Brush.verticalGradient(
-                    listOf(
-                        tintColor.copy(alpha = 0.38f),
-                        tintColor.copy(alpha = 0.24f),
-                    ),
-                ),
-                shape = BottomBarShape,
+            .padding(
+                horizontal = PomeloSpacing.bottomBarOuterPaddingHorizontal,
+                vertical = PomeloSpacing.bottomBarOuterPaddingVertical,
             )
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(
-                        tintColor.copy(alpha = 0.55f),
-                        tintColor.copy(alpha = 0.25f),
-                    ),
-                ),
-                shape = BottomBarShape,
-            ),
+            .clip(BottomBarShape)
+            .background(scheme.surfaceContainer),
     ) {
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(PomeloSpacing.bottomBarHeight),
         ) {
             val slotWidth = maxWidth / (destinations.size + settingsReveal)
-            // Wraps icon and label, centered in the 64dp row.
-            val indicatorWidth = if (slotWidth - 8.dp < 72.dp) slotWidth - 8.dp else 72.dp
-            val indicatorHeight = 52.dp
+            val indicatorWidth = if (slotWidth - PomeloSpacing.actionButtonSpacing < 72.dp) {
+                slotWidth - PomeloSpacing.actionButtonSpacing
+            } else {
+                72.dp
+            }
             val targetOffset = (slotWidth * (activeIndex.coerceAtMost(allDestinations.lastIndex) + 0.5f)) - (indicatorWidth / 2)
 
             val animatedOffset by animateDpAsState(
                 targetValue = targetOffset,
-                animationSpec = spring(
-                    dampingRatio = 0.78f,
-                    stiffness = 380f,
-                ),
+                animationSpec = spring(dampingRatio = 0.78f, stiffness = 380f),
                 label = "BottomBarIndicatorX",
             )
             val indicatorAlpha by animateFloatAsState(
@@ -171,26 +147,20 @@ fun OrchardBottomBar(currentRoute: String?, onSelect: (String) -> Unit, showSett
             )
 
             if (indicatorAlpha > 0.001f) {
-                val indicatorColor = tintColor.copy(alpha = 0.45f)
-
                 Box(
                     modifier = Modifier
-                        .offset { IntOffset(animatedOffset.roundToPx(), ((64.dp - indicatorHeight) / 2).roundToPx()) }
-                        .size(width = indicatorWidth, height = indicatorHeight)
+                        .offset {
+                            IntOffset(
+                                animatedOffset.roundToPx(),
+                                ((PomeloSpacing.bottomBarHeight - PomeloSpacing.bottomBarIndicatorHeight) / 2).roundToPx(),
+                            )
+                        }
+                        .size(width = indicatorWidth, height = PomeloSpacing.bottomBarIndicatorHeight)
                         .alpha(indicatorAlpha)
-                        .background(
-                            color = indicatorColor,
-                            shape = RoundedCornerShape(20.dp),
-                        )
-                        .border(
-                            width = 0.5.dp,
-                            color = Color.White.copy(alpha = 0.35f),
-                            shape = RoundedCornerShape(20.dp),
-                        ),
+                        .background(color = scheme.secondaryContainer, shape = BottomBarIndicatorShape),
                 )
             }
 
-            // Own row so each slot is exactly slotWidth wide and the indicator lines up with it.
             Row(Modifier.fillMaxSize().selectableGroup()) {
                 allDestinations.forEach { destination ->
                     val isSettings = destination === settingsDestination
@@ -212,12 +182,13 @@ fun OrchardBottomBar(currentRoute: String?, onSelect: (String) -> Unit, showSett
 
 @Composable
 private fun BottomBarItem(destination: BottomDestination, isSelected: Boolean, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
     val iconScale by animateFloatAsState(
         targetValue = if (isSelected) 1.08f else 1.0f,
         animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
         label = "NavIconScale",
     )
-    val tint = if (isSelected) Color.White else Color.White.copy(alpha = 0.72f)
+    val tint = if (isSelected) scheme.primary else scheme.onSurfaceVariant
     Column(
         Modifier
             .fillMaxSize()
@@ -236,11 +207,11 @@ private fun BottomBarItem(destination: BottomDestination, isSelected: Boolean, o
             contentDescription = null,
             tint = tint,
             modifier = Modifier
-                .size(22.dp)
+                .size(PomeloSpacing.chromeCapsuleIconSize)
                 .scale(iconScale)
                 .popOnChange(isSelected, peak = 1.35f, onlyOn = true),
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(PomeloSpacing.explicitBadgeGap))
         Text(
             destination.label,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),

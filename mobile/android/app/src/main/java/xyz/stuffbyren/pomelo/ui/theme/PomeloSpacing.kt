@@ -43,4 +43,15 @@ object PomeloSpacing {
 
     val explicitBadgeGap: Dp = 6.dp
     val durationLeadingGap: Dp = 8.dp
+
+    val bottomBarOuterPaddingHorizontal: Dp = 10.dp
+    val bottomBarOuterPaddingVertical: Dp = 6.dp
+    val bottomBarHeight: Dp = 64.dp
+    val bottomBarCorner: Dp = 26.dp
+    val bottomBarIndicatorCorner: Dp = 20.dp
+    val bottomBarIndicatorHeight: Dp = 52.dp
+
+    val miniPlayerHorizontalPadding: Dp = 10.dp
+    val miniPlayerVerticalPadding: Dp = 4.dp
+    val miniPlayerContentHeight: Dp = 60.dp
 }
