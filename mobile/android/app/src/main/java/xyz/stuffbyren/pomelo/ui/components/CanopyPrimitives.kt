@@ -45,8 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
 import xyz.stuffbyren.pomelo.ui.motion.pressScale
 import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
 import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
@@ -59,7 +57,7 @@ val CanopyGutter = 16.dp
 fun CanopyEyebrow(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = CanopyColors.Eyebrow,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Text(
         text = text,
@@ -85,7 +83,7 @@ fun CanopyRule(modifier: Modifier = Modifier, strong: Boolean = false) {
         modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(if (strong) CanopyColors.RuleStrong else CanopyColors.Rule),
+            .background(if (strong) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outlineVariant),
     )
 }
 
@@ -96,7 +94,7 @@ fun CanopyPanel(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
-        modifier = modifier.glassPane(CanopyRadius),
+        modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainer),
         color = Color.Transparent,
         shape = CanopyRadius,
     ) {
@@ -129,11 +127,11 @@ fun CanopyButton(
     primary: Boolean = false,
 ) {
     val containerColor by animateColorAsState(
-        if (primary) LocalAccent.current else Color.Transparent,
+        if (primary) MaterialTheme.colorScheme.primary else Color.Transparent,
         label = "BtnBg"
     )
     val contentColor by animateColorAsState(
-        if (primary) Color.Black else CanopyColors.Text,
+        if (primary) Color.Black else MaterialTheme.colorScheme.onSurface,
         label = "BtnText"
     )
 
@@ -147,7 +145,7 @@ fun CanopyButton(
         modifier = modifier
             .pressScale(source, 0.92f)
             .heightIn(min = 36.dp)
-            .then(if (primary) Modifier else Modifier.glassPane(CircleShape, GlassTone.CONTROL)),
+            .then(if (primary) Modifier else Modifier.background(MaterialTheme.colorScheme.surfaceContainer)),
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text(
