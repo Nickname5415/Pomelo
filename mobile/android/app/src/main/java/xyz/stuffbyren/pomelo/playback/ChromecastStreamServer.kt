@@ -92,8 +92,18 @@ class ChromecastStreamServer(
         runCatching {
             val requestLine = readLine(input) ?: return
             val parts = requestLine.split(' ')
-            if (parts.size < 2 || parts[0] !in setOf("GET", "HEAD")) {
+            if (parts.size < 2 || parts[0] !in setOf("GET", "HEAD", "OPTIONS")) {
                 writeError(output, 405, "Method Not Allowed")
+                return
+            }
+            if (parts[0] == "OPTIONS") {
+                writeStatus(output, 204, "No Content")
+                writeHeader(output, "Access-Control-Allow-Origin", "*")
+                writeHeader(output, "Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+                writeHeader(output, "Access-Control-Allow-Headers", "*")
+                writeHeader(output, "Content-Length", "0")
+                writeHeader(output, "Connection", "close")
+                finishHeaders(output)
                 return
             }
             val headers = mutableMapOf<String, String>()
@@ -117,8 +127,10 @@ class ChromecastStreamServer(
                 writeError(output, 404, "Not Found")
                 return
             }
+            Log.i(TAG, "Cast request: ${parts[0]} mediaId=$mediaId")
             val resolvedUrl = runBlocking { resolver.resolve(mediaId) }
             if (resolvedUrl.isNullOrBlank()) {
+                Log.w(TAG, "Stream resolution returned null for $mediaId")
                 writeError(output, 404, "Stream Not Found")
                 return
             }
@@ -126,7 +138,9 @@ class ChromecastStreamServer(
             val mimeType = if (streamInfo?.codec.equals("AAC", ignoreCase = true)) "audio/mp4" else "audio/flac"
             val isHead = parts[0] == "HEAD"
 
-            if (resolvedUrl.startsWith("file:")) {
+            if (resolvedUrl.startsWith("data:")) {
+                serveDataUri(output, resolvedUrl, isHead)
+            } else if (resolvedUrl.startsWith("file:")) {
                 serveFile(output, File(URI(resolvedUrl)), mimeType, headers["range"], isHead)
             } else {
                 serveRemote(output, resolvedUrl, mimeType, headers["range"], isHead)
@@ -136,6 +150,36 @@ class ChromecastStreamServer(
             runCatching { writeError(output, 502, "Bad Gateway") }
         }
         runCatching { output.flush() }
+    }
+
+    private fun serveDataUri(
+        output: BufferedOutputStream,
+        dataUri: String,
+        isHead: Boolean,
+    ) {
+        val commaIndex = dataUri.indexOf(',')
+        if (commaIndex < 0) {
+            writeError(output, 500, "Invalid data URI")
+            return
+        }
+        val meta = dataUri.substring(5, commaIndex)
+        val isBase64 = meta.endsWith(";base64", ignoreCase = true)
+        val mimeType = meta.substringBefore(';').ifBlank { "application/dash+xml" }
+        val payload = dataUri.substring(commaIndex + 1)
+        val bytes = if (isBase64) {
+            java.util.Base64.getDecoder().decode(payload)
+        } else {
+            URLDecoder.decode(payload, StandardCharsets.UTF_8.name()).toByteArray(StandardCharsets.UTF_8)
+        }
+        Log.i(TAG, "Serving data URI: mimeType=$mimeType, bytes=${bytes.size}")
+        writeStatus(output, 200, "OK")
+        writeHeader(output, "Content-Type", mimeType)
+        writeHeader(output, "Content-Length", bytes.size.toString())
+        writeHeader(output, "Access-Control-Allow-Origin", "*")
+        writeHeader(output, "Cache-Control", "no-cache")
+        writeHeader(output, "Connection", "close")
+        finishHeaders(output)
+        if (!isHead) output.write(bytes)
     }
 
     private fun serveRemote(
@@ -161,6 +205,7 @@ class ChromecastStreamServer(
             response.header("Content-Length")?.let { writeHeader(output, "Content-Length", it) }
             response.header("Content-Range")?.let { writeHeader(output, "Content-Range", it) }
             writeHeader(output, "Accept-Ranges", response.header("Accept-Ranges") ?: "bytes")
+            writeHeader(output, "Access-Control-Allow-Origin", "*")
             writeHeader(output, "Cache-Control", "no-store")
             writeHeader(output, "Connection", "close")
             finishHeaders(output)
@@ -195,6 +240,7 @@ class ChromecastStreamServer(
         writeHeader(output, "Content-Length", count.toString())
         if (requested != null) writeHeader(output, "Content-Range", "bytes $start-$end/$length")
         writeHeader(output, "Accept-Ranges", "bytes")
+        writeHeader(output, "Access-Control-Allow-Origin", "*")
         writeHeader(output, "Cache-Control", "no-store")
         writeHeader(output, "Connection", "close")
         finishHeaders(output)
@@ -214,6 +260,21 @@ class ChromecastStreamServer(
 
     private fun localIpv4Address(): Inet4Address? {
         val connectivity = appContext.getSystemService(ConnectivityManager::class.java)
+        // Always prioritize Wi-Fi and Ethernet networks over cellular for Cast LAN communication
+        for (network in connectivity.allNetworks) {
+            val caps = connectivity.getNetworkCapabilities(network) ?: continue
+            if (
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+            ) {
+                val lp = connectivity.getLinkProperties(network) ?: continue
+                val addr = lp.linkAddresses.asSequence()
+                    .map { it.address }
+                    .filterIsInstance<Inet4Address>()
+                    .firstOrNull { !it.isLoopbackAddress && !it.isLinkLocalAddress }
+                if (addr != null) return addr
+            }
+        }
         val active = connectivity.activeNetwork
         if (
             active != null &&

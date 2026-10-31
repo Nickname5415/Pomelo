@@ -42,7 +42,19 @@ class ChromecastMediaItemConverter(private val streamServer: ChromecastStreamSer
         originals[mediaItem.mediaId] = mediaItem
         val castUrl = streamServer.urlFor(mediaItem.mediaId)
         val track = MediaItemMapper.toTrack(mediaItem)
-        val mimeType = if (track.codec.equals("aac", ignoreCase = true)) "audio/mp4" else "audio/flac"
+        val isLocal = track.isLocal || mediaItem.localConfiguration?.uri?.scheme == "file" || mediaItem.localConfiguration?.uri?.scheme == "content"
+        val mimeType = if (isLocal) {
+            when {
+                track.codec.equals("aac", ignoreCase = true) || track.codec.equals("mp4", ignoreCase = true) -> "audio/mp4"
+                track.codec.equals("mp3", ignoreCase = true) -> "audio/mpeg"
+                track.codec.equals("ogg", ignoreCase = true) || track.codec.equals("opus", ignoreCase = true) -> "audio/ogg"
+                track.codec.equals("wav", ignoreCase = true) -> "audio/wav"
+                else -> "audio/flac"
+            }
+        } else {
+            "application/dash+xml"
+        }
+        android.util.Log.i(TAG, "toMediaQueueItem: mediaId=${mediaItem.mediaId}, title=${track.title}, mimeType=$mimeType, castUrl=$castUrl")
 
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK).apply {
             putString(MediaMetadata.KEY_TITLE, track.title.ifBlank { "Unknown Title" })
@@ -94,4 +106,8 @@ class ChromecastMediaItemConverter(private val streamServer: ChromecastStreamSer
 
     /** The Cast timeline can contain metadata-only placeholders for queued items. */
     fun originalFor(mediaId: String): MediaItem? = originals[mediaId]
+
+    private companion object {
+        const val TAG = "PomeloCastConverter"
+    }
 }

@@ -40,7 +40,11 @@ class ChromecastPlayback(
     private val onCastEnded: (Player) -> Unit,
     private val onError: (String) -> Unit,
 ) : AutoCloseable {
-    private val castContext: CastContext? = runCatching { CastContext.getSharedInstance(context) }.getOrNull()
+    private val castContext: CastContext? = runCatching {
+        CastContext.getSharedInstance(context)
+    }.onFailure {
+        Log.w(TAG, "CastContext.getSharedInstance failed", it)
+    }.getOrNull()
 
     val player: CastPlayer? = castContext?.let {
         CastPlayer(it, converter)
@@ -59,18 +63,30 @@ class ChromecastPlayback(
     }
 
     private val sessionListener = object : SessionAvailabilityListener {
-        override fun onCastSessionAvailable() = transferToReceiver()
-        override fun onCastSessionUnavailable() = transferToPhone()
+        override fun onCastSessionAvailable() {
+            Log.i(TAG, "SessionAvailabilityListener: onCastSessionAvailable")
+            transferToReceiver()
+        }
+
+        override fun onCastSessionUnavailable() {
+            Log.i(TAG, "SessionAvailabilityListener: onCastSessionUnavailable")
+            transferToPhone()
+        }
     }
 
     init {
         player?.addListener(remoteListener)
+        Log.i(TAG, "Initialized: player=$player, castContext=$castContext")
     }
 
     /** Starts observing Cast only after the service has stored this owner. */
     fun start() {
-        val cast = player ?: return
+        val cast = player ?: run {
+            Log.w(TAG, "Cannot start ChromecastPlayback: player is null")
+            return
+        }
         cast.setSessionAvailabilityListener(sessionListener)
+        Log.i(TAG, "Started listening to Cast session availability (available=${cast.isCastSessionAvailable})")
         if (cast.isCastSessionAvailable) transferToReceiver()
     }
 
@@ -81,6 +97,7 @@ class ChromecastPlayback(
         if (isActive) return
         val local = localPlayer()
         val state = TransferState.capture(local)
+        Log.i(TAG, "transferToReceiver: items=${state.items.size}, index=${state.index}, posMs=${state.positionMs}, playWhenReady=${state.playWhenReady}")
         lastPhoneState = state
         runCatching {
             local.pause()
@@ -97,6 +114,7 @@ class ChromecastPlayback(
             onCastStarted(cast)
             if (state.items.isNotEmpty()) cast.prepare()
             cast.playWhenReady = state.playWhenReady
+            Log.i(TAG, "transferToReceiver complete, cast.playWhenReady=${cast.playWhenReady}")
         }.onFailure { error ->
             Log.w(TAG, "Could not transfer playback to Cast", error)
             isActive = false
