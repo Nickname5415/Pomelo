@@ -87,8 +87,8 @@ internal fun FoldableOfflineBanner(downloadedCount: Int) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
         shape = RoundedCornerShape(16.dp),
-        color = CanopyColors.Surface,
-        border = BorderStroke(1.dp, LocalAccent.current.copy(alpha = 0.35f)),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
@@ -97,7 +97,7 @@ internal fun FoldableOfflineBanner(downloadedCount: Int) {
             Icon(
                 Icons.Rounded.CloudOff,
                 contentDescription = null,
-                tint = LocalAccent.current,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp),
             )
             Spacer(Modifier.width(14.dp))
@@ -106,14 +106,14 @@ internal fun FoldableOfflineBanner(downloadedCount: Int) {
                     "Offline Mode",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     if (downloadedCount > 0)
                         "Showing downloaded music ($downloadedCount ${if (downloadedCount == 1) "song" else "songs"})"
                     else "No internet connection detected",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

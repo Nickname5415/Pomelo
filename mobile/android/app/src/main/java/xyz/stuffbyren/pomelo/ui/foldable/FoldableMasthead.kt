@@ -109,7 +109,7 @@ internal fun FoldableMasthead(
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp,
                     ),
-                color = CanopyColors.Text,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -120,7 +120,7 @@ internal fun FoldableMasthead(
             ) {
                 Surface(
                     onClick = onSearch,
-                    color = CanopyColors.Surface,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                     shape = CircleShape,
                     modifier = Modifier.width(260.dp).height(44.dp),
                 ) {
@@ -131,14 +131,14 @@ internal fun FoldableMasthead(
                         Icon(
                             Icons.Rounded.Search,
                             contentDescription = "Search",
-                            tint = CanopyColors.Muted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(
                             text = "Search music, albums...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = CanopyColors.Muted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                         )
                     }
@@ -147,7 +147,7 @@ internal fun FoldableMasthead(
                 Surface(
                     onClick = onProfile,
                     shape = CircleShape,
-                    color = CanopyColors.Surface,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.size(44.dp),
                 ) {
                     if (avatarUrl.isNotBlank()) {
@@ -162,7 +162,7 @@ internal fun FoldableMasthead(
                             Icon(
                                 Icons.Rounded.Person,
                                 contentDescription = "User Avatar",
-                                tint = LocalAccent.current,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp),
                             )
                         }
@@ -179,8 +179,8 @@ internal fun FoldableMasthead(
                     Surface(
                         onClick = { onSelectCategory(category) },
                         shape = CircleShape,
-                        color = if (isSelected) Color.White else CanopyColors.Surface,
-                        border = if (isSelected) null else BorderStroke(1.dp, CanopyColors.Rule),
+                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.surfaceContainer,
+                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.height(34.dp),
                     ) {
                         Box(
@@ -195,7 +195,7 @@ internal fun FoldableMasthead(
                                             if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         fontSize = 13.sp,
                                     ),
-                                color = if (isSelected) Color.Black else CanopyColors.Text,
+                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -219,7 +219,7 @@ internal fun FoldableSectionHeader(title: String, onSeeAll: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                 ),
-            color = CanopyColors.Text,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Row(
             modifier =
@@ -231,13 +231,13 @@ internal fun FoldableSectionHeader(title: String, onSeeAll: () -> Unit) {
             Text(
                 text = "See all",
                 style = MaterialTheme.typography.labelLarge,
-                color = CanopyColors.Muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.width(4.dp))
             Icon(
                 Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = null,
-                tint = CanopyColors.Muted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
             )
         }

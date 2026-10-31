@@ -72,9 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.stuffbyren.pomelo.ui.components.PomeloMark
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
 import xyz.stuffbyren.pomelo.ui.glass.LocalGlass
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
 import xyz.stuffbyren.pomelo.ui.navigation.Routes
 import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
 import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
@@ -101,7 +99,7 @@ fun PomeloNavigationRail(
     modifier: Modifier = Modifier,
 ) {
     val glassTint = LocalGlass.current.tint
-    val tintColor = if (glassTint != Color.Unspecified && glassTint.alpha > 0f) glassTint else LocalAccent.current
+    val tintColor = if (glassTint != Color.Unspecified && glassTint.alpha > 0f) glassTint else MaterialTheme.colorScheme.primary
 
     val selectedIndex = remember(currentRoute) {
         val idx = foldableDestinations.indexOfFirst { it.route == currentRoute }
@@ -120,10 +118,11 @@ fun PomeloNavigationRail(
     }
     val activeIndex = selectedIndex ?: lastKnownIndex
 
-    val railScrim = remember {
+    val scheme = MaterialTheme.colorScheme
+    val railScrim = remember(scheme) {
         Brush.horizontalGradient(
-            0f to CanopyColors.Chrome.copy(alpha = 0.92f),
-            0.75f to CanopyColors.Chrome.copy(alpha = 0.75f),
+            0f to scheme.background.copy(alpha = 0.92f),
+            0.75f to scheme.background.copy(alpha = 0.75f),
             1f to Color.Transparent,
         )
     }
@@ -132,7 +131,7 @@ fun PomeloNavigationRail(
         modifier = modifier
             .fillMaxHeight()
             .width(FoldableNavRailWidth)
-            .background(CanopyColors.Chrome.copy(alpha = 0.95f))
+            .background(scheme.background.copy(alpha = 0.95f))
             .drawWithContent {
                 drawContent()
                 drawLine(

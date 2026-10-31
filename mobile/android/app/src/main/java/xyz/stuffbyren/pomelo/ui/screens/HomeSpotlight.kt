@@ -86,7 +86,7 @@ internal fun HomeSectionTitle(
         if (showDivider) {
             HorizontalDivider(
                 thickness = Dp.Hairline,
-                color = CanopyColors.Text.copy(alpha = 0.12f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                 modifier = Modifier.padding(start = HomeGutter, end = HomeGutter, top = HomeSectionGap),
             )
         }
@@ -107,7 +107,7 @@ internal fun HomeSectionTitle(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.labelLarge,
-                        color = CanopyColors.Text.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -118,7 +118,7 @@ internal fun HomeSectionTitle(
                     lineHeight = 28.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.01).em,
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -129,12 +129,12 @@ internal fun HomeSectionTitle(
                     onClick = action,
                     shape = CircleShape,
                     color = Color.Transparent,
-                    border = BorderStroke(1.dp, CanopyColors.RuleStrong),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 ) {
                     Text(
                         text = actionLabel ?: if (onPlayAllClick != null) "Play all" else "See all",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                     )

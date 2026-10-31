@@ -130,7 +130,7 @@ internal fun FoldableFullBleedHero(
                             )
                 )
 
-                // Bottom scrim dissolving smoothly into CanopyColors.Chrome
+                // Bottom scrim dissolving smoothly into MaterialTheme.colorScheme.background
                 Box(
                     modifier =
                         Modifier.fillMaxSize()
@@ -139,8 +139,8 @@ internal fun FoldableFullBleedHero(
                                     0f to Color.Transparent,
                                     0.35f to Color.Transparent,
                                     0.65f to Color.Black.copy(alpha = 0.55f),
-                                    0.86f to CanopyColors.Chrome.copy(alpha = 0.92f),
-                                    1f to CanopyColors.Chrome,
+                                    0.86f to MaterialTheme.colorScheme.background.copy(alpha = 0.92f),
+                                    1f to MaterialTheme.colorScheme.background,
                                 )
                             )
                 )
@@ -288,7 +288,7 @@ internal fun FoldableFullBleedHero(
 
             Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                 Surface(
-                    color = CanopyColors.Surface.copy(alpha = 0.85f),
+                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
                     shape = CircleShape,
                 ) {
                     Text(

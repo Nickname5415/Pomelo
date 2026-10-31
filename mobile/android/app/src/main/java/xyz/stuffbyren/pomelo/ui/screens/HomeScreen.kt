@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyColumn as LazyColumn
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -255,7 +256,7 @@ fun HomeScreen(data: HomeData) {
                     contentAlignment = Alignment.Center,
                 ) {
                     TextButton(onClick = actions.editLayout) {
-                        Text("Edit home layout", color = CanopyColors.Muted)
+                        Text("Edit home layout", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

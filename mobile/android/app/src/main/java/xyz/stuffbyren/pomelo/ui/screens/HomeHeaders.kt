@@ -99,14 +99,14 @@ internal fun GlassHomeHeader(
                     fontSize = 23.sp,
                     letterSpacing = (-0.6).sp,
                 ),
-                color = CanopyColors.Text,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
             HeaderAction(onClick = onSearch, description = "Search") {
                 Icon(
                     Icons.Rounded.Search,
                     contentDescription = null,
-                    tint = CanopyColors.Text,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -125,7 +125,7 @@ internal fun GlassHomeHeader(
             lineHeight = 41.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = (-0.02).em,
-            color = CanopyColors.Text,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             modifier = Modifier.riseIn(1, distance = 22f),
         )
@@ -153,13 +153,13 @@ internal fun ProfileAvatar(url: String, name: String, modifier: Modifier = Modif
         ArtworkTile(url = url, description = name, modifier = modifier, radius = 999)
     } else {
         Box(
-            modifier = modifier.clip(CircleShape).background(CanopyColors.Surface),
+            modifier = modifier.clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainer),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 Icons.Rounded.Person,
                 contentDescription = name,
-                tint = LocalAccent.current,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxSize(0.6f),
             )
         }
