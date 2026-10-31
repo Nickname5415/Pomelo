@@ -41,8 +41,10 @@ import xyz.stuffbyren.pomelo.model.CatalogItem
 import xyz.stuffbyren.pomelo.ui.motion.riseIn
 import xyz.stuffbyren.pomelo.ui.components.ArtistSectionBottomSheet
 import xyz.stuffbyren.pomelo.ui.components.CatalogCard
+import xyz.stuffbyren.pomelo.ui.components.OrchardSectionHeader
 import xyz.stuffbyren.pomelo.ui.components.ReorderControls
 import xyz.stuffbyren.pomelo.ui.components.filterTracks
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
 
 /** Standard album and playlist presentation. */
 @Composable
@@ -175,9 +177,10 @@ internal fun CollectionDetailContent(
                     detail.sections.forEach { section ->
                         val hasMoreViaApi = section.browseId.isNotBlank()
                         val canViewAll = hasMoreViaApi || section.items.size > 3
-                        HomeSectionTitle(
+                        OrchardSectionHeader(
                             title = section.title,
-                            onClick = if (canViewAll) {
+                            action = if (canViewAll) "View all" else null,
+                            onAction = if (canViewAll) {
                                 {
                                     activeSectionSheet = SectionSheetState(
                                         title = section.title,
@@ -189,8 +192,8 @@ internal fun CollectionDetailContent(
                             } else null,
                         )
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            contentPadding = PaddingValues(horizontal = PomeloSpacing.screenHorizontal),
+                            horizontalArrangement = Arrangement.spacedBy(PomeloSpacing.screenHorizontal),
                         ) {
                             itemsIndexed(section.items, key = { idx, it -> "${it.stableId}_$idx" }) { idx, item ->
                                 CatalogCard(
@@ -208,10 +211,10 @@ internal fun CollectionDetailContent(
                         }
                     }
                 } else if (detail.related.isNotEmpty()) {
-                    HomeSectionTitle(title = "More like this")
+                    OrchardSectionHeader(title = "More like this")
                     LazyRow(
-                        contentPadding = PaddingValues(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(horizontal = PomeloSpacing.screenHorizontal),
+                        horizontalArrangement = Arrangement.spacedBy(PomeloSpacing.screenHorizontal),
                     ) {
                         itemsIndexed(detail.related, key = { idx, it -> "${it.stableId}_$idx" }) { idx, item ->
                             CatalogCard(

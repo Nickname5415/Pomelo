@@ -69,8 +69,8 @@ import xyz.stuffbyren.pomelo.model.BrowseDetail
 import xyz.stuffbyren.pomelo.model.LocalBestMixJob
 import xyz.stuffbyren.pomelo.model.CatalogKind
 import xyz.stuffbyren.pomelo.model.Track
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
-import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
+import xyz.stuffbyren.pomelo.ui.theme.PomeloShapes
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
@@ -178,6 +178,7 @@ internal fun shareCollection(context: Context, detail: BrowseDetail, onShare: ((
 
 @Composable
 internal fun BestMixButton(isSorting: Boolean, statusText: String, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
     val transition = rememberInfiniteTransition(label = "BestMixGlow")
     val borderGlow by transition.animateFloat(
         initialValue = 0.25f,
@@ -196,26 +197,20 @@ internal fun BestMixButton(isSorting: Boolean, statusText: String, onClick: () -
         onClick = onClick,
         enabled = !isSorting,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White.copy(alpha = 0.10f),
-            contentColor = Color.White,
-            disabledContainerColor = Color.White.copy(alpha = 0.16f),
-            disabledContentColor = Color.White,
+            containerColor = scheme.secondaryContainer,
+            contentColor = scheme.onSecondaryContainer,
+            disabledContainerColor = scheme.surfaceContainerHigh,
+            disabledContentColor = scheme.onSurfaceVariant,
         ),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(PomeloSpacing.actionButtonHeight / 2),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .height(42.dp)
+            .padding(horizontal = PomeloSpacing.screenHorizontal)
+            .height(PomeloSpacing.actionButtonHeight)
             .border(
                 width = 1.dp,
-                brush = Brush.horizontalGradient(
-                    listOf(
-                        LocalAccent.current.copy(alpha = borderGlow * 0.8f),
-                        Color.White.copy(alpha = 0.40f),
-                        LocalAccent.current.copy(alpha = borderGlow),
-                    ),
-                ),
-                shape = RoundedCornerShape(20.dp),
+                color = scheme.primary.copy(alpha = borderGlow * 0.6f),
+                shape = RoundedCornerShape(PomeloSpacing.actionButtonHeight / 2),
             ),
     ) {
         Row(
@@ -225,14 +220,14 @@ internal fun BestMixButton(isSorting: Boolean, statusText: String, onClick: () -
             if (isSorting) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
-                    color = LocalAccent.current,
+                    color = scheme.primary,
                     strokeWidth = 2.dp,
                 )
             } else {
                 Icon(
                     Icons.Rounded.AutoAwesome,
                     contentDescription = "Best mix",
-                    tint = LocalAccent.current,
+                    tint = scheme.primary,
                     modifier = Modifier
                         .size(18.dp)
                         .graphicsLayer {
@@ -241,12 +236,12 @@ internal fun BestMixButton(isSorting: Boolean, statusText: String, onClick: () -
                         },
                 )
             }
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(PomeloSpacing.explicitBadgeGap))
             Text(
                 text = if (isSorting) statusText.ifBlank { "Sorting Best Mix..." } else "Best mix",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = Color.White,
+                color = scheme.onSecondaryContainer,
             )
         }
     }
@@ -259,6 +254,7 @@ internal fun BestMixDownloadPrompt(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -266,11 +262,11 @@ internal fun BestMixDownloadPrompt(
                 Icon(
                     Icons.Rounded.AutoAwesome,
                     contentDescription = null,
-                    tint = LocalAccent.current,
+                    tint = scheme.primary,
                     modifier = Modifier.size(24.dp),
                 )
-                Spacer(Modifier.width(8.dp))
-                Text("Best Mix Offline Analysis", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(PomeloSpacing.explicitBadgeGap))
+                Text("Best Mix Offline Analysis", fontWeight = FontWeight.Bold, color = scheme.onSurface)
             }
         },
         text = {
@@ -278,30 +274,30 @@ internal fun BestMixDownloadPrompt(
                 Text(
                     "Best Mix analyzes harmonic keys, tempo, and cue points locally to arrange your music seamlessly.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.85f),
+                    color = scheme.onSurfaceVariant,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(PomeloSpacing.explicitBadgeGap))
                 Text(
                     "Downloading $trackCount song${if (trackCount == 1) "" else "s"} could take up to ~$estimatedMb MB of storage.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = LocalAccent.current,
+                    color = scheme.primary,
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = LocalAccent.current),
+                colors = ButtonDefaults.buttonColors(containerColor = scheme.primary),
             ) {
-                Text("Download & Sort", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Download & Sort", color = scheme.onPrimary, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color.White.copy(alpha = 0.7f))
+                Text("Cancel", color = scheme.onSurfaceVariant)
             }
         },
-        shape = RoundedCornerShape(20.dp),
-        containerColor = CanopyColors.Surface,
+        shape = PomeloShapes.lg,
+        containerColor = scheme.surfaceContainerHigh,
     )
 }

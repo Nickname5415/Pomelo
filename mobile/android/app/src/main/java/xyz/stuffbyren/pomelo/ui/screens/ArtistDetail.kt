@@ -33,6 +33,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -71,10 +73,13 @@ import xyz.stuffbyren.pomelo.ui.components.CatalogCard
 import xyz.stuffbyren.pomelo.ui.components.ChromeAction
 import xyz.stuffbyren.pomelo.ui.components.DetailFloatingChrome
 import xyz.stuffbyren.pomelo.ui.components.FeaturedReleaseCard
-import xyz.stuffbyren.pomelo.ui.components.TrackRow
+import xyz.stuffbyren.pomelo.ui.components.PomeloInsetDivider
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackLeading
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackRow
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackRowActions
 import xyz.stuffbyren.pomelo.ui.components.rememberArtworkPalette
 import xyz.stuffbyren.pomelo.ui.components.rememberHeroScrimProgress
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
 import kotlinx.coroutines.launch
 
 /** Rows shown under "Top songs" before it is expanded. */
@@ -198,7 +203,7 @@ internal fun ArtistDetailContent(
                 Brush.verticalGradient(
                     0f to palette.top.copy(alpha = 0.6f),
                     0.4f to palette.deep,
-                    1f to CanopyColors.Chrome,
+                    1f to MaterialTheme.colorScheme.background,
                 ),
             ),
     ) {
@@ -216,25 +221,35 @@ internal fun ArtistDetailContent(
                     )
                     is ArtistRow.Latest -> FeaturedReleaseCard(item = row.record, onClick = { onOpen(row.record.stableId) })
                     is ArtistRow.Title -> HomeSectionTitle(title = row.title, onClick = row.onClick, actionLabel = row.actionLabel)
-                    is ArtistRow.Song -> TrackRow(
-                        track = row.track,
-                        onPlay = { onPlayTrack(detail.tracks, row.index, detail.title) },
-                        modifier = Modifier
+                    is ArtistRow.Song -> Column(
+                        Modifier
                             .animateItem(fadeInSpec = null)
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = PomeloSpacing.screenHorizontal)
                             .riseIn(row.index, cascadeOnScroll = true),
-                        showDivider = !row.last,
-                        onPlayNext = onPlayNext?.let { action -> { action(row.track) } },
-                        onAddToQueue = onAdd?.let { action -> { action(row.track) } },
-                        onDownload = onDownloadTrack?.let { action -> { action(row.track) } },
-                        onRemoveDownload = onRemoveDownloadTrack?.let { action -> { action(row.track.id) } },
-                        isDownloaded = row.track.id in downloadedTrackIds,
-                        isDownloading = row.track.id in downloadingTrackIds,
-                        onShare = onShareTrack?.let { action -> { action(row.track) } },
-                        onViewAlbum = if (row.track.albumId.isNotBlank()) {{ onOpen(row.track.albumId) }} else null,
-                        onViewArtist = if (row.track.artistId.isNotBlank()) {{ onOpen(row.track.artistId) }} else null,
-                        compact = true,
-                    )
+                    ) {
+                        PomeloTrackRow(
+                            title = row.track.title,
+                            onClick = { onPlayTrack(detail.tracks, row.index, detail.title) },
+                            leading = PomeloTrackLeading.Number(row.index + 1),
+                            durationMs = row.track.durationMs,
+                            isExplicit = row.track.explicit,
+                            actions = PomeloTrackRowActions(
+                                track = row.track,
+                                onPlay = { onPlayTrack(detail.tracks, row.index, detail.title) },
+                                onPlayNext = onPlayNext?.let { action -> { action(row.track) } },
+                                onAddToQueue = onAdd?.let { action -> { action(row.track) } },
+                                onDownload = onDownloadTrack?.let { action -> { action(row.track) } },
+                                onRemoveDownload = onRemoveDownloadTrack?.let { action -> { action(row.track.id) } },
+                                isDownloaded = row.track.id in downloadedTrackIds,
+                                onShare = onShareTrack?.let { action -> { action(row.track) } },
+                                onViewAlbum = if (row.track.albumId.isNotBlank()) {{ onOpen(row.track.albumId) }} else null,
+                                onViewArtist = if (row.track.artistId.isNotBlank()) {{ onOpen(row.track.artistId) }} else null,
+                            ),
+                        )
+                        if (!row.last) {
+                            PomeloInsetDivider()
+                        }
+                    }
                     is ArtistRow.Rail -> CatalogRail(row.items, row.title, onPlayTrack, onOpen)
                     ArtistRow.About -> ArtistAboutCard(detail, palette)
                 }
@@ -278,7 +293,7 @@ private fun ArtistAboutCard(detail: BrowseDetail, palette: ArtworkPalette) {
         modifier = Modifier
             .padding(start = 20.dp, end = 20.dp, top = 28.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(Brush.verticalGradient(listOf(palette.top.copy(alpha = 0.35f), CanopyColors.Surface)))
+            .background(Brush.verticalGradient(listOf(palette.top.copy(alpha = 0.35f), MaterialTheme.colorScheme.surfaceContainer)))
             .padding(vertical = 20.dp),
     )
 }
