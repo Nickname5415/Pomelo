@@ -173,6 +173,7 @@ class PomeloPlaybackService : MediaLibraryService() {
                         val streamUrl = kotlinx.coroutines.runBlocking { tidalResolver.resolve(trackId) }
                         if (!streamUrl.isNullOrBlank()) {
                             Log.d(TAG, "Resolved track $trackId to: ${streamUrl.take(70)}...")
+                            handler.post { nowPlaying.publishBitrate() }
                             return dataSpec.buildUpon()
                                 .setUri(Uri.parse(streamUrl))
                                 .build()

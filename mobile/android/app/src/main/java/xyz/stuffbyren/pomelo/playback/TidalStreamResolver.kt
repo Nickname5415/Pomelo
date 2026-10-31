@@ -152,17 +152,19 @@ class TidalStreamResolver(
                                 xmlSampleRate = srMatch?.groupValues?.get(1)?.toIntOrNull()
                             } catch (_: Exception) {}
                         }
-                        val sampleRate = json.optInt("sampleRate", xmlSampleRate ?: 44100)
                         val audioQuality = json.optString("audioQuality", quality)
-                        val bitDepth = json.optInt("bitDepth", if (audioQuality.contains("HI_RES", ignoreCase = true)) 24 else 16)
-                        val hiRes = audioQuality.contains("HI_RES", ignoreCase = true) || bitDepth > 16 || sampleRate > 48000
-                        val effectiveBitrate = if (bandwidthKbps > 0) bandwidthKbps else if (codec == "FLAC") (if (hiRes) 2304 else 850) else (if (quality == "LOW") 96 else 320)
+                        val isAac = codec.equals("AAC", ignoreCase = true) || audioQuality == "LOW" || audioQuality == "HIGH"
+                        val effectiveCodec = if (isAac) "AAC" else codec
+                        val sampleRate = json.optInt("sampleRate", xmlSampleRate ?: 44100)
+                        val bitDepth = if (isAac) 0 else json.optInt("bitDepth", if (audioQuality.contains("HI_RES", ignoreCase = true)) 24 else 16)
+                        val hiRes = !isAac && (audioQuality.contains("HI_RES", ignoreCase = true) || bitDepth > 16 || sampleRate > 48000)
+                        val effectiveBitrate = if (bandwidthKbps > 0) bandwidthKbps else if (effectiveCodec == "FLAC") (if (hiRes) 2304 else 850) else (if (audioQuality == "LOW") 96 else 320)
                         val info = TidalStreamInfo(
                             url = extracted,
                             bitrateKbps = effectiveBitrate,
                             bitDepth = bitDepth,
                             sampleRate = sampleRate,
-                            codec = codec,
+                            codec = effectiveCodec,
                             hiRes = hiRes,
                         )
                         val infoKey = if (forCast) "$trackId:cast" else "$trackId:${targetQuality.name}"
@@ -237,7 +239,7 @@ class TidalStreamResolver(
                     val info = TidalStreamInfo(
                         url = result.second!!,
                         bitrateKbps = effectiveBitrate,
-                        bitDepth = 16,
+                        bitDepth = if (isLossless) 16 else 0,
                         sampleRate = 44100,
                         codec = if (isLossless) "FLAC" else "AAC",
                         hiRes = false,
@@ -314,27 +316,32 @@ class TidalStreamResolver(
             }.onFailure { Log.w(TAG, "OpenAPI request exception for $trackId ($formats)", it) }.getOrNull()
 
             if (result != null) {
+                val openApiBitrate = if (targetQuality == AudioQuality.LOW) 96 else 320
                 if (result.first == "FULL" && !result.third.isNullOrBlank()) {
                     Log.i(TAG, "Found FULL stream for $trackId via OpenAPI with formats=$formats")
-                    streamInfoCache[trackId] = TidalStreamInfo(
+                    val info = TidalStreamInfo(
                         url = result.third!!,
-                        bitrateKbps = 320,
-                        bitDepth = 16,
+                        bitrateKbps = openApiBitrate,
+                        bitDepth = 0,
                         sampleRate = 44100,
                         codec = "AAC",
                         hiRes = false,
                     )
+                    streamInfoCache["$trackId:${targetQuality.name}"] = info
+                    streamInfoCache[trackId] = info
                     return result.third
                 }
                 if (formats == formatCandidates.last() && !result.third.isNullOrBlank()) {
-                    streamInfoCache[trackId] = TidalStreamInfo(
+                    val info = TidalStreamInfo(
                         url = result.third!!,
-                        bitrateKbps = 320,
-                        bitDepth = 16,
+                        bitrateKbps = openApiBitrate,
+                        bitDepth = 0,
                         sampleRate = 44100,
                         codec = "AAC",
                         hiRes = false,
                     )
+                    streamInfoCache["$trackId:${targetQuality.name}"] = info
+                    streamInfoCache[trackId] = info
                     return result.third
                 }
             }

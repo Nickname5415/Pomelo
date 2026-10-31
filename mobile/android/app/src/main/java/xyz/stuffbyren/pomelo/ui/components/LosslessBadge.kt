@@ -76,14 +76,23 @@ fun LosslessBadge(
     modifier: Modifier = Modifier,
 ) {
     val detail = LocalStreamDetail.current
-    val isLossless = isQobuz || detail.codec.equals("FLAC", ignoreCase = true) || detail.bitDepth >= 16 || detail.hiRes
+    val isLossy = detail.codec.equals("AAC", ignoreCase = true) ||
+        detail.codec.equals("MP3", ignoreCase = true) ||
+        detail.codec.equals("Opus", ignoreCase = true) ||
+        detail.codec.equals("Vorbis", ignoreCase = true)
+    val isLossless = !isLossy && (isQobuz || detail.codec.equals("FLAC", ignoreCase = true) || detail.bitDepth >= 16 || detail.hiRes)
 
-    if (!isLossless && (!showBitrate || bitrateKbps <= 0)) return
+    if (!isLossless && !showBitrate && bitrateKbps <= 0 && detail.codec.isBlank()) return
 
     if (!isLossless) {
+        val label = if (bitrateKbps > 0) {
+            listOf("$bitrateKbps kbps", detail.codec.ifBlank { "AAC" }).filter { it.isNotBlank() }.joinToString(" · ")
+        } else {
+            detail.codec.ifBlank { "AAC" }
+        }
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text(
-                text = listOf("$bitrateKbps kbps", detail.codec).filter { it.isNotBlank() }.joinToString(" · "),
+                text = label,
                 color = Color.White.copy(alpha = 0.85f),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
