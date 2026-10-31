@@ -25,8 +25,10 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
@@ -40,6 +42,12 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
+
+/** Flat [MaterialTheme.colorScheme.background] behind main app content (not Now Playing). */
+@Composable
+fun SolidAppBackground(modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+}
 
 /**
  * Ambient wash behind the whole app, tinted by whatever is playing.

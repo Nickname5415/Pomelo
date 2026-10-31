@@ -51,7 +51,7 @@ import xyz.stuffbyren.pomelo.model.LoadState
 import xyz.stuffbyren.pomelo.model.LibraryFilter
 import xyz.stuffbyren.pomelo.model.PlaybackTarget
 import androidx.compose.ui.graphics.Color
-import xyz.stuffbyren.pomelo.ui.components.ArtworkBackdrop
+import xyz.stuffbyren.pomelo.ui.components.SolidAppBackground
 import xyz.stuffbyren.pomelo.ui.components.CanopyReadout
 import xyz.stuffbyren.pomelo.ui.components.OrchardBottomBar
 import xyz.stuffbyren.pomelo.ui.components.SongShareBottomSheet
@@ -166,7 +166,7 @@ fun OrchardApp(viewModel: OrchardViewModel) {
         xyz.stuffbyren.pomelo.model.LocalStartMix provides viewModel::startMix,
     ) {
         Scaffold(
-            // Transparent so the artwork wash below shows through every screen.
+            // Transparent so the flat theme background below shows through every screen.
             containerColor = Color.Transparent,
         ) { padding ->
             // Collection artwork runs under the status bar, so those screens take no top inset.
@@ -181,16 +181,7 @@ fun OrchardApp(viewModel: OrchardViewModel) {
             // lifted out of this box and into the overlay below.
             Box(Modifier.fillMaxSize().glassSceneSource(glassScene)) {
                 Box(Modifier.fillMaxSize().glassWashSource(glassScene)) {
-                    ArtworkBackdrop(
-                        palette = backdropPalette,
-                        animated = settings.animatedBackground,
-                    )
-                    // Home, Settings and Library wear the current song; the shader idles once playback pauses.
-                    xyz.stuffbyren.pomelo.ui.components.HomeBackdrop(
-                        visible = route == Routes.HOME || route == Routes.SETTINGS || route == Routes.LIBRARY,
-                        artworkUrl = playerPlayback.currentTrack?.artworkUrl.orEmpty(),
-                        isPlaying = playerPlayback.isPlaying && settings.animatedBackground,
-                    )
+                    SolidAppBackground()
                 }
 
                 val isFoldable = xyz.stuffbyren.pomelo.ui.foldable.isFoldableOrWideLayout()
