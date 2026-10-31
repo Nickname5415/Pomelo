@@ -84,8 +84,8 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = CanopyColors.Surface,
-            border = BorderStroke(1.dp, CanopyColors.RuleStrong),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
@@ -99,13 +99,13 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
                     modifier = Modifier
                         .size(56.dp)
                         .scale(pulseScale)
-                        .background(LocalAccent.current.copy(alpha = 0.16f), CircleShape),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Rounded.CloudDownload,
                         contentDescription = null,
-                        tint = LocalAccent.current,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp),
                     )
                 }
@@ -115,7 +115,7 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
                 Text(
                     "Downloading update",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -123,7 +123,7 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
                 Text(
                     "Orchard ${state.version}",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = LocalAccent.current,
+                    color = MaterialTheme.colorScheme.primary,
                 )
 
                 Spacer(Modifier.height(12.dp))
@@ -131,7 +131,7 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
                 Text(
                     "The installer will open automatically when finished. You can continue listening to music in the background.",
                     style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -142,8 +142,8 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(CircleShape),
-                    color = LocalAccent.current,
-                    trackColor = CanopyColors.Canvas,
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 )
 
                 Spacer(Modifier.height(20.dp))
@@ -158,7 +158,7 @@ internal fun UpdateDownloadingDialog(state: UpdateState.Downloading, onDismiss: 
                     Text(
                         "Hide",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -174,8 +174,8 @@ internal fun UpdateFailedDialog(state: UpdateState.Failed, onDismiss: () -> Unit
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = CanopyColors.Surface,
-            border = BorderStroke(1.dp, CanopyColors.RuleStrong),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
@@ -188,13 +188,13 @@ internal fun UpdateFailedDialog(state: UpdateState.Failed, onDismiss: () -> Unit
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(CanopyColors.Danger.copy(alpha = 0.16f), CircleShape),
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.16f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Rounded.ErrorOutline,
                         contentDescription = null,
-                        tint = CanopyColors.Danger,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(28.dp),
                     )
                 }
@@ -204,21 +204,21 @@ internal fun UpdateFailedDialog(state: UpdateState.Failed, onDismiss: () -> Unit
                 Text(
                     "Update failed",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = CanopyColors.Canvas,
-                    border = BorderStroke(1.dp, CanopyColors.Danger.copy(alpha = 0.2f)),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         "${state.reason} Orchard ${state.version} was not installed.",
                         style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-                        color = CanopyColors.MutedStrong,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(14.dp),
                     )
                 }
@@ -229,7 +229,7 @@ internal fun UpdateFailedDialog(state: UpdateState.Failed, onDismiss: () -> Unit
                     onClick = onDismiss,
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LocalAccent.current,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.Black,
                     ),
                     modifier = Modifier
@@ -254,8 +254,8 @@ internal fun UpdateReadyDialog(state: UpdateState.ReadyToInstall, onDismiss: () 
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = CanopyColors.Surface,
-            border = BorderStroke(1.dp, CanopyColors.RuleStrong),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
@@ -268,13 +268,13 @@ internal fun UpdateReadyDialog(state: UpdateState.ReadyToInstall, onDismiss: () 
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(LocalAccent.current.copy(alpha = 0.16f), CircleShape),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Rounded.CheckCircle,
                         contentDescription = null,
-                        tint = LocalAccent.current,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp),
                     )
                 }
@@ -284,7 +284,7 @@ internal fun UpdateReadyDialog(state: UpdateState.ReadyToInstall, onDismiss: () 
                 Text(
                     "Update ready to install",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(Modifier.height(6.dp))
@@ -292,7 +292,7 @@ internal fun UpdateReadyDialog(state: UpdateState.ReadyToInstall, onDismiss: () 
                 Text(
                     "Orchard ${state.version} has finished downloading and can be installed now.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -302,7 +302,7 @@ internal fun UpdateReadyDialog(state: UpdateState.ReadyToInstall, onDismiss: () 
                     onClick = onDismiss,
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LocalAccent.current,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.Black,
                     ),
                     modifier = Modifier

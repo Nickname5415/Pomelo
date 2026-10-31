@@ -85,8 +85,8 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = CanopyColors.Surface,
-            border = BorderStroke(1.dp, CanopyColors.RuleStrong),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -109,13 +109,13 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .background(LocalAccent.current.copy(alpha = 0.14f), RoundedCornerShape(12.dp)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 Icons.Rounded.SystemUpdate,
                                 contentDescription = null,
-                                tint = LocalAccent.current,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp),
                             )
                         }
@@ -124,12 +124,12 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                             Text(
                                 "Orchard update",
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = CanopyColors.Text,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
                                 if (metadata.publishedAt.isNotBlank()) "Published ${metadata.publishedAt}" else "Update available",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -140,7 +140,7 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                         Icon(
                             Icons.Rounded.Close,
                             contentDescription = "Close update prompt",
-                            tint = CanopyColors.Muted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -151,8 +151,8 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                 // Versions stats panel
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = CanopyColors.Canvas,
-                    border = BorderStroke(1.dp, CanopyColors.Rule),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
@@ -170,20 +170,20 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.8.sp,
                                 ),
-                                color = CanopyColors.Eyebrow,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 "v$currentVersion",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = CanopyColors.MutedStrong,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
 
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
-                            tint = CanopyColors.Muted.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             modifier = Modifier.size(18.dp),
                         )
 
@@ -195,25 +195,25 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.8.sp,
                                 ),
-                                color = LocalAccent.current,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                             Spacer(Modifier.height(2.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     "v${metadata.version}",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = CanopyColors.Text,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 if (metadata.codename.isNotBlank()) {
                                     Spacer(Modifier.width(6.dp))
                                     Surface(
-                                        color = LocalAccent.current.copy(alpha = 0.14f),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
                                         shape = RoundedCornerShape(6.dp),
                                     ) {
                                         Text(
                                             metadata.codename,
                                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                            color = LocalAccent.current,
+                                            color = MaterialTheme.colorScheme.primary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -241,17 +241,17 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.5.sp,
                         ),
-                        color = CanopyColors.Eyebrow,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (totalChanges > 0) {
                         Surface(
-                            color = CanopyColors.Canvas,
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
                             shape = CircleShape,
                         ) {
                             Text(
                                 if (totalChanges == 1) "1 change" else "$totalChanges changes",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             )
                         }
@@ -275,14 +275,14 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                     } else {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = CanopyColors.Canvas.copy(alpha = 0.6f),
-                            border = BorderStroke(1.dp, CanopyColors.Rule),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
                                 "Includes general performance improvements and bug fixes.",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(14.dp),
                             )
                         }
@@ -307,7 +307,7 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                         Text(
                             "Not now",
                             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                            color = CanopyColors.Muted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
 
@@ -315,7 +315,7 @@ internal fun UpdateAvailableDialog(state: UpdateState.Available, onInstall: (Mob
                         onClick = { onInstall(metadata) },
                         shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = LocalAccent.current,
+                            containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = Color.Black,
                         ),
                         modifier = Modifier

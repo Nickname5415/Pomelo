@@ -71,8 +71,8 @@ internal fun ReleaseNoteSectionCard(section: ReleaseNoteSection) {
 
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = CanopyColors.Canvas.copy(alpha = 0.65f),
-        border = BorderStroke(1.dp, CanopyColors.Rule),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.65f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
@@ -104,17 +104,17 @@ internal fun ReleaseNoteSectionCard(section: ReleaseNoteSection) {
                     Text(
                         section.title,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
                 Surface(
-                    color = CanopyColors.Surface,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                     shape = CircleShape,
                 ) {
                     Text(
                         "${section.items.size}",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
@@ -137,9 +137,9 @@ internal fun ReleaseNoteSectionCard(section: ReleaseNoteSection) {
                                 .background(categoryColor.copy(alpha = 0.8f), CircleShape),
                         )
                         Text(
-                            text = formatMarkdownInline(item, CanopyColors.Text, LocalAccent.current),
+                            text = formatMarkdownInline(item, MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary),
                             style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 19.sp),
-                            color = CanopyColors.MutedStrong,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -168,8 +168,8 @@ fun ReleaseNotesDialog(
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = CanopyColors.Surface,
-            border = BorderStroke(1.dp, CanopyColors.RuleStrong),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -192,13 +192,13 @@ fun ReleaseNotesDialog(
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .background(LocalAccent.current.copy(alpha = 0.14f), RoundedCornerShape(12.dp)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 Icons.Rounded.AutoAwesome,
                                 contentDescription = null,
-                                tint = LocalAccent.current,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp),
                             )
                         }
@@ -207,12 +207,12 @@ fun ReleaseNotesDialog(
                             Text(
                                 "What's new",
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = CanopyColors.Text,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
                                 if (codename.isNotBlank()) "Orchard $version \"$codename\"" else "Orchard $version",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -223,7 +223,7 @@ fun ReleaseNotesDialog(
                         Icon(
                             Icons.Rounded.Close,
                             contentDescription = "Close release notes",
-                            tint = CanopyColors.Muted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -234,8 +234,8 @@ fun ReleaseNotesDialog(
                 // Current version card
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = CanopyColors.Canvas,
-                    border = BorderStroke(1.dp, CanopyColors.Rule),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
@@ -253,25 +253,25 @@ fun ReleaseNotesDialog(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.8.sp,
                                 ),
-                                color = CanopyColors.Eyebrow,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 "v$version",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = CanopyColors.Text,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
 
                         if (codename.isNotBlank()) {
                             Surface(
-                                color = LocalAccent.current.copy(alpha = 0.14f),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(6.dp),
                             ) {
                                 Text(
                                     codename,
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
-                                    color = LocalAccent.current,
+                                    color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 )
                             }
@@ -295,17 +295,17 @@ fun ReleaseNotesDialog(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.5.sp,
                         ),
-                        color = CanopyColors.Eyebrow,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (totalChanges > 0) {
                         Surface(
-                            color = CanopyColors.Canvas,
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
                             shape = CircleShape,
                         ) {
                             Text(
                                 if (totalChanges == 1) "1 change" else "$totalChanges changes",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             )
                         }
@@ -329,14 +329,14 @@ fun ReleaseNotesDialog(
                     } else {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = CanopyColors.Canvas.copy(alpha = 0.6f),
-                            border = BorderStroke(1.dp, CanopyColors.Rule),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
                                 "Includes general performance improvements and bug fixes.",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(14.dp),
                             )
                         }
@@ -349,7 +349,7 @@ fun ReleaseNotesDialog(
                     onClick = onDismiss,
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LocalAccent.current,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.Black,
                     ),
                     modifier = Modifier

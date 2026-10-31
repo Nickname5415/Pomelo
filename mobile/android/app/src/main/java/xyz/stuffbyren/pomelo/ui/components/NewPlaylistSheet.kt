@@ -63,11 +63,11 @@ internal fun NewPlaylistSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = CanopyColors.Surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
     ) {
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
-            Text("New playlist", style = MaterialTheme.typography.titleLarge, color = CanopyColors.Text)
+            Text("New playlist", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -83,7 +83,7 @@ internal fun NewPlaylistSheet(
                 if (local) "Songs stay where they are on your phone. Pomelo only remembers the list."
                 else "Created on TIDAL, private until you share it.",
                 style = MaterialTheme.typography.bodySmall,
-                color = CanopyColors.Muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(

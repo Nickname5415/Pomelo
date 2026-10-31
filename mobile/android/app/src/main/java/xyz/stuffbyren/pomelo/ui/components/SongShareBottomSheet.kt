@@ -82,8 +82,8 @@ fun SongShareBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = CanopyColors.Chrome,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+        containerColor = MaterialTheme.colorScheme.background,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
     ) {
         Column(
             modifier = Modifier
@@ -103,10 +103,10 @@ fun SongShareBottomSheet(
                         else -> "Share"
                     },
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Close", tint = CanopyColors.Muted)
+                    Icon(Icons.Rounded.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -115,7 +115,7 @@ fun SongShareBottomSheet(
             // Media Preview Card
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = CanopyColors.Surface.copy(alpha = 0.65f),
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
@@ -135,7 +135,7 @@ fun SongShareBottomSheet(
                             Text(
                                 text = state.title.ifBlank { "Orchard Music" },
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = CanopyColors.Text,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false),
@@ -150,7 +150,7 @@ fun SongShareBottomSheet(
                             Text(
                                 text = state.subtitle,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = CanopyColors.Muted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -177,7 +177,7 @@ fun SongShareBottomSheet(
                                 .height(46.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = CanopyColors.Accent,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black,
                             ),
                         ) {
@@ -197,14 +197,14 @@ fun SongShareBottomSheet(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = CanopyColors.SurfaceHover,
-                                contentColor = CanopyColors.Text,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                             ),
                         ) {
                             Icon(
                                 if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
-                                tint = if (copied) CanopyColors.Accent else CanopyColors.Text,
+                                tint = if (copied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(if (copied) "Copied!" else "Copy Link", fontWeight = FontWeight.SemiBold)
@@ -222,7 +222,7 @@ fun SongShareBottomSheet(
                         Text(
                             text = state.message,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = CanopyColors.Muted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

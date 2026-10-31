@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Stars
 import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -214,10 +215,18 @@ fun parseReleaseNoteSections(markdown: String): List<ReleaseNoteSection> {
  */
 fun formatMarkdownInline(
     text: String,
-    baseColor: Color = CanopyColors.Text,
-    accentColor: Color = CanopyColors.Accent,
+    baseColor: Color = Color.Unspecified,
+    accentColor: Color = Color.Unspecified,
+    codeBackground: Color = Color.Unspecified,
 ): AnnotatedString {
     if (text.isBlank()) return AnnotatedString("")
+    val resolvedBase = if (baseColor != Color.Unspecified) baseColor else Color.White
+    val resolvedAccent = if (accentColor != Color.Unspecified) accentColor else Color.Cyan
+    val resolvedCodeBg = if (codeBackground != Color.Unspecified) {
+        codeBackground
+    } else {
+        resolvedBase.copy(alpha = 0.12f)
+    }
 
     val flavour = GFMFlavourDescriptor()
     val tree = MarkdownParser(
@@ -229,7 +238,7 @@ fun formatMarkdownInline(
     fun appendNode(node: ASTNode) {
         when (node.type) {
             MarkdownElementTypes.STRONG -> {
-                builder.pushStyle(SpanStyle(fontWeight = FontWeight.Bold, color = baseColor))
+                builder.pushStyle(SpanStyle(fontWeight = FontWeight.Bold, color = resolvedBase))
                 for (child in node.children) {
                     if (child.type != MarkdownTokenTypes.EMPH) {
                         appendNode(child)
@@ -250,8 +259,8 @@ fun formatMarkdownInline(
                 builder.pushStyle(
                     SpanStyle(
                         fontFamily = FontFamily.Monospace,
-                        color = accentColor,
-                        background = CanopyColors.Chrome.copy(alpha = 0.6f),
+                        color = resolvedAccent,
+                        background = resolvedCodeBg,
                         fontSize = 12.sp,
                     ),
                 )
@@ -264,7 +273,7 @@ fun formatMarkdownInline(
                 val linkTextNode = node.findChildOfType(MarkdownElementTypes.LINK_TEXT)
                 val linkText = linkTextNode?.getTextInNode(text)?.toString()?.removePrefix("[")?.removeSuffix("]")
                     ?: node.getTextInNode(text).toString()
-                builder.pushStyle(SpanStyle(color = accentColor, textDecoration = TextDecoration.Underline))
+                builder.pushStyle(SpanStyle(color = resolvedAccent, textDecoration = TextDecoration.Underline))
                 builder.append(linkText)
                 builder.pop()
             }
@@ -310,9 +319,9 @@ internal fun categoryIcon(category: ReleaseNoteCategory): ImageVector = when (ca
 
 @Composable
 internal fun categoryColor(category: ReleaseNoteCategory): Color = when (category) {
-    ReleaseNoteCategory.NEW -> LocalAccent.current
+    ReleaseNoteCategory.NEW -> MaterialTheme.colorScheme.primary
     ReleaseNoteCategory.FIXED -> Color(0xFF4ADE80)
     ReleaseNoteCategory.CHANGED -> CanopyColors.SecondaryAccent
     ReleaseNoteCategory.SECURITY -> CanopyColors.Warning
-    ReleaseNoteCategory.OTHER -> CanopyColors.Eyebrow
+    ReleaseNoteCategory.OTHER -> MaterialTheme.colorScheme.onSurfaceVariant
 }

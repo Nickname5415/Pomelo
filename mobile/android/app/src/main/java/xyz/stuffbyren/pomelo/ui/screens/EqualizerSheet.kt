@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import xyz.stuffbyren.pomelo.ui.scroll.orchardVerticalScroll as verticalScroll
 import androidx.compose.material.icons.rounded.Equalizer
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,7 +56,7 @@ internal fun EqualizerRow(settings: OrchardSettings, onSettings: (OrchardSetting
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
-            containerColor = CanopyColors.Surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ) {
             EqualizerContent(
@@ -80,7 +81,7 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
         Text(
             "Equalizer",
             style = MaterialTheme.typography.headlineMedium,
-            color = CanopyColors.Text,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -97,8 +98,8 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                    focusedTextColor = CanopyColors.Text,
-                    unfocusedTextColor = CanopyColors.Text,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
             )
@@ -125,7 +126,7 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
         Spacer(Modifier.height(24.dp))
 
         // Preamp Slider
-        Text("Preamp: ${config.preampDb.roundToInt()} dB", color = CanopyColors.Text)
+        Text("Preamp: ${config.preampDb.roundToInt()} dB", color = MaterialTheme.colorScheme.onSurface)
         Slider(
             value = config.preampDb,
             onValueChange = { 
@@ -133,15 +134,15 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
             },
             valueRange = EqualizerConfig.MIN_PREAMP_DB..EqualizerConfig.MAX_PREAMP_DB,
             colors = SliderDefaults.colors(
-                thumbColor = LocalAccent.current,
-                activeTrackColor = LocalAccent.current,
-                inactiveTrackColor = CanopyColors.Canvas
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerLow
             )
         )
         Spacer(Modifier.height(16.dp))
         
         // Bass Boost Slider
-        Text("Bass Boost: ${(config.bassBoost * 100).roundToInt()}%", color = CanopyColors.Text)
+        Text("Bass Boost: ${(config.bassBoost * 100).roundToInt()}%", color = MaterialTheme.colorScheme.onSurface)
         Slider(
             value = config.bassBoost,
             onValueChange = { 
@@ -149,9 +150,9 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
             },
             valueRange = 0f..1f,
             colors = SliderDefaults.colors(
-                thumbColor = LocalAccent.current,
-                activeTrackColor = LocalAccent.current,
-                inactiveTrackColor = CanopyColors.Canvas
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerLow
             )
         )
         Spacer(Modifier.height(24.dp))
@@ -165,7 +166,7 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
             ) {
                 Text(
                     text = band.label,
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.width(48.dp),
                     textAlign = TextAlign.End
                 )
@@ -183,15 +184,15 @@ private fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalizer
                     valueRange = EqualizerConfig.MIN_GAIN_DB..EqualizerConfig.MAX_GAIN_DB,
                     modifier = Modifier.weight(1f),
                     colors = SliderDefaults.colors(
-                        thumbColor = LocalAccent.current,
-                        activeTrackColor = LocalAccent.current,
-                        inactiveTrackColor = CanopyColors.Canvas
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerLow
                     )
                 )
                 Spacer(Modifier.width(16.dp))
                 Text(
                     text = "${if (gain > 0) "+" else ""}${gain.roundToInt()} dB",
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.width(52.dp)
                 )
             }

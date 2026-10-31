@@ -77,19 +77,19 @@ internal fun PlaylistPickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = CanopyColors.Surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
         ) {
-            Text("Add to playlist", style = MaterialTheme.typography.titleLarge, color = CanopyColors.Text)
+            Text("Add to playlist", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
             Text(
                 track.title,
                 style = MaterialTheme.typography.bodyMedium,
-                color = CanopyColors.Muted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -120,7 +120,7 @@ internal fun PlaylistPickerSheet(
                             if (playlists.isEmpty()) "No saved playlists yet. Save or create a playlist first."
                             else "No matching playlists. Try another name.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = CanopyColors.Muted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(vertical = 16.dp),
                         )
                     }
@@ -140,17 +140,17 @@ internal fun PlaylistPickerSheet(
                                 ArtworkTile(playlist.artworkUrl, playlist.title, Modifier.size(42.dp), 8)
                                 Spacer(Modifier.width(14.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(playlist.title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium), color = CanopyColors.Text)
+                                    Text(playlist.title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurface)
                                     Text(
                                         if (containsTrack) "Already added" else playlist.subtitle,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = CanopyColors.Muted,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                                 Icon(
                                     Icons.AutoMirrored.Rounded.PlaylistAdd,
                                     contentDescription = null,
-                                    tint = if (containsTrack) CanopyColors.Muted else LocalAccent.current,
+                                    tint = if (containsTrack) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                                 )
                             }
                         }

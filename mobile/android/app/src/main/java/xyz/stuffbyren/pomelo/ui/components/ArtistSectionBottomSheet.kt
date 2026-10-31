@@ -117,8 +117,8 @@ fun ArtistSectionBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = CanopyColors.Chrome,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+        containerColor = MaterialTheme.colorScheme.background,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
     ) {
         Column(
             modifier = Modifier
@@ -139,13 +139,13 @@ fun ArtistSectionBottomSheet(
                             fontWeight = FontWeight.Bold,
                             fontSize = 22.sp,
                         ),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     if (displayItems.isNotEmpty()) {
                         Text(
                             text = "${displayItems.size} items",
                             style = MaterialTheme.typography.labelMedium,
-                            color = CanopyColors.Muted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -154,7 +154,7 @@ fun ArtistSectionBottomSheet(
                     if (isLoadingFull) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = LocalAccent.current,
+                            color = MaterialTheme.colorScheme.primary,
                             strokeWidth = 2.dp,
                         )
                         Spacer(Modifier.width(12.dp))
@@ -170,7 +170,7 @@ fun ArtistSectionBottomSheet(
                             Icon(
                                 if (showSearchBar) Icons.Rounded.Close else Icons.Rounded.Search,
                                 contentDescription = "Search in section",
-                                tint = CanopyColors.Muted,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp),
                             )
                         }
@@ -182,16 +182,16 @@ fun ArtistSectionBottomSheet(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Filter items in $title...", color = CanopyColors.Muted) },
+                    placeholder = { Text("Filter items in $title...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
-                        focusedBorderColor = LocalAccent.current.copy(alpha = 0.6f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
-                        focusedTextColor = CanopyColors.Text,
-                        unfocusedTextColor = CanopyColors.Text,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
