@@ -128,7 +128,7 @@ class ChromecastStreamServer(
                 return
             }
             Log.i(TAG, "Cast request: ${parts[0]} mediaId=$mediaId")
-            val resolvedUrl = runBlocking { resolver.resolve(mediaId) }
+            val resolvedUrl = runBlocking { resolver.resolve(mediaId, forCast = true) }
             if (resolvedUrl.isNullOrBlank()) {
                 Log.w(TAG, "Stream resolution returned null for $mediaId")
                 writeError(output, 404, "Stream Not Found")

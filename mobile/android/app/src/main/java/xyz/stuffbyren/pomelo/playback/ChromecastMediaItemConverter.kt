@@ -41,6 +41,7 @@ class ChromecastMediaItemConverter(private val streamServer: ChromecastStreamSer
     override fun toMediaQueueItem(mediaItem: MediaItem): MediaQueueItem {
         originals[mediaItem.mediaId] = mediaItem
         val castUrl = streamServer.urlFor(mediaItem.mediaId)
+        originals[castUrl] = mediaItem
         val track = MediaItemMapper.toTrack(mediaItem)
         val isLocal = track.isLocal || mediaItem.localConfiguration?.uri?.scheme == "file" || mediaItem.localConfiguration?.uri?.scheme == "content"
         val mimeType = if (isLocal) {
@@ -96,12 +97,21 @@ class ChromecastMediaItemConverter(private val streamServer: ChromecastStreamSer
     }
 
     override fun toMediaItem(mediaQueueItem: MediaQueueItem): MediaItem {
-        mediaQueueItem.media?.contentId?.let { originals[it] }?.let { return it }
-        mediaQueueItem.media?.contentUrl?.let { url ->
-            originals.values.firstOrNull { it.mediaId in url }?.let { return it }
+        val media = mediaQueueItem.media
+        if (media != null) {
+            originals[media.contentId]?.let { return it }
+            media.contentUrl?.let { url ->
+                originals[url]?.let { return it }
+                originals.values.firstOrNull { it.mediaId.isNotBlank() && url.endsWith("/${it.mediaId}") }?.let { return it }
+            }
         }
-        val converted = delegate.toMediaItem(mediaQueueItem)
-        return originals[converted.mediaId] ?: converted
+        val converted = runCatching { delegate.toMediaItem(mediaQueueItem) }.getOrNull()
+        if (converted != null) {
+            return originals[converted.mediaId] ?: converted
+        }
+        val fallbackId = media?.contentId?.substringAfterLast('/')?.takeIf { it.isNotBlank() }
+            ?: mediaQueueItem.itemId.toString()
+        return originals[fallbackId] ?: MediaItem.Builder().setMediaId(fallbackId).build()
     }
 
     /** The Cast timeline can contain metadata-only placeholders for queued items. */

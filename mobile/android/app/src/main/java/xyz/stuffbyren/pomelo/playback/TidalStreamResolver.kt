@@ -60,34 +60,40 @@ class TidalStreamResolver(
     private val cache = ConcurrentHashMap<String, Pair<String, Long>>()
     private val streamInfoCache = ConcurrentHashMap<String, TidalStreamInfo>()
 
-    fun getStreamInfo(trackId: String): TidalStreamInfo? = streamInfoCache[trackId]
+    fun getStreamInfo(trackId: String): TidalStreamInfo? =
+        streamInfoCache["$trackId:cast"] ?: streamInfoCache[trackId]
 
-    suspend fun resolve(trackId: String): String? = withContext(Dispatchers.IO) {
+    suspend fun resolve(trackId: String, forCast: Boolean = false): String? = withContext(Dispatchers.IO) {
+        val cacheKey = if (forCast) "$trackId:cast" else trackId
         val now = System.currentTimeMillis()
-        val cached = cache[trackId]
+        val cached = cache[cacheKey]
         if (cached != null && now < cached.second) {
-            Log.d(TAG, "Using cached URL for $trackId")
+            Log.d(TAG, "Using cached URL for $cacheKey")
             return@withContext cached.first
         }
 
-        Log.d(TAG, "Resolving track $trackId (hasStreamingApi=${streamingApiProvider() != null})")
-        val resolvedFromApi = resolveViaWebPlayback(trackId)
+        Log.d(TAG, "Resolving track $trackId (forCast=$forCast, hasStreamingApi=${streamingApiProvider() != null})")
+        val resolvedFromApi = resolveViaWebPlayback(trackId, forCast)
             ?: resolveViaStreamingApi(trackId)
             ?: resolveViaOpenApi(trackId)
 
         if (!resolvedFromApi.isNullOrBlank()) {
-            cache[trackId] = Pair(resolvedFromApi, now + CACHE_TTL_MS)
+            cache[cacheKey] = Pair(resolvedFromApi, now + CACHE_TTL_MS)
             return@withContext resolvedFromApi
         }
 
-        Log.w(TAG, "Failed to resolve stream URL for track $trackId")
+        Log.w(TAG, "Failed to resolve stream URL for track $trackId (forCast=$forCast)")
         null
     }
 
-    private suspend fun resolveViaWebPlayback(trackId: String): String? {
+    private suspend fun resolveViaWebPlayback(trackId: String, forCast: Boolean = false): String? {
         val token = webSession?.getAccessToken() ?: return null
         val countryCode = auth.session()?.countryCode ?: "MX"
-        val qualities = listOf("HI_RES", "LOSSLESS", "HIGH", "LOW")
+        val qualities = if (forCast) {
+            listOf("LOSSLESS", "HIGH", "LOW")
+        } else {
+            listOf("HI_RES", "LOSSLESS", "HIGH", "LOW")
+        }
 
         for (quality in qualities) {
             val url = "https://api.tidal.com/v1/tracks/$trackId/playbackinfopostpaywall" +
