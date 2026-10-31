@@ -19,6 +19,7 @@
 
 package xyz.stuffbyren.pomelo.ui.screens
 
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.lazy.itemsIndexed
