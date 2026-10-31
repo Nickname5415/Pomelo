@@ -82,8 +82,6 @@ import xyz.stuffbyren.pomelo.model.PlaybackDevice
 import xyz.stuffbyren.pomelo.model.PlaybackTarget
 import xyz.stuffbyren.pomelo.model.PlaybackTargetState
 import xyz.stuffbyren.pomelo.social.PartyState
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
 import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
 import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
 
@@ -107,13 +105,13 @@ fun DevicesSheet(
     onLeaveParty: () -> Unit = {},
     onRenameDevice: (PlaybackDevice, String) -> Unit = { _, _ -> },
 ) {
-    val accent = lerp(LocalAccent.current, Color.White, 0.35f)
+    val accent = lerp(MaterialTheme.colorScheme.primary, Color.White, 0.35f)
     CompositionLocalProvider(LocalAccent provides accent) {
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            containerColor = CanopyColors.Surface,
-            dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
         ) {
             FrostedDevicesScreenContent(
                 targets = targets,
@@ -136,7 +134,7 @@ fun DevicesSheet(
 @Composable
 fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var nameInput by remember(device) { mutableStateOf(device.displayName) }
-    val accent = LocalAccent.current
+    val accent = MaterialTheme.colorScheme.primary
     val shape = RoundedCornerShape(24.dp)
     val hasCustomName = device.customName.isNotBlank()
 
@@ -146,8 +144,8 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
             color = Color.Transparent,
             modifier =
                 Modifier.fillMaxWidth()
-                    .glassPane(shape, GlassTone.PANEL)
-                    .border(1.dp, CanopyColors.RuleStrong, shape),
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, shape),
         ) {
             Column(
                 modifier = Modifier.padding(22.dp),
@@ -158,7 +156,7 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                         Modifier.size(48.dp)
                             .clip(CircleShape)
                             .background(accent.copy(alpha = 0.18f))
-                            .glassPane(CircleShape, GlassTone.CONTROL)
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
                             .border(1.dp, accent.copy(alpha = 0.35f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -175,7 +173,7 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                 Text(
                     text = "Rename This Device",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -183,7 +181,7 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                 Text(
                     text = "Set a custom name for this device in Connect and Listening Parties.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
 
@@ -192,17 +190,17 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                 TextField(
                     value = nameInput,
                     onValueChange = { nameInput = it },
-                    placeholder = { Text(device.name, color = CanopyColors.Muted) },
+                    placeholder = { Text(device.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     singleLine = true,
                     shape = CircleShape,
                     colors =
                         TextFieldDefaults.colors(
-                            focusedContainerColor = CanopyColors.Canvas,
-                            unfocusedContainerColor = CanopyColors.Canvas,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = CanopyColors.Text,
-                            unfocusedTextColor = CanopyColors.Text,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                         ),
                     trailingIcon = {
                         if (nameInput.isNotBlank()) {
@@ -210,12 +208,12 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                                 Icon(
                                     Icons.Rounded.Close,
                                     contentDescription = "Clear",
-                                    tint = CanopyColors.Muted,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().border(1.dp, CanopyColors.Rule, CircleShape),
+                    modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                 )
 
                 if (hasCustomName) {
@@ -231,14 +229,14 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                         Icon(
                             Icons.Rounded.RestartAlt,
                             contentDescription = null,
-                            tint = CanopyColors.Muted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             text = "Reset to Default (${device.name})",
                             style = MaterialTheme.typography.labelSmall,
-                            color = CanopyColors.MutedStrong,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -255,10 +253,10 @@ fun RenameDeviceDialog(device: PlaybackDevice, onDismiss: () -> Unit, onConfirm:
                         modifier =
                             Modifier.weight(1f)
                                 .height(44.dp)
-                                .glassPane(CircleShape, GlassTone.CONTROL)
-                                .border(1.dp, CanopyColors.Rule, CircleShape),
+                                .background(MaterialTheme.colorScheme.surfaceContainer)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                     ) {
-                        Text("Cancel", fontWeight = FontWeight.SemiBold, color = CanopyColors.Text)
+                        Text("Cancel", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     }
 
                     Button(

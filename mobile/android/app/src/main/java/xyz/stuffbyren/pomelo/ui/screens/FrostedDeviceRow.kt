@@ -83,14 +83,14 @@ internal fun FrostedDeviceRow(
                 modifier =
                     Modifier.size(40.dp)
                         .clip(CircleShape)
-                        .background(CanopyColors.Canvas)
-                        .border(1.dp, CanopyColors.Rule, CircleShape),
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = getDeviceIcon(device),
                     contentDescription = null,
-                    tint = CanopyColors.MutedStrong,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -101,7 +101,7 @@ internal fun FrostedDeviceRow(
                 Text(
                     text = device.displayName,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val isOnline = device.availability == DeviceAvailability.ONLINE
@@ -110,7 +110,7 @@ internal fun FrostedDeviceRow(
                             Modifier.size(7.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isOnline) CanopyColors.Accent else CanopyColors.Muted
+                                    if (isOnline) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                     )
                     Spacer(Modifier.width(6.dp))
@@ -125,7 +125,7 @@ internal fun FrostedDeviceRow(
                                     else -> "Unavailable"
                                 },
                         style = MaterialTheme.typography.bodySmall,
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -139,7 +139,7 @@ internal fun FrostedDeviceRow(
                         Icon(
                             Icons.Rounded.Edit,
                             contentDescription = "Rename",
-                            tint = CanopyColors.Muted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -150,7 +150,7 @@ internal fun FrostedDeviceRow(
                         Icon(
                             Icons.Rounded.DeleteOutline,
                             contentDescription = "Forget device",
-                            tint = CanopyColors.Danger.copy(alpha = 0.7f),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -160,7 +160,7 @@ internal fun FrostedDeviceRow(
                 Surface(
                     shape = CircleShape,
                     color = Color.Transparent,
-                    modifier = Modifier.border(1.dp, CanopyColors.Rule, CircleShape),
+                    modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -170,7 +170,7 @@ internal fun FrostedDeviceRow(
                         Icon(
                             Icons.Rounded.SwapHoriz,
                             contentDescription = null,
-                            tint = LocalAccent.current,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp),
                         )
                         Text(
@@ -179,7 +179,7 @@ internal fun FrostedDeviceRow(
                                 MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
-                            color = CanopyColors.Text,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }

@@ -136,10 +136,10 @@ internal fun SupportComposer(
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
-                Text("Include system details", color = SettingsStyle.Title, fontSize = 15.sp)
+                Text("Include system details", color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp)
                 Text(
                     if (showDiagnostics) "Hide details" else "App version, Android version and device model. Tap to see them.",
-                    color = SettingsStyle.Description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     modifier = Modifier.clickable(role = Role.Button) { showDiagnostics = !showDiagnostics },
                 )
@@ -152,7 +152,7 @@ internal fun SupportComposer(
                 preview,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
-                color = SettingsStyle.Description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF141815)).padding(12.dp),
             )
         }
@@ -163,7 +163,7 @@ internal fun SupportComposer(
         Text(
             "Posted publicly as an issue on ${state.repository.ifBlank { "GitHub" }} by @${state.github?.login.orEmpty()}" +
                 if (draft.screenshot != null) ", screenshot included." else ".",
-            color = SettingsStyle.Caption,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 12.sp,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 24.dp)) {
@@ -184,8 +184,8 @@ private fun Field(value: String, placeholder: String, onChange: (String) -> Unit
         value = value,
         onValueChange = onChange,
         singleLine = singleLine,
-        textStyle = TextStyle(color = SettingsStyle.Title, fontSize = 15.sp),
-        cursorBrush = SolidColor(SettingsStyle.SageSoft),
+        textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier.fillMaxWidth(),
         decorationBox = { field ->
             Box(
@@ -196,7 +196,7 @@ private fun Field(value: String, placeholder: String, onChange: (String) -> Unit
                     .border(1.dp, SettingsStyle.PanelBorder, shape)
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
-                if (value.isEmpty()) Text(placeholder, color = SettingsStyle.Caption, fontSize = 15.sp)
+                if (value.isEmpty()) Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
                 field()
             }
         },
@@ -230,11 +230,11 @@ private fun ScreenshotCard(
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text(if (screenshot != null) "Screenshot attached" else "Screenshot", color = SettingsStyle.Title, fontSize = 15.sp)
+                Text(if (screenshot != null) "Screenshot attached" else "Screenshot", color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp)
                 Text(
                     if (screenshot != null) "Check it for anything private before sending: it is posted publicly."
                     else "Capture hides this sheet so you can open the screen with the problem first.",
-                    color = SettingsStyle.Description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                 )
             }
@@ -259,7 +259,7 @@ private fun Chip(icon: ImageVector, label: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = SettingsStyle.SageSoft, modifier = Modifier.size(16.dp))
-        Text(label, color = SettingsStyle.Title, fontSize = 13.sp, style = MaterialTheme.typography.labelLarge)
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(16.dp))
+        Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, style = MaterialTheme.typography.labelLarge)
     }
 }

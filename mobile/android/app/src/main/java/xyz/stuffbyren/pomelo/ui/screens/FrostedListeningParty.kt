@@ -85,7 +85,7 @@ internal fun FrostedListeningPartyPanel(
     onLeave: () -> Unit,
 ) {
     val shape = RoundedCornerShape(22.dp)
-    val accent = LocalAccent.current
+    val accent = MaterialTheme.colorScheme.primary
 
     Surface(shape = shape, color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(vertical = 16.dp, horizontal = 4.dp)) {
@@ -98,7 +98,7 @@ internal fun FrostedListeningPartyPanel(
                     Icon(
                         Icons.Rounded.Groups,
                         contentDescription = null,
-                        tint = if (party.isActive) accent else CanopyColors.Muted,
+                        tint = if (party.isActive) accent else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(24.dp),
                     )
                     Spacer(Modifier.width(10.dp))
@@ -106,7 +106,7 @@ internal fun FrostedListeningPartyPanel(
                         text = "Listening party",
                         style =
                             MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -135,12 +135,12 @@ private fun FrostedInactiveParty(
 ) {
     var codeInput by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val accent = LocalAccent.current
+    val accent = MaterialTheme.colorScheme.primary
 
     Text(
         text = "Listen to the same music together.",
         style = MaterialTheme.typography.bodyMedium,
-        color = CanopyColors.Muted,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     Spacer(Modifier.height(14.dp))
@@ -149,13 +149,13 @@ private fun FrostedInactiveParty(
     TextField(
         value = codeInput,
         onValueChange = { codeInput = cleanRoomCode(it).take(ROOM_CODE_LENGTH) },
-        placeholder = { Text("Room code", color = CanopyColors.Muted) },
+        placeholder = { Text("Room code", color = MaterialTheme.colorScheme.onSurfaceVariant) },
         singleLine = true,
         leadingIcon = {
             Icon(
                 Icons.Rounded.AutoAwesome,
                 contentDescription = null,
-                tint = if (codeInput.isNotBlank()) accent else CanopyColors.Muted,
+                tint = if (codeInput.isNotBlank()) accent else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         trailingIcon = {
@@ -164,7 +164,7 @@ private fun FrostedInactiveParty(
                     Icon(
                         Icons.Rounded.Close,
                         contentDescription = "Clear",
-                        tint = CanopyColors.Muted,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
@@ -182,14 +182,14 @@ private fun FrostedInactiveParty(
         shape = CircleShape,
         colors =
             TextFieldDefaults.colors(
-                focusedContainerColor = CanopyColors.Canvas,
-                unfocusedContainerColor = CanopyColors.Canvas,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = CanopyColors.Text,
-                unfocusedTextColor = CanopyColors.Text,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
             ),
-        modifier = Modifier.fillMaxWidth().border(1.dp, CanopyColors.Rule, CircleShape),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
     )
 
     Spacer(Modifier.height(14.dp))
@@ -212,12 +212,12 @@ private fun FrostedInactiveParty(
             enabled = party.status != PartyStatus.CONNECTING,
             shape = CircleShape,
             modifier =
-                Modifier.weight(1f).height(44.dp).border(1.dp, CanopyColors.Rule, CircleShape),
+                Modifier.weight(1f).height(44.dp).border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
         ) {
             Text(
                 "Start a party",
                 fontWeight = FontWeight.Bold,
-                color = CanopyColors.Text,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp,
             )
         }
@@ -227,7 +227,7 @@ private fun FrostedInactiveParty(
 @Composable
 private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
     val context = LocalContext.current
-    val accent = LocalAccent.current
+    val accent = MaterialTheme.colorScheme.primary
 
     // Session Status Label
     val statusText =
@@ -242,7 +242,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
     Text(
         text = statusText,
         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = if (party.status == PartyStatus.CONNECTED) accent else CanopyColors.Muted,
+        color = if (party.status == PartyStatus.CONNECTED) accent else MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     if (party.code.isNotBlank()) {
@@ -253,7 +253,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
             shape = RoundedCornerShape(16.dp),
             color = Color.Transparent,
             modifier =
-                Modifier.fillMaxWidth().border(1.dp, CanopyColors.Rule, RoundedCornerShape(16.dp)),
+                Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -266,7 +266,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.2.sp,
                         ),
-                    color = CanopyColors.Eyebrow,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -278,7 +278,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                             letterSpacing = 4.sp,
                             fontFamily = FontFamily.Monospace,
                         ),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(Modifier.height(12.dp))
@@ -303,7 +303,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                         modifier =
                             Modifier.weight(1f)
                                 .height(38.dp)
-                                .border(1.dp, CanopyColors.Rule, CircleShape),
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxSize(),
@@ -323,7 +323,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                                     MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = FontWeight.Bold
                                     ),
-                                color = CanopyColors.Text,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -351,7 +351,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                         modifier =
                             Modifier.weight(1f)
                                 .height(38.dp)
-                                .border(1.dp, CanopyColors.Rule, CircleShape),
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxSize(),
@@ -371,7 +371,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                                     MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = FontWeight.Bold
                                     ),
-                                color = CanopyColors.Text,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -390,7 +390,7 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
                 else -> "${party.peers.size} other listeners"
             },
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-        color = CanopyColors.Muted,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     party.peers.forEach { peer ->
@@ -404,15 +404,15 @@ private fun FrostedActiveParty(party: PartyState, onLeave: () -> Unit) {
     OutlinedButton(
         onClick = onLeave,
         shape = CircleShape,
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = CanopyColors.Danger),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
         modifier =
             Modifier.fillMaxWidth()
                 .height(44.dp)
-                .border(1.dp, CanopyColors.Danger.copy(alpha = 0.35f), CircleShape),
+                .border(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f), CircleShape),
     ) {
         Text(
             text = if (party.isHost) "End Party (Close Room)" else "Leave Party",
-            color = CanopyColors.Danger,
+            color = MaterialTheme.colorScheme.error,
             fontWeight = FontWeight.Bold,
         )
     }
@@ -424,7 +424,7 @@ private fun FrostedPeerRow(peer: PartyPeer) {
         shape = RoundedCornerShape(12.dp),
         color = Color.Transparent,
         modifier =
-            Modifier.fillMaxWidth().border(1.dp, CanopyColors.Rule, RoundedCornerShape(12.dp)),
+            Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -433,14 +433,14 @@ private fun FrostedPeerRow(peer: PartyPeer) {
             Icon(
                 Icons.Rounded.PhoneAndroid,
                 contentDescription = null,
-                tint = if (peer.open) LocalAccent.current else CanopyColors.Muted,
+                tint = if (peer.open) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(18.dp),
             )
             Spacer(Modifier.width(10.dp))
             Text(
                 text = peer.name.ifBlank { "Listener" },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = CanopyColors.Text,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
 
@@ -449,12 +449,12 @@ private fun FrostedPeerRow(peer: PartyPeer) {
                 modifier =
                     Modifier.size(8.dp)
                         .clip(CircleShape)
-                        .background(if (peer.open) LocalAccent.current else CanopyColors.Muted)
+                        .background(if (peer.open) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
             )
 
             if (peer.role == PartyRole.HOST) {
                 Spacer(Modifier.width(8.dp))
-                Surface(shape = CircleShape, color = LocalAccent.current) {
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
                     Text(
                         text = "HOST",
                         style =

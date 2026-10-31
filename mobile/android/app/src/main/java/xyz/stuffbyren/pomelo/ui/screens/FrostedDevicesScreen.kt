@@ -178,7 +178,7 @@ private fun FrostedHeader() {
     Text(
         "Connect",
         style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-        color = CanopyColors.Text,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(bottom = 12.dp),
     )
 }
@@ -192,7 +192,7 @@ private fun FrostedActiveDeviceHeroCard(
     onRename: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(22.dp)
-    val accent = LocalAccent.current
+    val accent = MaterialTheme.colorScheme.primary
 
     Surface(shape = shape, color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(vertical = 16.dp, horizontal = 4.dp)) {
@@ -236,7 +236,7 @@ private fun FrostedActiveDeviceHeroCard(
                                 MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
-                            color = CanopyColors.Text,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         if (onRename != null) {
                             Spacer(Modifier.width(6.dp))
@@ -244,7 +244,7 @@ private fun FrostedActiveDeviceHeroCard(
                                 Icon(
                                     Icons.Rounded.Edit,
                                     contentDescription = "Rename ${device.displayName}",
-                                    tint = CanopyColors.Muted,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(15.dp),
                                 )
                             }
@@ -261,7 +261,7 @@ private fun FrostedActiveDeviceHeroCard(
                                     else -> "Playing there, controlled from here"
                                 },
                         style = MaterialTheme.typography.bodySmall,
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -290,7 +290,7 @@ private fun FrostedActiveDeviceHeroCard(
                         text = "Connecting…",
                         style =
                             MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }

@@ -52,17 +52,17 @@ internal fun FrostedSectionHeader(title: String, badge: String? = null) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = CanopyColors.Text,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         badge?.let {
-            Text(text = it, style = MaterialTheme.typography.labelSmall, color = CanopyColors.Muted)
+            Text(text = it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
 internal fun FrostedMessageBanner(message: String, isError: Boolean = false) {
-    val tint = if (isError) CanopyColors.Danger else LocalAccent.current
+    val tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = tint.copy(alpha = 0.12f),
@@ -84,7 +84,7 @@ internal fun FrostedMessageBanner(message: String, isError: Boolean = false) {
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = CanopyColors.Text,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

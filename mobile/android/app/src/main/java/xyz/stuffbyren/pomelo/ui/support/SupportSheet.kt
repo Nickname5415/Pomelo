@@ -117,7 +117,7 @@ internal fun SupportSheet(ui: SupportUi, page: String) {
                     else -> "New report"
                 },
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f).padding(start = 4.dp),
             )
             if (ready && ui.screen == SupportScreen.Compose) {
@@ -163,7 +163,7 @@ private fun IconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, la
         Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.Button, onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = label, tint = SettingsStyle.Title, modifier = Modifier.size(22.dp))
+        Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -177,15 +177,15 @@ private fun ReportsButton(unread: Int, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(Icons.Rounded.Inbox, contentDescription = null, tint = SettingsStyle.SageSoft, modifier = Modifier.size(18.dp))
-        Text("Reports", color = SettingsStyle.Title, fontSize = 14.sp)
+        Icon(Icons.Rounded.Inbox, contentDescription = null, tint = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(18.dp))
+        Text("Reports", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
         if (unread > 0) UnreadDot()
     }
 }
 
 @Composable
 internal fun UnreadDot() {
-    Box(Modifier.size(8.dp).clip(CircleShape).background(SettingsStyle.Sage))
+    Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
 }
 
 @Composable
@@ -195,12 +195,12 @@ private fun Gate(title: String, text: String, action: String, onAction: () -> Un
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
     ) {
-        Icon(Icons.Rounded.BugReport, contentDescription = null, tint = SettingsStyle.SageSoft, modifier = Modifier.size(40.dp))
+        Icon(Icons.Rounded.BugReport, contentDescription = null, tint = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(40.dp))
         Text(title, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = SettingsStyle.Title, textAlign = TextAlign.Center)
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = SettingsStyle.Description, textAlign = TextAlign.Center)
+            color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         SettingsPill(action, onClick = onAction, modifier = Modifier.fillMaxWidth())
-        if (hint.isNotBlank()) Text(hint, style = MaterialTheme.typography.bodySmall, color = SettingsStyle.Caption)
+        if (hint.isNotBlank()) Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (error.isNotBlank()) Text(error, style = MaterialTheme.typography.bodySmall, color = Color(0xFFE8A598), textAlign = TextAlign.Center)
     }
 }
@@ -223,7 +223,7 @@ private fun ReportList(state: SupportState, onNew: () -> Unit, onOpen: (String) 
                 Text(
                     if (state.loaded) "No reports yet. Everything working is also a fine outcome." else "Loading…",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = SettingsStyle.Description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(8.dp),
                 )
             } else SettingsPanel {
@@ -236,7 +236,7 @@ private fun ReportList(state: SupportState, onNew: () -> Unit, onOpen: (String) 
         Text(
             "Linked as @${state.github?.login.orEmpty()}",
             style = MaterialTheme.typography.bodySmall,
-            color = SettingsStyle.Caption,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(8.dp, 16.dp),
         )
     }
@@ -256,7 +256,7 @@ private fun ReportRow(report: SupportReport, onClick: () -> Unit) {
                     fontSize = 15.sp,
                     fontWeight = if (report.unread > 0) FontWeight.SemiBold else FontWeight.Medium,
                 ),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -264,7 +264,7 @@ private fun ReportRow(report: SupportReport, onClick: () -> Unit) {
             Text(
                 "#${report.number} · ${stateLabel(report)}$latest",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-                color = SettingsStyle.Description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

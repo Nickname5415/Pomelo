@@ -98,11 +98,11 @@ internal fun SupportTimeline(state: SupportState) {
                 Text(
                     report.title,
                     style = MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, fontWeight = FontWeight.SemiBold),
-                    color = SettingsStyle.Title,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     "#${report.number} · ${stateLabel(report)}",
-                    color = if (report.closed) SettingsStyle.SageSoft else SettingsStyle.Description,
+                    color = if (report.closed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                 )
                 Row(
@@ -116,12 +116,12 @@ internal fun SupportTimeline(state: SupportState) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, tint = SettingsStyle.SageSoft, modifier = Modifier.size(16.dp))
-                    Text("Open on GitHub", color = SettingsStyle.Title, fontSize = 13.sp)
+                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(16.dp))
+                    Text("Open on GitHub", color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
                 }
                 Text(
                     "Reply on GitHub. Orchard checks for news every few minutes and tells you when something happens.",
-                    color = SettingsStyle.Caption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                 )
             }
@@ -129,10 +129,10 @@ internal fun SupportTimeline(state: SupportState) {
         if (state.events.isEmpty()) {
             item {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    if (state.activeLoading) CircularProgressIndicator(color = SettingsStyle.Sage, modifier = Modifier.size(28.dp))
+                    if (state.activeLoading) CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
                     else Text(
                         "No activity yet. Replies, commits that mention this report, and its closing show up here.",
-                        color = SettingsStyle.Description,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
                     )
                 }
@@ -149,7 +149,7 @@ private fun EventRow(event: SupportEvent, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(Modifier.size(32.dp).clip(CircleShape).background(Color(0xFF22302A)), contentAlignment = Alignment.Center) {
-            Icon(eventIcon(event.kind), contentDescription = null, tint = SettingsStyle.SageSoft, modifier = Modifier.size(16.dp))
+            Icon(eventIcon(event.kind), contentDescription = null, tint = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(16.dp))
             if (event.kind == "comment" && event.actorAvatar.isNotBlank()) {
                 AsyncImage(model = event.actorAvatar, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             }
@@ -158,7 +158,7 @@ private fun EventRow(event: SupportEvent, onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     event.title,
-                    color = SettingsStyle.Title,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
@@ -168,7 +168,7 @@ private fun EventRow(event: SupportEvent, onClick: () -> Unit) {
                 if (event.maintainer) {
                     Text(
                         "Maintainer",
-                        color = SettingsStyle.SageSoft,
+                        color = MaterialTheme.colorScheme.primaryContainer,
                         fontSize = 10.sp,
                         modifier = Modifier
                             .clip(CircleShape)
@@ -180,11 +180,11 @@ private fun EventRow(event: SupportEvent, onClick: () -> Unit) {
             }
             Text(
                 DateUtils.getRelativeTimeSpanString(event.createdAt * 1000).toString(),
-                color = SettingsStyle.Caption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
             )
             if (event.body.isNotBlank()) {
-                Text(event.body, color = SettingsStyle.Description, fontSize = 13.sp, maxLines = 12, overflow = TextOverflow.Ellipsis)
+                Text(event.body, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp, maxLines = 12, overflow = TextOverflow.Ellipsis)
             }
         }
     }
