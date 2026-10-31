@@ -103,6 +103,7 @@ fun DetailScreen(
     onPlayBestMix: ((List<Track>, String, (String) -> Unit, () -> Unit) -> Unit)? = null,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
+    playingTrackId: String? = null,
 ) {
     // Keyed on the state's kind so a refresh does not crossfade the page into itself.
     AnimatedContent(
@@ -192,7 +193,8 @@ fun DetailScreen(
                     smartCrossfadeEnabled = smartCrossfadeEnabled,
                     onPlayBestMix = onPlayBestMix,
                     onFetchSectionItems = onFetchSectionItems,
-                    )
+                    playingTrackId = playingTrackId,
+                )
                 }
             }
         }

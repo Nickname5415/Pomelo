@@ -19,27 +19,13 @@
 
 package xyz.stuffbyren.pomelo.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyColumn as LazyColumn
 import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyRow as LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import xyz.stuffbyren.pomelo.model.BrowseDetail
 import xyz.stuffbyren.pomelo.model.CatalogKind
@@ -58,13 +41,8 @@ import xyz.stuffbyren.pomelo.model.CatalogItem
 import xyz.stuffbyren.pomelo.ui.motion.riseIn
 import xyz.stuffbyren.pomelo.ui.components.ArtistSectionBottomSheet
 import xyz.stuffbyren.pomelo.ui.components.CatalogCard
-import xyz.stuffbyren.pomelo.ui.components.rememberArtworkPalette
-import xyz.stuffbyren.pomelo.ui.components.rememberHeroScrimProgress
-import xyz.stuffbyren.pomelo.ui.components.MessagePanel
 import xyz.stuffbyren.pomelo.ui.components.ReorderControls
-import xyz.stuffbyren.pomelo.ui.components.TrackRow
 import xyz.stuffbyren.pomelo.ui.components.filterTracks
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
 
 /** Standard album and playlist presentation. */
 @Composable
@@ -97,226 +75,106 @@ internal fun CollectionDetailContent(
     smartCrossfadeEnabled: Boolean = false,
     onPlayBestMix: ((List<Track>, String, (String) -> Unit, () -> Unit) -> Unit)? = null,
     onFetchSectionItems: (suspend (String, String) -> List<CatalogItem>)? = null,
+    playingTrackId: String? = null,
 ) {
     var activeSectionSheet by remember { mutableStateOf<SectionSheetState?>(null) }
     var isSearching by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
-    // Edit mode: rows grow move and remove buttons. Offered wherever the listener may edit the playlist.
     var editing by remember { mutableStateOf(false) }
     val canEdit = detail.kind == CatalogKind.PLAYLIST && detail.editable && onMovePlaylistTrack != null
     val editRows = editing && canEdit && !isSearching
 
-    // The cover's own colours carry the whole screen.
-    val palette = rememberArtworkPalette(detail.artworkUrl)
-    val listState = rememberLazyListState()
-    val scrimProgress = rememberHeroScrimProgress(listState)
     val bestMix = rememberBestMixLauncher(detail, downloadedTrackIds, onPlayAll, onPlayBestMix)
-    // Albums link their artist chip; playlists mix artists, so the chip stays inert.
-    val albumArtistId = remember(detail) {
-        if (detail.kind != CatalogKind.ALBUM) null
-        else detail.tracks.firstOrNull { it.artistId.isNotBlank() }?.artistId
-    }
 
     val filteredTracks = remember(detail.tracks, searchQuery, isSearching) {
-        if (isSearching && searchQuery.isNotBlank()) {
-            filterTracks(detail.tracks, searchQuery)
-        } else {
-            detail.tracks
-        }
+        if (isSearching && searchQuery.isNotBlank()) filterTracks(detail.tracks, searchQuery) else detail.tracks
     }
 
-    if (activeSectionSheet != null) {
-        activeSectionSheet?.let { sheet ->
-            ArtistSectionBottomSheet(
-                title = sheet.title,
-                initialItems = sheet.initialItems,
-                browseId = sheet.browseId,
-                params = sheet.params,
-                onFetchFullItems = onFetchSectionItems,
-                onPlay = { track -> onPlayTrack(listOf(track), 0, sheet.title) },
-                onOpen = onOpen,
-                onDismiss = { activeSectionSheet = null },
-            )
-        }
+    activeSectionSheet?.let { sheet ->
+        ArtistSectionBottomSheet(
+            title = sheet.title,
+            initialItems = sheet.initialItems,
+            browseId = sheet.browseId,
+            params = sheet.params,
+            onFetchFullItems = onFetchSectionItems,
+            onPlay = { track -> onPlayTrack(listOf(track), 0, sheet.title) },
+            onOpen = onOpen,
+            onDismiss = { activeSectionSheet = null },
+        )
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    0f to palette.top.copy(alpha = 0.70f),
-                    0.25f to palette.bottom.copy(alpha = 0.45f),
-                    0.55f to palette.deep,
-                    1f to palette.deep,
-                ),
-            ),
-    ) {
-        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 120.dp)) {
-            item {
-                CollectionHero(
-                    detail = detail,
-                    palette = palette,
-                    shuffleAvailable = shuffleAvailable,
-                    onPlayAll = onPlayAll,
-                    onShuffle = onShuffle,
-                    onSave = onSave,
-                    bestMix = bestMix,
-                    isSaved = isSaved,
-                    animatedArtworkUrl = animatedArtworkUrl,
-                    artistPortraitUrl = artistPortraitUrl,
-                    onOpenArtist = albumArtistId?.let { id -> { onOpen(id) } },
-                    smartCrossfadeEnabled = smartCrossfadeEnabled,
+    if (bestMix.showPrompt) {
+        BestMixDownloadPrompt(
+            trackCount = bestMix.undownloadedCount,
+            estimatedMb = bestMix.estimatedMb,
+            onConfirm = {
+                bestMix.showPrompt = false
+                bestMix.run()
+            },
+            onDismiss = { bestMix.showPrompt = false },
+        )
+    }
+
+    AlbumPlaylistCollectionBody(
+        detail = detail,
+        filteredTracks = filteredTracks,
+        onBack = onBack,
+        onPlayAll = onPlayAll,
+        onShuffle = onShuffle,
+        onPlayTrack = onPlayTrack,
+        shuffleAvailable = shuffleAvailable,
+        onSave = onSave,
+        isSaved = isSaved,
+        playingTrackId = playingTrackId,
+        isSearching = isSearching,
+        searchQuery = searchQuery,
+        onSearch = { isSearching = true },
+        onSearchQueryChange = { searchQuery = it },
+        onCloseSearch = {
+            isSearching = false
+            searchQuery = ""
+        },
+        onShareCollection = onShareCollection,
+        bestMix = bestMix,
+        smartCrossfadeEnabled = smartCrossfadeEnabled,
+        downloadedTrackIds = downloadedTrackIds,
+        onDownloadTracks = onDownloadTracks,
+        onRemoveDownloadTracks = onRemoveDownloadTracks,
+        headerExtra = {
+            if (canEdit && !isSearching) {
+                PlaylistEditBar(
+                    title = detail.title,
+                    editing = editing,
+                    onEditingChange = { editing = it },
+                    local = localEdit,
                 )
             }
-            if (canEdit && !isSearching) {
-                item {
-                    PlaylistEditBar(
-                        title = detail.title,
-                        editing = editing,
-                        onEditingChange = { editing = it },
-                        local = localEdit,
+        },
+        trackRowWrapper = { index, track, row ->
+            if (editRows) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) { row() }
+                    ReorderControls(
+                        onMoveUp = if (index > 0) onMovePlaylistTrack?.let { move -> { move(index, index - 1) } } else null,
+                        onMoveDown = if (index < detail.tracks.lastIndex) {
+                            onMovePlaylistTrack?.let { move -> { move(index, index + 1) } }
+                        } else null,
+                        onRemove = onRemoveFromPlaylist?.let { remove -> { remove(track) } },
                     )
                 }
+            } else {
+                row()
             }
-            if (isSearching && searchQuery.isNotBlank()) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = "${filteredTracks.size} ${if (filteredTracks.size == 1) "track" else "tracks"} found",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = CanopyColors.Muted,
-                        )
-                        Surface(
-                            onClick = { searchQuery = "" },
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color.White.copy(alpha = 0.12f),
-                        ) {
-                            Text(
-                                text = "Clear",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            )
-                        }
-                    }
-                }
-
-                if (filteredTracks.isEmpty()) {
-                    item {
-                        MessagePanel(
-                            title = "No matching tracks",
-                            message = "No songs matching \"$searchQuery\" found in ${detail.title}.",
-                            actionLabel = "Clear search",
-                            onAction = { searchQuery = "" },
-                        )
-                    }
-                }
-            }
-
-            if (filteredTracks.isNotEmpty()) {
-                itemsIndexed(filteredTracks, key = { index, track -> "${track.id}_$index" }) { index, track ->
-                    val isAlbum = detail.kind == CatalogKind.ALBUM
-                    val isDownloaded = downloadedTrackIds.contains(track.id)
-                    val isDownloading = downloadingTrackIds.contains(track.id)
-                    val originalIndex = detail.tracks.indexOf(track).takeIf { it >= 0 } ?: index
-                    val rowModifier = Modifier
-                        .animateItem(fadeInSpec = null)
-                        .padding(horizontal = 8.dp)
-                        .riseIn(index, cascadeOnScroll = true)
-                    val trackRow: @Composable (Modifier) -> Unit = {
-                        TrackRow(
-                            track = track,
-                            trackNumber = if (isAlbum) originalIndex + 1 else null,
-                            showArtwork = !isAlbum,
-                            parentArtist = if (isAlbum) detail.artist else "",
-                            showAlbum = false,
-                            showDivider = index < filteredTracks.lastIndex,
-                            onPlay = { onPlayTrack(filteredTracks, index, detail.title) },
-                            modifier = it,
-                            onPlayNext = onPlayNext?.let { action -> { action(track) } },
-                            onAddToQueue = onAdd?.let { action -> { action(track) } },
-                            onAddToPlaylist = if (detail.kind == CatalogKind.ALBUM || detail.kind == CatalogKind.PLAYLIST)
-                                onAddToPlaylist?.let { action -> { action(track) } } else null,
-                            onRemoveFromPlaylist = if (detail.kind == CatalogKind.PLAYLIST)
-                                onRemoveFromPlaylist?.let { action -> { action(track) } } else null,
-                            onMoveUp = if (detail.editable && !isSearching && index > 0)
-                                onMovePlaylistTrack?.let { action -> { action(index, index - 1) } } else null,
-                            onMoveDown = if (detail.editable && !isSearching && index < detail.tracks.lastIndex)
-                                onMovePlaylistTrack?.let { action -> { action(index, index + 1) } } else null,
-                            onDownload = onDownloadTrack?.let { action -> { action(track) } },
-                            onRemoveDownload = onRemoveDownloadTrack?.let { action -> { action(track.id) } },
-                            isDownloaded = isDownloaded,
-                            isDownloading = isDownloading,
-                            onShare = onShareTrack?.let { action -> { action(track) } },
-                            onViewAlbum = if (track.albumId.isNotBlank()) {{ onOpen(track.albumId) }} else null,
-                            onViewArtist = if (track.artistId.isNotBlank()) {{ onOpen(track.artistId) }} else null,
-                        )
-                    }
-                    if (editRows) {
-                        Row(rowModifier, verticalAlignment = Alignment.CenterVertically) {
-                            trackRow(Modifier.weight(1f))
-                            ReorderControls(
-                                onMoveUp = if (index > 0) onMovePlaylistTrack?.let { move -> { move(index, index - 1) } } else null,
-                                onMoveDown = if (index < detail.tracks.lastIndex) onMovePlaylistTrack?.let { move -> { move(index, index + 1) } } else null,
-                                onRemove = onRemoveFromPlaylist?.let { remove -> { remove(track) } },
-                            )
-                        }
-                    } else {
-                        trackRow(rowModifier)
-                    }
-                }
-
-                if (!isSearching || searchQuery.isBlank()) {
-                    item {
-                        val totalMs = remember(detail.tracks) { detail.tracks.sumOf { it.durationMs } }
-                        val totalSeconds = totalMs / 1000
-                        val hours = totalSeconds / 3600
-                        val remainingMinutes = (totalSeconds % 3600) / 60
-                        val durationSummary = buildString {
-                            if (hours > 0) {
-                                append(", $hours Hour${if (hours > 1) "s" else ""}")
-                                if (remainingMinutes > 0) {
-                                    append(" $remainingMinutes Minute${if (remainingMinutes > 1) "s" else ""}")
-                                }
-                            } else if (remainingMinutes > 0) {
-                                append(", $remainingMinutes Minute${if (remainingMinutes > 1) "s" else ""}")
-                            }
-                        }
-                        val countSummary = "${detail.tracks.size} Song${if (detail.tracks.size == 1) "" else "s"}$durationSummary"
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 20.dp),
-                        ) {
-                            if (detail.year.isNotBlank()) {
-                                Text(
-                                    text = "Released ${detail.year}",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                    color = Color.White.copy(alpha = 0.50f),
-                                )
-                                Spacer(Modifier.height(2.dp))
-                            }
-                            Text(
-                                text = countSummary,
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                color = Color.White.copy(alpha = 0.50f),
-                            )
-                        }
-                    }
-                }
-            }
-            if ((!isSearching || searchQuery.isBlank()) && detail.sections.isNotEmpty()) {
-                detail.sections.forEach { section ->
-                    val hasMoreViaApi = section.browseId.isNotBlank()
-                    val canViewAll = hasMoreViaApi || section.items.size > 3
-                    item {
+        },
+        belowTracks = {
+            if (!isSearching || searchQuery.isBlank()) {
+                if (detail.sections.isNotEmpty()) {
+                    detail.sections.forEach { section ->
+                        val hasMoreViaApi = section.browseId.isNotBlank()
+                        val canViewAll = hasMoreViaApi || section.items.size > 3
                         HomeSectionTitle(
                             title = section.title,
                             onClick = if (canViewAll) {
@@ -330,65 +188,47 @@ internal fun CollectionDetailContent(
                                 }
                             } else null,
                         )
-                    }
-                    item {
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 20.dp),
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            itemsIndexed(section.items, key = { index, it -> "${it.stableId}_$index" }) { index, item ->
-                                CatalogCard(item, modifier = Modifier.riseIn(index, fromScale = 0.9f, cascadeOnScroll = true), onClick = {
-                                    if (item is CatalogItem.Song) {
-                                        onPlayTrack(listOf(item.track), 0, section.title)
-                                    } else {
-                                        onOpen(item.stableId)
-                                    }
-                                })
+                            itemsIndexed(section.items, key = { idx, it -> "${it.stableId}_$idx" }) { idx, item ->
+                                CatalogCard(
+                                    item,
+                                    modifier = Modifier.riseIn(idx, fromScale = 0.9f, cascadeOnScroll = true),
+                                    onClick = {
+                                        if (item is CatalogItem.Song) {
+                                            onPlayTrack(listOf(item.track), 0, section.title)
+                                        } else {
+                                            onOpen(item.stableId)
+                                        }
+                                    },
+                                )
                             }
                         }
                     }
-                }
-            } else if ((!isSearching || searchQuery.isBlank()) && detail.related.isNotEmpty()) {
-                item { HomeSectionTitle(title = "More like this") }
-                item {
+                } else if (detail.related.isNotEmpty()) {
+                    HomeSectionTitle(title = "More like this")
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        itemsIndexed(detail.related, key = { index, it -> "${it.stableId}_$index" }) { index, item ->
-                            CatalogCard(item, modifier = Modifier.riseIn(index, fromScale = 0.9f, cascadeOnScroll = true), onClick = {
-                                if (item is CatalogItem.Song) {
-                                    onPlayAll(listOf(item.track), detail.title)
-                                } else {
-                                    onOpen(item.stableId)
-                                }
-                            })
+                        itemsIndexed(detail.related, key = { idx, it -> "${it.stableId}_$idx" }) { idx, item ->
+                            CatalogCard(
+                                item,
+                                modifier = Modifier.riseIn(idx, fromScale = 0.9f, cascadeOnScroll = true),
+                                onClick = {
+                                    if (item is CatalogItem.Song) {
+                                        onPlayAll(listOf(item.track), detail.title)
+                                    } else {
+                                        onOpen(item.stableId)
+                                    }
+                                },
+                            )
                         }
                     }
                 }
             }
-        }
-
-        CollectionChrome(
-            detail = detail,
-            scrimProgress = scrimProgress,
-            onBack = onBack,
-            onSave = onSave,
-            isSaved = isSaved,
-            bestMix = bestMix,
-            smartCrossfadeEnabled = smartCrossfadeEnabled,
-            downloadedTrackIds = downloadedTrackIds,
-            onDownloadTracks = onDownloadTracks,
-            onRemoveDownloadTracks = onRemoveDownloadTracks,
-            onShare = onShareCollection,
-            isSearching = isSearching,
-            searchQuery = searchQuery,
-            onSearch = { isSearching = true },
-            onSearchQueryChange = { searchQuery = it },
-            onCloseSearch = {
-                isSearching = false
-                searchQuery = ""
-            },
-        )
-    }
+        },
+    )
 }

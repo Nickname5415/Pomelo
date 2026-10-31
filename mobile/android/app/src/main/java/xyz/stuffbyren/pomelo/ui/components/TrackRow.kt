@@ -87,7 +87,7 @@ fun ExplicitBadge(modifier: Modifier = Modifier) {
     }
 }
 
-/** Expressive track list row with rounded art or track numbers, active row highlight, and popup actions. */
+/** Legacy expressive row; new lists should use [PomeloTrackRow]. */
 @Composable
 fun TrackRow(
     track: Track,

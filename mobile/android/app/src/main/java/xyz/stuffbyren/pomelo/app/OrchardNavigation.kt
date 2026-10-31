@@ -343,6 +343,7 @@ internal fun OrchardNavigation(
                 onPlayBestMix = viewModel::playBestMix,
                 isRefreshing = detailRefreshing,
                 onRefresh = viewModel::refreshDetail,
+                playingTrackId = playback.currentTrack?.id,
             )
         }
     }
