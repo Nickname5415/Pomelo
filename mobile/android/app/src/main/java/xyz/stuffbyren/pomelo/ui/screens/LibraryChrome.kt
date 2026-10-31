@@ -68,13 +68,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.stuffbyren.pomelo.model.LibraryFilter
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
 import xyz.stuffbyren.pomelo.ui.motion.riseIn
 
 private val EmptyFill = Color(0xA01E2521)
 
-/** Text and icons drawn on a [SettingsStyle.Sage] or [SettingsStyle.SageSoft] fill. */
+/** Text and icons drawn on a [MaterialTheme.colorScheme.primary] or [MaterialTheme.colorScheme.primaryContainer] fill. */
 internal val OnSage = Color(0xFF0F1A14)
 
 /** Side gutter shared by every library row. */
@@ -97,10 +95,10 @@ internal fun LibraryHeader(
             Text(
                 "Library",
                 style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.riseIn(distance = 18f),
             )
-            Text(summary, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp), color = SettingsStyle.Description)
+            Text(summary, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (showSearch) HeaderButton(
@@ -119,13 +117,13 @@ internal fun LibraryHeader(
 @Composable
 private fun HeaderButton(icon: ImageVector, label: String, filled: Boolean, busy: Boolean = false, onClick: () -> Unit) {
     val base = Modifier.size(44.dp).clip(CircleShape)
-    val surface = if (filled) base.background(SettingsStyle.Sage, CircleShape)
-    else base.glassPane(CircleShape, GlassTone.CONTROL).border(1.dp, SettingsStyle.PanelBorder, CircleShape)
+    val surface = if (filled) base.background(MaterialTheme.colorScheme.primary, CircleShape)
+    else base.background(MaterialTheme.colorScheme.surfaceContainer).border(1.dp, SettingsStyle.PanelBorder, CircleShape)
     Box(
         surface.clickable(role = Role.Button, onClick = onClick).semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        val tint = if (filled) OnSage else SettingsStyle.Title
+        val tint = if (filled) OnSage else MaterialTheme.colorScheme.onSurface
         if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = tint, strokeWidth = 2.dp)
         else Icon(icon, null, tint = tint, modifier = Modifier.size(22.dp))
     }
@@ -155,13 +153,13 @@ internal fun LibraryChips(selected: LibraryFilter, onSelect: (LibraryFilter) -> 
 @Composable
 private fun LibraryChip(label: String, on: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(18.dp)
-    val fill by animateColorAsState(if (on) SettingsStyle.SageSoft else Color.Transparent, label = "ChipFill")
+    val fill by animateColorAsState(if (on) MaterialTheme.colorScheme.primaryContainer else Color.Transparent, label = "ChipFill")
     val text by animateColorAsState(if (on) OnSage else SettingsStyle.SegmentIdle, label = "ChipText")
     Box(
         Modifier
             .height(36.dp)
             .clip(shape)
-            .glassPane(shape, GlassTone.CONTROL)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .background(fill, shape)
             .border(1.dp, if (on) Color.Transparent else SettingsStyle.PanelBorder, shape)
             .clickable(role = Role.Tab, onClick = onClick)
@@ -184,23 +182,23 @@ internal fun LibraryFilterField(query: String, placeholder: String, autoFocus: B
             .fillMaxWidth()
             .height(44.dp)
             .clip(shape)
-            .glassPane(shape, GlassTone.CONTROL)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .border(1.dp, SettingsStyle.PanelBorder, shape)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Rounded.Search, null, tint = SettingsStyle.Description, modifier = Modifier.size(18.dp))
+        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             if (query.isEmpty()) {
-                Text(placeholder, style = TextStyle(fontSize = 14.sp, color = SettingsStyle.Description), maxLines = 1)
+                Text(placeholder, style = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant), maxLines = 1)
             }
             BasicTextField(
                 value = query,
                 onValueChange = onChange,
                 modifier = Modifier.fillMaxWidth().focusRequester(focus).semantics { contentDescription = placeholder },
-                textStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = SettingsStyle.Title),
-                cursorBrush = SolidColor(SettingsStyle.Sage),
+                textStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 singleLine = true,
             )
         }
@@ -210,7 +208,7 @@ internal fun LibraryFilterField(query: String, placeholder: String, autoFocus: B
                     .semantics { contentDescription = "Clear" },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Rounded.Close, null, tint = SettingsStyle.Title, modifier = Modifier.size(14.dp))
+                Icon(Icons.Rounded.Close, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(14.dp))
             }
         }
     }
@@ -218,7 +216,7 @@ internal fun LibraryFilterField(query: String, placeholder: String, autoFocus: B
 
 /** Section caption above a group of rows, aligned with the row content. */
 @Composable
-internal fun LibraryLabel(value: String, color: Color = SettingsStyle.Sage) {
+internal fun LibraryLabel(value: String, color: Color = MaterialTheme.colorScheme.primary) {
     Text(
         value.uppercase(),
         style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.9.sp),
@@ -246,8 +244,8 @@ internal fun LibraryEmpty(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         RowIcon(icon)
-        Text(title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold), color = SettingsStyle.Title, textAlign = TextAlign.Center)
-        Text(message, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), color = SettingsStyle.Description, textAlign = TextAlign.Center)
+        Text(title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
+        Text(message, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         if (actionLabel != null) {
             val shape = RoundedCornerShape(14.dp)
             Box(
@@ -255,13 +253,13 @@ internal fun LibraryEmpty(
                     .padding(top = 6.dp)
                     .height(44.dp)
                     .clip(shape)
-                    .background(SettingsStyle.Sage.copy(alpha = 0.18f), shape)
-                    .border(1.dp, SettingsStyle.Sage.copy(alpha = 0.5f), shape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), shape)
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), shape)
                     .clickable(role = Role.Button, onClick = onAction)
                     .padding(horizontal = 22.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(actionLabel, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold), color = SettingsStyle.SageSoft)
+                Text(actionLabel, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.primaryContainer)
             }
         }
     }

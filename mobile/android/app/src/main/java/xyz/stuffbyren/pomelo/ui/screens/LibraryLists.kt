@@ -51,7 +51,10 @@ import xyz.stuffbyren.pomelo.model.LibraryFilter
 import xyz.stuffbyren.pomelo.model.Track
 import xyz.stuffbyren.pomelo.ui.components.ArtworkTile
 import xyz.stuffbyren.pomelo.ui.components.CatalogCard
-import xyz.stuffbyren.pomelo.ui.components.TrackRow
+import xyz.stuffbyren.pomelo.ui.components.PomeloInsetDivider
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackLeading
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackRow
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackRowActions
 import xyz.stuffbyren.pomelo.ui.components.catalogSubtitle
 import xyz.stuffbyren.pomelo.ui.motion.riseIn
 
@@ -119,7 +122,7 @@ private fun CollectionRow(item: CatalogItem, onClick: () -> Unit, modifier: Modi
             Text(
                 item.title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -128,7 +131,7 @@ private fun CollectionRow(item: CatalogItem, onClick: () -> Unit, modifier: Modi
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-                    color = SettingsStyle.Description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -151,22 +154,34 @@ internal fun LazyListScope.tracks(
     onOpen: ((String) -> Unit)? = null,
 ) {
     itemsIndexed(values, key = { index, track -> "$key:${track.id}_$index" }) { index, track ->
-        TrackRow(
-            track = track,
-            onPlay = { onPlay(track) },
-            modifier = Modifier
+        Column(
+            Modifier
                 .animateItem(fadeInSpec = null)
                 .riseIn(index, cascadeOnScroll = true),
-            onPlayNext = onPlayNext?.let { action -> { action(track) } },
-            onAddToQueue = onAdd?.let { action -> { action(track) } },
-            onDownload = onDownloadTrack?.let { action -> { action(track) } },
-            onRemoveDownload = onRemoveDownloadTrack?.let { action -> { action(track.id) } },
-            isDownloaded = downloadedTrackIds.contains(track.id),
-            isDownloading = downloadingTrackIds.contains(track.id),
-            onShare = onShare?.let { action -> { action(track) } },
-            onViewAlbum = onOpen?.takeIf { track.albumId.isNotBlank() }?.let { nav -> { nav(track.albumId) } },
-            onViewArtist = onOpen?.takeIf { track.artistId.isNotBlank() }?.let { nav -> { nav(track.artistId) } },
-        )
+        ) {
+            PomeloTrackRow(
+                title = track.title,
+                onClick = { onPlay(track) },
+                leading = PomeloTrackLeading.Artwork(track.artworkUrl, track.title),
+                durationMs = track.durationMs,
+                isExplicit = track.explicit,
+                actions = PomeloTrackRowActions(
+                    track = track,
+                    onPlay = { onPlay(track) },
+                    onPlayNext = onPlayNext?.let { action -> { action(track) } },
+                    onAddToQueue = onAdd?.let { action -> { action(track) } },
+                    onDownload = onDownloadTrack?.let { action -> { action(track) } },
+                    onRemoveDownload = onRemoveDownloadTrack?.let { action -> { action(track.id) } },
+                    isDownloaded = downloadedTrackIds.contains(track.id),
+                    onShare = onShare?.let { action -> { action(track) } },
+                    onViewAlbum = onOpen?.takeIf { track.albumId.isNotBlank() }?.let { nav -> { nav(track.albumId) } },
+                    onViewArtist = onOpen?.takeIf { track.artistId.isNotBlank() }?.let { nav -> { nav(track.artistId) } },
+                ),
+            )
+            if (index < values.lastIndex) {
+                PomeloInsetDivider()
+            }
+        }
     }
 }
 

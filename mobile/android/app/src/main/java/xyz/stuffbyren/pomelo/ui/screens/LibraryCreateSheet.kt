@@ -95,14 +95,14 @@ internal fun LibraryCreateSheet(
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            containerColor = CanopyColors.Surface,
-            dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
         ) {
             Column(Modifier.padding(horizontal = 12.dp).padding(bottom = 28.dp)) {
                 Text(
                     "Create",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
                 )
                 CreateRow(Icons.AutoMirrored.Rounded.PlaylistAdd, "New playlist",
@@ -157,15 +157,15 @@ private fun CreateRow(icon: ImageVector, title: String, subtitle: String, accent
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(48.dp).clip(tile).background(if (accent) SettingsStyle.Sage else Color(0x14FFFFFF), tile),
+            Modifier.size(48.dp).clip(tile).background(if (accent) MaterialTheme.colorScheme.primary else Color(0x14FFFFFF), tile),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, null, tint = if (accent) OnSage else CanopyColors.Text, modifier = Modifier.size(22.dp))
+            Icon(icon, null, tint = if (accent) OnSage else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold), color = CanopyColors.Text)
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp), color = CanopyColors.Muted)
+            Text(title, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
