@@ -106,18 +106,18 @@ internal fun WelcomeHeroHeader() {
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            LocalAccent.current.copy(alpha = 0.35f),
-                            LocalAccent.current.copy(alpha = 0.08f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
                         ),
                     ),
                 )
-                .border(1.5.dp, LocalAccent.current.copy(alpha = 0.4f), CircleShape),
+                .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 Icons.Rounded.MusicNote,
                 contentDescription = null,
-                tint = LocalAccent.current,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(38.dp),
             )
         }
@@ -130,7 +130,7 @@ internal fun WelcomeHeroHeader() {
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 28.sp,
             ),
-            color = CanopyColors.Text,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             modifier = Modifier.riseIn(1),
         )
@@ -140,7 +140,7 @@ internal fun WelcomeHeroHeader() {
         Text(
             text = "Personalize your sound, visuals, and music experience",
             style = MaterialTheme.typography.bodyLarge,
-            color = CanopyColors.Muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp).riseIn(2),
         )
@@ -171,7 +171,7 @@ internal fun WelcomeAuthSection(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(LocalAccent.current.copy(alpha = 0.15f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
                 if (avatarUrl.isNotBlank()) {
@@ -185,7 +185,7 @@ internal fun WelcomeAuthSection(
                     Icon(
                         if (isSignedIn) Icons.Rounded.CheckCircle else Icons.Rounded.Person,
                         contentDescription = null,
-                        tint = LocalAccent.current,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp),
                     )
                 }
@@ -197,12 +197,12 @@ internal fun WelcomeAuthSection(
                 Text(
                     text = if (isSignedIn) displayName else "Not Connected",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = if (isSignedIn) "Signed in and ready to stream" else "Sign in required for full playback",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isSignedIn) LocalAccent.current else CanopyColors.Muted,
+                    color = if (isSignedIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -214,14 +214,14 @@ internal fun WelcomeAuthSection(
                     shape = CircleShape,
                     modifier = Modifier.fillMaxWidth().height(44.dp),
                 ) {
-                    Text("Sign out / Switch account", color = CanopyColors.Danger)
+                    Text("Sign out / Switch account", color = MaterialTheme.colorScheme.error)
                 }
             } else {
                 Button(
                     onClick = onSignIn,
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LocalAccent.current,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.Black,
                     ),
                     modifier = Modifier.fillMaxWidth().height(46.dp),
@@ -296,12 +296,12 @@ internal fun WelcomeCrossfadeSection(
                     Text(
                         "Duration",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         "${settings.crossfadeSeconds} seconds",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = LocalAccent.current,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
 
@@ -311,9 +311,9 @@ internal fun WelcomeCrossfadeSection(
                     valueRange = OrchardSettings.MIN_CROSSFADE_SECONDS.toFloat()..OrchardSettings.MAX_CROSSFADE_SECONDS.toFloat(),
                     steps = OrchardSettings.MAX_CROSSFADE_SECONDS - OrchardSettings.MIN_CROSSFADE_SECONDS - 1,
                     colors = SliderDefaults.colors(
-                        thumbColor = LocalAccent.current,
-                        activeTrackColor = LocalAccent.current,
-                        inactiveTrackColor = CanopyColors.Canvas,
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -323,13 +323,13 @@ internal fun WelcomeCrossfadeSection(
                 Text(
                     "Transition Type",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(CanopyColors.Canvas, RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow, RoundedCornerShape(12.dp))
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -381,12 +381,12 @@ internal fun WelcomeQualityAndStorageSection(
                     Text(
                         "Streaming Quality",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         settings.audioQuality.name.lowercase().replace('_', ' ').replaceFirstChar(Char::titlecase),
                         style = MaterialTheme.typography.bodySmall,
-                        color = LocalAccent.current,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
@@ -396,7 +396,7 @@ internal fun WelcomeQualityAndStorageSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(CanopyColors.Canvas, CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow, CircleShape)
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
@@ -407,7 +407,7 @@ internal fun WelcomeQualityAndStorageSection(
                             .weight(1f)
                             .height(36.dp)
                             .background(
-                                if (isSelected) LocalAccent.current else Color.Transparent,
+                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                                 CircleShape,
                             )
                             .clickable { onUpdateSettings(settings.copy(audioQuality = quality)) },
@@ -417,7 +417,7 @@ internal fun WelcomeQualityAndStorageSection(
                             text = quality.label,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.Black else CanopyColors.Muted,
+                            color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -437,18 +437,18 @@ internal fun WelcomeQualityAndStorageSection(
                     Text(
                         "Audio Cache Size",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         "Store up to ${formatCacheSize(steps[index])} of played music",
                         style = MaterialTheme.typography.bodySmall,
-                        color = CanopyColors.Muted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(
                     formatCacheSize(steps[index]),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = LocalAccent.current,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
 
@@ -458,9 +458,9 @@ internal fun WelcomeQualityAndStorageSection(
                 valueRange = 0f..steps.lastIndex.toFloat(),
                 steps = steps.size - 2,
                 colors = SliderDefaults.colors(
-                    thumbColor = LocalAccent.current,
-                    activeTrackColor = LocalAccent.current,
-                    inactiveTrackColor = CanopyColors.Canvas,
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 ),
                 modifier = Modifier.fillMaxWidth(),
             )

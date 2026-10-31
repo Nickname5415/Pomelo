@@ -99,9 +99,9 @@ fun SpotifyLoginScreen(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = CanopyColors.Canvas,
-                titleContentColor = CanopyColors.Text,
-                navigationIconContentColor = CanopyColors.Text,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
             ),
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -147,19 +147,19 @@ fun SpotifyLoginScreen(
 
             if (pageError.isNotBlank()) {
                 Surface(
-                    color = CanopyColors.Surface,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.fillMaxSize().padding(24.dp),
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             "Failed to load Spotify login",
                             style = MaterialTheme.typography.titleMedium,
-                            color = CanopyColors.Danger,
+                            color = MaterialTheme.colorScheme.error,
                         )
                         Text(
                             pageError,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = CanopyColors.Muted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         TextButton(onClick = { webView?.reload() }) {
                             Text("Retry")

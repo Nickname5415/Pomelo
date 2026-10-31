@@ -75,7 +75,7 @@ fun WelcomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CanopyColors.Chrome),
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
             modifier = Modifier
@@ -132,7 +132,7 @@ fun WelcomeScreen(
                 onClick = onFinish,
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = LocalAccent.current,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.Black,
                 ),
                 interactionSource = finishSource,
