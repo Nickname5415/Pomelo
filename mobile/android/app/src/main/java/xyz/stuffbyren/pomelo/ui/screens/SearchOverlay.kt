@@ -84,14 +84,16 @@ import xyz.stuffbyren.pomelo.model.LoadState
 import xyz.stuffbyren.pomelo.model.SearchResults
 import xyz.stuffbyren.pomelo.model.Track
 import xyz.stuffbyren.pomelo.ui.components.HomeBackdrop
-import xyz.stuffbyren.pomelo.ui.components.TrackRow
+import xyz.stuffbyren.pomelo.ui.components.PomeloInsetDivider
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackLeading
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackRow
+import xyz.stuffbyren.pomelo.ui.components.PomeloTrackRowActions
 import xyz.stuffbyren.pomelo.ui.components.TrackRowShimmer
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
+import xyz.stuffbyren.pomelo.ui.theme.PomeloShapes
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
 import xyz.stuffbyren.pomelo.ui.scroll.OrchardLazyColumn as LazyColumn
 
-// Light enough that the panes have something to blur.
-private val GlassScrim = Color(0x59080B09)
+// Dimmed scrim over the screen underneath.
 private const val PanelMaxWidthDp = 640
 private const val SongsOnAll = 4
 private const val OthersOnAll = 3
@@ -146,11 +148,12 @@ internal fun SearchOverlay(
         DisposableEffect(Unit) { onDispose { keyboard?.hide() } }
 
         Box(Modifier.fillMaxSize()) {
+            val scheme = MaterialTheme.colorScheme
             if (showBackdrop) HomeBackdrop(true, backdropArtworkUrl, backdropPlaying)
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(GlassScrim)
+                    .background(scheme.scrim.copy(alpha = 0.55f))
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = actions.onClose),
             )
             Column(
@@ -185,23 +188,23 @@ private fun SearchBar(query: String, actions: SearchActions, focus: FocusRequest
                 .weight(1f)
                 .height(52.dp)
                 .clip(shape)
-                .glassPane(shape, GlassTone.CONTROL)
-                .border(1.dp, SettingsStyle.Sage.copy(alpha = 0.55f), shape)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f), shape)
                 .padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.Search, null, tint = SettingsStyle.Sage, modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             Box(Modifier.weight(1f).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
-                val textStyle = MaterialTheme.typography.bodyLarge.copy(color = SettingsStyle.Title)
+                val textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                 if (query.isEmpty()) {
-                    Text("Search music", style = textStyle, color = SettingsStyle.Description)
+                    Text("Search music", style = textStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 BasicTextField(
                     value = query,
                     onValueChange = actions.onQueryChange,
                     singleLine = true,
                     textStyle = textStyle,
-                    cursorBrush = SolidColor(SettingsStyle.Sage),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { actions.onSubmit(query) }),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
@@ -209,7 +212,7 @@ private fun SearchBar(query: String, actions: SearchActions, focus: FocusRequest
             }
             if (query.isNotEmpty()) {
                 IconButton(onClick = { actions.onQueryChange("") }, modifier = Modifier.size(44.dp)) {
-                    Icon(Icons.Rounded.Close, "Clear search", tint = SettingsStyle.Chevron, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.Close, "Clear search", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -217,7 +220,7 @@ private fun SearchBar(query: String, actions: SearchActions, focus: FocusRequest
             Modifier.height(52.dp).clickable(onClick = actions.onClose).padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Cancel", style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold), color = SettingsStyle.Sage)
+            Text("Cancel", style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -234,12 +237,15 @@ private fun SearchPanel(
     modifier: Modifier,
 ) {
     var scope by rememberSaveable { mutableStateOf(SearchScope.All) }
+    val scheme = MaterialTheme.colorScheme
+    val shape = PomeloShapes.lg
     Surface(
-        color = Color.Transparent,
-        shape = SettingsStyle.PanelShape,
-        border = BorderStroke(1.dp, SettingsStyle.PanelBorder),
-        // Swallows taps on the panel's own padding so they do not dismiss through to the scrim.
-        modifier = modifier.fillMaxWidth().glassPane(SettingsStyle.PanelShape, GlassTone.PANEL).clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+        color = scheme.surfaceContainerHigh,
+        shape = shape,
+        border = BorderStroke(1.dp, scheme.outlineVariant),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
     ) {
         LazyColumn(contentPadding = PaddingValues(bottom = 6.dp)) {
             when (state) {
@@ -255,7 +261,7 @@ private fun SearchPanel(
                         Text(
                             "Try again",
                             style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                            color = SettingsStyle.Sage,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.fillMaxWidth().clickable { actions.onSubmit(query) }.padding(horizontal = 16.dp, vertical = 14.dp),
                         )
                     }
@@ -309,22 +315,32 @@ private fun LazyListScope.results(
     val songs = results.tracks.filterNot { top is CatalogItem.Song && it.id == top.track.id }
     if ((all || scope == SearchScope.Songs) && songs.isNotEmpty()) {
         item { Column { PanelDivider(); PanelCaption("Songs", "See all".takeIf { all && songs.size > SongsOnAll }) { onScope(SearchScope.Songs) } } }
-        itemsIndexed(if (all) songs.take(SongsOnAll) else songs, key = { index, it -> "track:${it.id}_$index" }) { _, track ->
-            TrackRow(
-                track = track,
-                onPlay = { actions.onPlay(track) },
-                modifier = Modifier.padding(horizontal = 4.dp),
-                onPlayNext = actions.onPlayNext?.let { act -> { act(track) } },
-                onAddToQueue = actions.onAddToQueue?.let { act -> { act(track) } },
-                onAddToPlaylist = actions.onAddToPlaylist?.let { act -> { act(track) } },
-                onDownload = actions.onDownloadTrack?.let { act -> { act(track) } },
-                onRemoveDownload = actions.onRemoveDownloadTrack?.let { act -> { act(track.id) } },
-                isDownloaded = track.id in downloadedTrackIds,
-                isDownloading = track.id in downloadingTrackIds,
-                onShare = actions.onShare?.let { act -> { act(track) } },
-                onViewAlbum = if (track.albumId.isNotBlank()) {{ actions.onOpenDetail(track.albumId) }} else null,
-                onViewArtist = if (track.artistId.isNotBlank()) {{ actions.onOpenDetail(track.artistId) }} else null,
-            )
+        itemsIndexed(if (all) songs.take(SongsOnAll) else songs, key = { index, it -> "track:${it.id}_$index" }) { index, track ->
+            Column(Modifier.padding(horizontal = PomeloSpacing.explicitBadgeGap)) {
+                PomeloTrackRow(
+                    title = track.title,
+                    onClick = { actions.onPlay(track) },
+                    leading = PomeloTrackLeading.Artwork(track.artworkUrl, track.title),
+                    durationMs = track.durationMs,
+                    isExplicit = track.explicit,
+                    actions = PomeloTrackRowActions(
+                        track = track,
+                        onPlay = { actions.onPlay(track) },
+                        onPlayNext = actions.onPlayNext?.let { act -> { act(track) } },
+                        onAddToQueue = actions.onAddToQueue?.let { act -> { act(track) } },
+                        onAddToPlaylist = actions.onAddToPlaylist?.let { act -> { act(track) } },
+                        onDownload = actions.onDownloadTrack?.let { act -> { act(track) } },
+                        onRemoveDownload = actions.onRemoveDownloadTrack?.let { act -> { act(track.id) } },
+                        isDownloaded = track.id in downloadedTrackIds,
+                        onShare = actions.onShare?.let { act -> { act(track) } },
+                        onViewAlbum = if (track.albumId.isNotBlank()) {{ actions.onOpenDetail(track.albumId) }} else null,
+                        onViewArtist = if (track.artistId.isNotBlank()) {{ actions.onOpenDetail(track.artistId) }} else null,
+                    ),
+                )
+                if (index < (if (all) songs.take(SongsOnAll) else songs).lastIndex) {
+                    PomeloInsetDivider()
+                }
+            }
         }
     }
     videoResults(results.videos, scope, onScope, OthersOnAll, actions.onPlayVideo)

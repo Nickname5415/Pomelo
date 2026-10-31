@@ -105,14 +105,14 @@ internal fun PanelCaption(text: String, action: String? = null, onAction: () -> 
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.9.sp,
             ),
-            color = SettingsStyle.Caption,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(vertical = 8.dp),
         )
         if (action != null) {
             Text(
                 action,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
-                color = SettingsStyle.Sage,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable(onClick = onAction)
@@ -145,7 +145,7 @@ internal fun ScopeChips(selected: SearchScope, onSelect: (SearchScope) -> Unit) 
                 Text(
                     scope.label,
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
-                    color = if (on) SettingsStyle.Title else SettingsStyle.SegmentIdle,
+                    color = if (on) MaterialTheme.colorScheme.onSurface else SettingsStyle.SegmentIdle,
                 )
             }
         }
@@ -169,7 +169,7 @@ internal fun ResultRow(item: CatalogItem, subtitle: String, round: Boolean, onCl
             Text(
                 item.title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -177,13 +177,13 @@ internal fun ResultRow(item: CatalogItem, subtitle: String, round: Boolean, onCl
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                    color = SettingsStyle.Description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = SettingsStyle.Chevron, modifier = Modifier.size(20.dp))
+        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -205,19 +205,19 @@ internal fun TopResultRow(item: CatalogItem, onOpen: () -> Unit, onPlay: () -> U
             Text(
                 "TOP RESULT",
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.9.sp),
-                color = SettingsStyle.Sage,
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 item.title,
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 item.kindLabel(),
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                color = SettingsStyle.Description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -230,7 +230,7 @@ internal fun TopResultRow(item: CatalogItem, onOpen: () -> Unit, onPlay: () -> U
                 Icon(Icons.Rounded.PlayArrow, "Play", tint = Color.White, modifier = Modifier.size(22.dp))
             }
         } else {
-            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = SettingsStyle.Chevron, modifier = Modifier.size(20.dp))
+            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -264,7 +264,7 @@ internal fun BrowseTiles(onOpen: (String) -> Unit) {
                 Text(
                     entry.label,
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium),
-                    color = SettingsStyle.Title,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -280,18 +280,18 @@ internal fun HistoryRow(value: String, onPick: () -> Unit, onRemove: () -> Unit)
             Modifier.weight(1f).height(48.dp).clickable(onClick = onPick).padding(start = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.History, null, tint = SettingsStyle.Chevron, modifier = Modifier.size(18.dp))
+            Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             Text(
                 value,
                 modifier = Modifier.padding(start = 14.dp),
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
-                color = SettingsStyle.Title,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         IconButton(onClick = onRemove, modifier = Modifier.size(48.dp)) {
-            Icon(Icons.Rounded.Close, "Remove search", tint = SettingsStyle.Chevron, modifier = Modifier.size(16.dp))
+            Icon(Icons.Rounded.Close, "Remove search", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         }
     }
 }
@@ -306,8 +306,8 @@ internal fun PanelMessage(icon: ImageVector, title: String, subtitle: String) {
         RowIcon(icon)
         Spacer(Modifier.width(14.dp))
         Column {
-            Text(title, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium), color = SettingsStyle.Title)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp), color = SettingsStyle.Description)
+            Text(title, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
