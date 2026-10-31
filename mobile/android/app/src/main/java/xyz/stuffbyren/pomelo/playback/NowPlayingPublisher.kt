@@ -43,8 +43,8 @@ internal class NowPlayingPublisher(
     private val handler: Handler,
     private val scope: CoroutineScope,
     private val tidalResolver: TidalStreamResolver? = null,
-    /** The session's local player, or null before it exists. */
-    private val player: () -> ExoPlayer?,
+    /** The session's player, or null before it exists. */
+    private val player: () -> Player?,
 ) {
     private var artworkHydrationId = ""
 
@@ -59,7 +59,7 @@ internal class NowPlayingPublisher(
             publish(0)
             return
         }
-        val format = player.audioFormat
+        val format = (player as? ExoPlayer)?.audioFormat
         val playerCodec = codecName(format?.sampleMimeType)
         val track = MediaItemMapper.toTrack(item)
         if (track.isLocal) {
