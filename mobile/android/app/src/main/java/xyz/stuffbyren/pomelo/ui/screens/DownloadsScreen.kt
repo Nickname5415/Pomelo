@@ -88,13 +88,13 @@ fun DownloadsScreen(
                 Text(
                     "Downloads",
                     style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     "Offline tracks • ${formatStorageSize(totalBytesUsed)} used",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -104,7 +104,7 @@ fun DownloadsScreen(
                 Text(
                     "DOWNLOADING (${active.size})",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = LocalAccent.current,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
@@ -119,7 +119,7 @@ fun DownloadsScreen(
                 Text(
                     "DOWNLOADED (${completed.size})",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
@@ -182,7 +182,7 @@ internal fun DownloadedTrackRow(
                     Text(
                         item.track.title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = CanopyColors.Text,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
@@ -195,16 +195,16 @@ internal fun DownloadedTrackRow(
                 Text(
                     "${item.track.artist} • ${formatStorageSize(item.bytesDownloaded)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
             IconButton(onClick = onPlay) {
-                Icon(Icons.Rounded.PlayArrow, contentDescription = "Play offline", tint = CanopyColors.Text)
+                Icon(Icons.Rounded.PlayArrow, contentDescription = "Play offline", tint = MaterialTheme.colorScheme.onSurface)
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Rounded.Delete, contentDescription = "Delete download", tint = CanopyColors.Muted)
+                Icon(Icons.Rounded.Delete, contentDescription = "Delete download", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -231,7 +231,7 @@ internal fun DownloadingRow(
                 Text(
                     item.track.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = CanopyColors.Text,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -246,8 +246,8 @@ internal fun DownloadingRow(
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().height(4.dp),
-                    color = LocalAccent.current,
-                    trackColor = CanopyColors.Rule,
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.outlineVariant,
                 )
             } else if (item.status == DownloadStatus.FAILED) {
                 Text(
@@ -260,13 +260,13 @@ internal fun DownloadingRow(
                 Text(
                     "Queued...",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CanopyColors.Muted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
         Spacer(Modifier.width(8.dp))
         IconButton(onClick = onCancel) {
-            Icon(Icons.Rounded.Delete, contentDescription = "Cancel download", tint = CanopyColors.Muted)
+            Icon(Icons.Rounded.Delete, contentDescription = "Cancel download", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
