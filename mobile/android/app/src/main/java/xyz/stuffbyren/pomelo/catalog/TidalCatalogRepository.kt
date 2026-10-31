@@ -137,14 +137,11 @@ class TidalCatalogRepository(
         }
 
     suspend fun home(): HomeFeed = withContext(Dispatchers.IO) {
-        val sections = listOf(
-            "featured-playlists" to "Featured Playlists",
-            "trending-songs" to "Top Songs",
-            "popular-albums" to "Popular Albums",
-        ).mapNotNull { (id, title) ->
-            sectionItems(id).takeIf { it.isNotEmpty() }?.let { CatalogSection(id = id, title = title, items = it) }
-        }
-        HomeFeed(sections = sections)
+        val realHome = TidalHomeFeedFetcher.fetchHome(http, webSession, auth)
+        if (realHome != null && realHome.sections.isNotEmpty()) return@withContext realHome
+        val fallback = listOf("featured-playlists" to "Featured Playlists", "trending-songs" to "Top Songs", "popular-albums" to "Popular Albums")
+            .mapNotNull { (id, title) -> sectionItems(id).takeIf { it.isNotEmpty() }?.let { CatalogSection(id = id, title = title, items = it) } }
+        HomeFeed(sections = fallback)
     }
 
     suspend fun browse(id: String, seed: CatalogItem? = null): BrowseDetail = withContext(Dispatchers.IO) {
@@ -153,7 +150,8 @@ class TidalCatalogRepository(
 
         val isArtist = cleanId.startsWith("artist") || seed is CatalogItem.Performer
         val isAlbum = cleanId.startsWith("album") || seed is CatalogItem.Record
-        val isPlaylist = cleanId.startsWith("playlist") || seed is CatalogItem.Collection || (!isArtist && !isAlbum && cleanId.contains("-"))
+        val isPlaylist = cleanId.startsWith("playlist") || cleanId.startsWith("mix") ||
+            seed is CatalogItem.Collection || (!isArtist && !isAlbum && cleanId.contains("-"))
 
         val v1 = v1Catalog
         if (v1 != null && webSession?.hasToken() == true) {
@@ -166,7 +164,15 @@ class TidalCatalogRepository(
                 }
             }.getOrNull()
             if (v1Detail != null) {
-                return@withContext v1Detail
+                return@withContext if (seed is CatalogItem.Collection && v1Detail.artworkUrl.isBlank()) {
+                    v1Detail.copy(
+                        title = seed.playlist.title.ifBlank { v1Detail.title },
+                        description = seed.playlist.description.ifBlank { v1Detail.description },
+                        artworkUrl = seed.playlist.artworkUrl.ifBlank { v1Detail.artworkUrl },
+                    )
+                } else {
+                    v1Detail
+                }
             }
         }
 
@@ -452,36 +458,23 @@ class TidalCatalogRepository(
                         TidalOpenApiParser.parseTrackWithContext(inc, artistsMap, albumsMap, artworksMap)?.let { tracks.add(it) }
                     }
                 }
-                return@withContext BrowseDetail(
-                    id = "liked-music",
-                    kind = CatalogKind.PLAYLIST,
-                    title = "Favorite Tracks",
-                    tracks = tracks,
-                    source = TIDAL_SOURCE,
-                )
+                return@withContext BrowseDetail(id = "liked-music", kind = CatalogKind.PLAYLIST, title = "Favorite Tracks", tracks = tracks, source = TIDAL_SOURCE)
             }
         }
-        BrowseDetail(
-            id = "liked-music",
-            kind = CatalogKind.PLAYLIST,
-            title = "Favorite Tracks",
-            source = TIDAL_SOURCE,
-        )
+        BrowseDetail(id = "liked-music", kind = CatalogKind.PLAYLIST, title = "Favorite Tracks", source = TIDAL_SOURCE)
     }
 
     suspend fun sectionItems(browseId: String, params: String = ""): List<CatalogItem> {
-        val query = when (browseId) {
-            "featured-playlists" -> "Hits"
-            "trending-songs" -> "Top Hits"
-            "popular-albums" -> "Hits"
-            "essential-playlists" -> "Essentials"
-            else -> browseId
+        if (browseId.startsWith("pages/")) {
+            val items = TidalHomeFeedFetcher.fetchSectionItems(http, webSession, auth, browseId)
+            if (items.isNotEmpty()) return items
         }
-        val filter = when (browseId) {
-            "featured-playlists", "essential-playlists" -> "playlists"
-            "trending-songs" -> "songs"
-            "popular-albums" -> "albums"
-            else -> "all"
+        val (query, filter) = when (browseId) {
+            "featured-playlists" -> "Hits" to "playlists"
+            "trending-songs" -> "Top Hits" to "songs"
+            "popular-albums" -> "Hits" to "albums"
+            "essential-playlists" -> "Essentials" to "playlists"
+            else -> browseId to "all"
         }
         val searchRes = search(query, filter = filter)
         return (searchRes.tracks.map { CatalogItem.Song(it) } +

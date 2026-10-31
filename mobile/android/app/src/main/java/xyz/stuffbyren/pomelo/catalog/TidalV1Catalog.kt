@@ -207,25 +207,47 @@ class TidalV1Catalog(
 
     suspend fun getPlaylist(playlistId: String): BrowseDetail? = withContext(Dispatchers.IO) {
         val cleanId = playlistId.removePrefix("playlist:").removePrefix("playlist-").removePrefix("playlist/")
-        val playlistJson = executeGet("/playlists/$cleanId") ?: return@withContext null
-        val playlist = parsePlaylist(playlistJson) ?: return@withContext null
+            .removePrefix("mix:").removePrefix("mix-").removePrefix("mix/")
+        val playlistJson = executeGet("/playlists/$cleanId")
+        if (playlistJson != null) {
+            val playlist = parsePlaylist(playlistJson)
+            if (playlist != null) {
+                val itemsJson = executeGet("/playlists/$cleanId/items", mapOf("limit" to "100"))
+                val tracks = mutableListOf<Track>()
+                itemsJson?.optJSONArray("items")?.let { items ->
+                    for (i in 0 until items.length()) {
+                        val entry = items.optJSONObject(i) ?: continue
+                        val trackObj = entry.optJSONObject("item") ?: entry
+                        parseTrack(trackObj)?.let { tracks.add(it) }
+                    }
+                }
+                return@withContext BrowseDetail(
+                    id = cleanId,
+                    kind = CatalogKind.PLAYLIST,
+                    title = playlist.title,
+                    description = playlist.description.orEmpty(),
+                    artworkUrl = playlist.artworkUrl,
+                    tracks = tracks,
+                    source = TIDAL_SOURCE,
+                )
+            }
+        }
 
-        val itemsJson = executeGet("/playlists/$cleanId/items", mapOf("limit" to "100"))
+        val mixItemsJson = executeGet("/mixes/$cleanId/items") ?: return@withContext null
         val tracks = mutableListOf<Track>()
-        itemsJson?.optJSONArray("items")?.let { items ->
+        mixItemsJson.optJSONArray("items")?.let { items ->
             for (i in 0 until items.length()) {
                 val entry = items.optJSONObject(i) ?: continue
                 val trackObj = entry.optJSONObject("item") ?: entry
                 parseTrack(trackObj)?.let { tracks.add(it) }
             }
         }
-
         BrowseDetail(
             id = cleanId,
             kind = CatalogKind.PLAYLIST,
-            title = playlist.title,
-            description = playlist.description.orEmpty(),
-            artworkUrl = playlist.artworkUrl,
+            title = "Mix",
+            description = "TIDAL Mix",
+            artworkUrl = "",
             tracks = tracks,
             source = TIDAL_SOURCE,
         )
