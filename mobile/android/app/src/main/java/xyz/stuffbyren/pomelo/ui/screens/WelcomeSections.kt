@@ -414,12 +414,7 @@ internal fun WelcomeQualityAndStorageSection(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = when (quality) {
-                                AudioQuality.DATA_SAVER -> "Saver"
-                                AudioQuality.NORMAL -> "Normal"
-                                AudioQuality.HIGH -> "High"
-                                AudioQuality.MAX -> "Max"
-                            },
+                            text = quality.label,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) Color.Black else CanopyColors.Muted,

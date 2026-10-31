@@ -30,10 +30,9 @@ ColumnLayout {
         activityText: "{song}",
         detailsText: "{artist}",
         stateText: "",
-        platform: "YouTube Music",
+        platform: "Pomelo",
         activityType: "listening",
         statusDisplay: "name",
-        projectButtonEnabled: false,
         animatedArtworkEnabled: false,
         connected: true,
         lastError: ""
@@ -41,7 +40,6 @@ ColumnLayout {
     property bool accountSignedIn: false
     property alias enableSwitch: enableSwitch
     property alias lyricsSwitch: lyricsSwitch
-    property alias projectSwitch: projectSwitch
     property alias animatedSwitch: animatedSwitch
     property alias customizeButton: customizeButton
 
@@ -112,34 +110,7 @@ ColumnLayout {
                 padding: 0
                 checked: root.discord.showSyncedLyrics
                 Accessible.name: qsTr("Show Synced Lyrics")
-            }
-        }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 20
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 4
-
-                SettingsFieldLabel {
-                    text: qsTr("Orchard project button")
-                }
-
-                SettingsHint {
-                    text: qsTr("Add ‘View the Orchard Project’ as the optional second Discord button.")
-                }
-            }
-
-            SettingsSwitch {
-                id: projectSwitch
-                Layout.alignment: Qt.AlignVCenter
-                padding: 0
-                checked: root.discord.projectButtonEnabled
-                Accessible.name: qsTr("Show the Orchard project button")
-            }
-        }
 
         // Uploads go through the Orchard account worker, so no account means no moving pictures.
         RowLayout {

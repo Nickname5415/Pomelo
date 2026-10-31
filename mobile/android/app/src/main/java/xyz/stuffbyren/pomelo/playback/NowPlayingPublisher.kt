@@ -43,8 +43,8 @@ internal class NowPlayingPublisher(
     private val handler: Handler,
     private val scope: CoroutineScope,
     private val tidalResolver: TidalStreamResolver? = null,
-    /** The session's local player, or null before it exists. */
-    private val player: () -> ExoPlayer?,
+    /** The session's player, or null before it exists. */
+    private val player: () -> Player?,
 ) {
     private var artworkHydrationId = ""
 
@@ -59,7 +59,7 @@ internal class NowPlayingPublisher(
             publish(0)
             return
         }
-        val format = player.audioFormat
+        val format = (player as? ExoPlayer)?.audioFormat
         val playerCodec = codecName(format?.sampleMimeType)
         val track = MediaItemMapper.toTrack(item)
         if (track.isLocal) {
@@ -70,14 +70,15 @@ internal class NowPlayingPublisher(
         }
         val tidalInfo = tidalResolver?.getStreamInfo(track.id)
         if (track.isTidal || tidalInfo != null) {
-            val bitDepth = tidalInfo?.bitDepth
-                ?: (track.bitDepth ?: if (format?.pcmEncoding == C.ENCODING_PCM_24BIT) 24 else 16)
+            val isAac = tidalInfo?.codec.equals("AAC", ignoreCase = true) || playerCodec.equals("AAC", ignoreCase = true)
+            val bitDepth = if (isAac) 0 else (tidalInfo?.bitDepth
+                ?: (track.bitDepth ?: if (format?.pcmEncoding == C.ENCODING_PCM_24BIT) 24 else 16))
             val sampleRate = tidalInfo?.sampleRate
                 ?: (format?.sampleRate?.takeIf { it > 0 } ?: (track.sampleRate ?: 44100))
-            val hiRes = tidalInfo?.hiRes ?: (track.hires || bitDepth > 16 || sampleRate > 48000)
-            val codec = tidalInfo?.codec ?: playerCodec.ifBlank { "FLAC" }
+            val hiRes = !isAac && (tidalInfo?.hiRes ?: (track.hires || bitDepth > 16 || sampleRate > 48000))
+            val codec = if (isAac) "AAC" else (tidalInfo?.codec ?: playerCodec.ifBlank { "FLAC" })
             val decoded = listOfNotNull(format?.averageBitrate, format?.bitrate).firstOrNull { it > 0 }?.div(1000) ?: 0
-            val kbps = tidalInfo?.bitrateKbps?.takeIf { it > 0 } ?: (if (decoded > 0) decoded else 850)
+            val kbps = tidalInfo?.bitrateKbps?.takeIf { it > 0 } ?: (if (decoded > 0) decoded else if (isAac) 320 else 850)
             publish(kbps, StreamDetail(hiRes = hiRes, bitDepth = bitDepth, sampleRate = sampleRate, codec = codec))
             return
         }

@@ -28,7 +28,6 @@ DiscordForm {
 
     enableSwitch.onToggled: discord.enabled = enableSwitch.checked
     lyricsSwitch.onToggled: discord.showSyncedLyrics = lyricsSwitch.checked
-    projectSwitch.onToggled: discord.projectButtonEnabled = projectSwitch.checked
     animatedSwitch.onToggled: discord.animatedArtworkEnabled = animatedSwitch.checked
     customizeButton.onClicked: customizePopup.open()
 

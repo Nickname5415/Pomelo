@@ -37,9 +37,11 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   if (m_nextRequest && id == m_nextRequest) {
     m_nextRequest = 0;
     const auto stream = result.toObject();
-    const QUrl url(stream.value("url").toString());
-    if (url.scheme() != "https" || !(url.host().endsWith(".googlevideo.com") || url.host().endsWith(".c.youtube.com")) ||
-        stream.value("contentLength").toDouble() <= 0)
+    const bool hasManifest = stream.contains(QStringLiteral("manifestXml")) &&
+                             !stream.value(QStringLiteral("manifestXml")).toString().isEmpty();
+    const QUrl url(stream.value(QStringLiteral("url")).toString());
+    const bool hasUrl = !url.isEmpty() && (url.scheme() == QStringLiteral("https") || url.scheme() == QStringLiteral("http"));
+    if (!hasManifest && !hasUrl)
       return;
     openPreparedStream(stream);
     return;
@@ -130,12 +132,12 @@ void PlaybackController::receiveStream(quint64 id, const QJsonValue &result) {
   if (qEnvironmentVariableIsSet("ORCHARD_PLAYBACK_TIMING"))
     qInfo() << "Playback resolver stages (ms):"
             << stream.value("timings").toObject();
-  const QUrl url(stream.value("url").toString());
-  const qint64 length =
-      static_cast<qint64>(stream.value("contentLength").toDouble());
-  if (url.scheme() != "https" || !(url.host().endsWith(".googlevideo.com") || url.host().endsWith(".c.youtube.com")) ||
-      length <= 0) {
-    fail(tr("YouTube returned an invalid audio stream."));
+  const bool hasManifest = stream.contains(QStringLiteral("manifestXml")) &&
+                           !stream.value(QStringLiteral("manifestXml")).toString().isEmpty();
+  const QUrl url(stream.value(QStringLiteral("url")).toString());
+  const bool hasUrl = !url.isEmpty() && (url.scheme() == QStringLiteral("https") || url.scheme() == QStringLiteral("http"));
+  if (!hasManifest && !hasUrl) {
+    fail(tr("The music provider returned an invalid audio stream."));
     return;
   }
   startResolvedStream(stream);
@@ -146,6 +148,16 @@ void PlaybackController::openPreparedStream(const QJsonObject &stream) {
   if (localUrl.isEmpty())
     return;
   m_preparedBitrate = stream.value("bitrate").toInt();
+  if (stream.contains(QStringLiteral("bitDepth")))
+    m_preparedTrack.insert(QStringLiteral("bitDepth"), stream.value(QStringLiteral("bitDepth")).toInt());
+  if (stream.contains(QStringLiteral("sampleRate")))
+    m_preparedTrack.insert(QStringLiteral("sampleRate"), stream.value(QStringLiteral("sampleRate")).toInt());
+  if (stream.contains(QStringLiteral("hires")))
+    m_preparedTrack.insert(QStringLiteral("hires"), stream.value(QStringLiteral("hires")).toBool());
+  if (stream.contains(QStringLiteral("streamCodec")))
+    m_preparedTrack.insert(QStringLiteral("streamCodec"), stream.value(QStringLiteral("streamCodec")).toString());
+  else if (!m_preparedTrack.contains(QStringLiteral("streamCodec")))
+    m_preparedTrack.insert(QStringLiteral("streamCodec"), QStringLiteral("FLAC"));
   rememberStreamTracking(m_preparedTrack.value("id").toString(), stream);
   m_nextPlayer->setSource(localUrl);
   m_nextPlayer->pause();
@@ -182,6 +194,17 @@ void PlaybackController::startResolvedStream(const QJsonObject &stream) {
   if (streamBitrate > 0) {
     // Hand the bitrate to the track. Audiophiles rejoice!
     m_track.insert(QStringLiteral("bitrate"), streamBitrate);
+  }
+  if (stream.contains(QStringLiteral("bitDepth")))
+    m_track.insert(QStringLiteral("bitDepth"), stream.value(QStringLiteral("bitDepth")).toInt());
+  if (stream.contains(QStringLiteral("sampleRate")))
+    m_track.insert(QStringLiteral("sampleRate"), stream.value(QStringLiteral("sampleRate")).toInt());
+  if (stream.contains(QStringLiteral("hires")))
+    m_track.insert(QStringLiteral("hires"), stream.value(QStringLiteral("hires")).toBool());
+  if (stream.contains(QStringLiteral("streamCodec"))) {
+    m_track.insert(QStringLiteral("streamCodec"), stream.value(QStringLiteral("streamCodec")).toString());
+  } else if (!m_track.contains(QStringLiteral("streamCodec"))) {
+    m_track.insert(QStringLiteral("streamCodec"), QStringLiteral("FLAC"));
   }
   m_restoringPlayback = false;
   savePlaybackState();

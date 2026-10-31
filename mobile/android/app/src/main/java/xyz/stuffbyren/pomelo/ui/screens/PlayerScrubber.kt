@@ -247,7 +247,7 @@ fun PlayerScrubber(
                     xyz.stuffbyren.pomelo.ui.components.LosslessBadge(
                         showBitrate = showBitrate,
                         bitrateKbps = bitrateKbps,
-                        isQobuz = isQobuz || playback.currentTrack?.isTidal == true || playback.currentTrack?.isQobuz == true,
+                        isQobuz = isQobuz || playback.currentTrack?.isQobuz == true,
                     )
                 }
             }

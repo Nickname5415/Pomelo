@@ -19,8 +19,6 @@
 
 #include "discord.h"
 #include "auth/auth_manager.h"
-#include "youtube_links.h"
-
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMetaObject>
@@ -51,14 +49,15 @@ QString artworkUrl(const QVariantMap &track)
 
 QString listenUrl(const QVariantMap &track)
 {
-    const QString id = track.value(QStringLiteral("id")).toString().trimmed();
-    if (!id.isEmpty()) {
-        return youtubeShareUrl(id);
+    const QString direct = track.value(QStringLiteral("url")).toString().trimmed();
+    if (direct.startsWith(QLatin1String("http://"), Qt::CaseInsensitive) ||
+        direct.startsWith(QLatin1String("https://"), Qt::CaseInsensitive)) {
+        return direct;
     }
 
-    const QString direct = track.value(QStringLiteral("url")).toString().trimmed();
-    if (!direct.isEmpty()) {
-        return youtubeShareUrl(direct);
+    const QString id = track.value(QStringLiteral("id")).toString().trimmed();
+    if (!id.isEmpty() && !id.startsWith(QLatin1String("local"), Qt::CaseInsensitive)) {
+        return QStringLiteral("https://tidal.com/track/%1/u").arg(id);
     }
 
     return {};
@@ -104,14 +103,17 @@ Discord::Discord(OrchardAccount *account, YouTubeCatalog *catalog, AuthManager *
         QStringLiteral("{song}")).toString();
     m_detailsText = settings.value(QStringLiteral("detailsText"), QString()).toString();
     m_stateText = settings.value(QStringLiteral("stateText"), QString()).toString();
-    m_platform = settings.value(QStringLiteral("platform"), QStringLiteral("YouTube Music"))
+    m_platform = settings.value(QStringLiteral("platform"), QStringLiteral("Pomelo"))
                      .toString();
+    if (m_platform == QLatin1String("YouTube Music") || m_platform == QLatin1String("Orchard V3")) {
+        m_platform = QStringLiteral("Pomelo");
+    }
     m_activityType = normalizedActivityType(
         settings.value(QStringLiteral("activityType"), QStringLiteral("listening")).toString());
     m_statusDisplay = normalizedStatusDisplay(
         settings.value(QStringLiteral("statusDisplay"), QStringLiteral("name")).toString());
     m_projectButtonEnabled =
-        settings.value(QStringLiteral("projectButtonEnabled"), true).toBool();
+        settings.value(QStringLiteral("projectButtonEnabled"), false).toBool();
     m_animatedArtworkEnabled =
         settings.value(QStringLiteral("animatedArtworkEnabled"), true).toBool();
     m_showSyncedLyrics = settings.value(QStringLiteral("showSyncedLyrics"), false).toBool();
@@ -370,7 +372,7 @@ void Discord::refresh(bool force)
         {QStringLiteral("artist"), m_track.value(QStringLiteral("artist")).toString()},
         {QStringLiteral("album"), m_track.value(QStringLiteral("album")).toString()},
         {QStringLiteral("platform"), m_platform},
-        {QStringLiteral("app"), QStringLiteral("Orchard V3")},
+        {QStringLiteral("app"), QStringLiteral("Pomelo")},
         {QStringLiteral("status"), m_playing ? QStringLiteral("Playing") : QStringLiteral("Paused")},
         {QStringLiteral("activityText"), m_activityText},
         {QStringLiteral("detailsText"), m_detailsText},
@@ -386,8 +388,8 @@ void Discord::refresh(bool force)
         {QStringLiteral("artworkText"), QStringLiteral("{album}")},
         {QStringLiteral("artistImageUrl"), m_artistImage},
         {QStringLiteral("listenUrl"), listenUrl(m_track)},
-        {QStringLiteral("listenButtonText"), QStringLiteral("Listen on YouTube Music")},
-        {QStringLiteral("projectButton"), m_projectButtonEnabled},
+        {QStringLiteral("listenButtonText"), QStringLiteral("Listen on your platform")},
+        {QStringLiteral("projectButton"), false},
         {QStringLiteral("currentTime"), m_position},
         {QStringLiteral("duration"), m_duration},
         {QStringLiteral("isPlaying"), m_playing},

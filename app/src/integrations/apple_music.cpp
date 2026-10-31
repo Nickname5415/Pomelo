@@ -21,8 +21,7 @@
 
 #include "account/orchard_account.h"
 #include "auth/auth_session_channel.h"
-#include "provider_host/provider_host.h"
-#include "providers/runtime/provider_runtime.h"
+
 
 #include <QCoreApplication>
 #include <QDateTime>
@@ -52,12 +51,7 @@ QString helperPath() {
 } // namespace
 
 AppleMusic::AppleMusic(OrchardAccount *account, QObject *parent, bool restore)
-    : QObject(parent), m_account(account), m_network(this),
-      m_runtime(new ProviderRuntime(orchard::provider::appleMusicBundle(), this)) {
-  connect(m_runtime, &ProviderRuntime::invocationSucceeded, this,
-          [this](quint64 id, const QJsonValue &result) { finishCall(id, result, {}); });
-  connect(m_runtime, &ProviderRuntime::invocationFailed, this,
-          [this](quint64 id, const QString &error) { finishCall(id, {}, error); });
+    : QObject(parent), m_account(account), m_network(this), m_runtime(nullptr) {
   if (restore)
     restoreSession();
 }

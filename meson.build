@@ -206,62 +206,7 @@ keychain_dep = declare_dependency(link_with: keychain_archive,
   compile_args: ['-I' + source_root / 'third_party/qtkeychain', '-DQTKEYCHAIN_NO_EXPORT'],
   dependencies: keychain_deps)
 
-qjsc = get_option('host_qjsc') == '' ? quickjs.target('qjsc') : find_program(get_option('host_qjsc'))
-if meson.is_cross_build() and get_option('host_qjsc') == ''
-  error('Set -Dhost_qjsc=/path/to/qjsc built from third_party/quickjs for cross compilation')
-endif
-youtube_bundle = custom_target('YouTube provider bundle',
-  input: files(youtube_sources + ['providers/youtube/package.json',
-    'providers/youtube/package-lock.json']),
-  output: 'youtube-provider.js',
-  command: [npm, '--prefix', source_root / 'providers/youtube', 'run',
-    'build:runtime', '--', '--outfile=' + meson.current_build_dir() / 'youtube-provider.js'])
-po_bundle = custom_target('YouTube PO minter bundle',
-  input: files(youtube_sources + ['providers/youtube/scripts/buildPoMinter.mjs',
-    'providers/youtube/scripts/poNodeGlobals.js', 'providers/youtube/package.json',
-    'providers/youtube/package-lock.json']),
-  output: ['youtube-po-minter.js', 'youtube-po-minter-licenses.txt'],
-  command: [npm, '--prefix', source_root / 'providers/youtube', 'run',
-    'build:po-minter', '--', '--outfile=' + meson.current_build_dir() / 'youtube-po-minter.js'])
-qobuz_bundle = custom_target('Qobuz provider bundle',
-  input: files(qobuz_sources + ['providers/youtube/package-lock.json']),
-  output: 'qobuz-provider.js',
-  command: [npm, '--prefix', source_root / 'providers/youtube', 'exec', '--offline',
-    '--', 'esbuild', source_root / 'providers/qobuz/src/runtime.js', '--bundle',
-    '--platform=browser', '--format=iife', '--target=es2023',
-    '--legal-comments=none', '--outfile=' + meson.current_build_dir() / 'qobuz-provider.js'])
-apple_music_bundle = custom_target('Apple Music provider bundle',
-  input: files(apple_music_sources + ['providers/youtube/package-lock.json']),
-  output: 'apple-music-provider.js',
-  command: [npm, '--prefix', source_root / 'providers/youtube', 'exec', '--offline',
-    '--', 'esbuild', source_root / 'providers/apple-music/src/runtime.js', '--bundle',
-    '--platform=browser', '--format=iife', '--target=es2023',
-    '--legal-comments=none', '--outfile=' + meson.current_build_dir() / 'apple-music-provider.js'])
-youtube_bytecode = custom_target('YouTube provider bytecode', input: youtube_bundle,
-  output: 'youtube-provider.qjc',
-  command: [qjsc, '-b', '-C', '-n', 'youtube-provider.js', '-o', '@OUTPUT@', '@INPUT@'])
-po_bytecode = custom_target('YouTube PO minter bytecode', input: po_bundle[0],
-  output: 'youtube-po-minter.qjc',
-  command: [qjsc, '-b', '-C', '-s', '-n', 'youtube-po-minter.js', '-o', '@OUTPUT@', '@INPUT@'])
-qobuz_bytecode = custom_target('Qobuz provider bytecode', input: qobuz_bundle,
-  output: 'qobuz-provider.qjc',
-  command: [qjsc, '-b', '-C', '-n', 'qobuz-provider.js', '-o', '@OUTPUT@', '@INPUT@'])
-apple_music_bytecode = custom_target('Apple Music provider bytecode', input: apple_music_bundle,
-  output: 'apple-music-provider.qjc',
-  command: [qjsc, '-b', '-C', '-n', 'apple-music-provider.js', '-o', '@OUTPUT@', '@INPUT@'])
 
-provider_resources = custom_target('provider resources',
-  input: [youtube_bytecode, po_bytecode, po_bundle[1], qobuz_bytecode, apple_music_bytecode],
-  output: 'qrc_provider_resources.cpp',
-  command: [python, files('scripts/meson-rcc.py'), '--rcc', rcc,
-    '--name', 'provider_resources', '--prefix', '/providers',
-    '--output', '@OUTPUT@', '@INPUT@'])
-auth_provider_resources = custom_target('auth provider resources',
-  input: [youtube_bytecode, po_bytecode, po_bundle[1]],
-  output: 'qrc_auth_provider_resources.cpp',
-  command: [python, files('scripts/meson-rcc.py'), '--rcc', rcc,
-    '--name', 'auth_provider_resources', '--prefix', '/providers',
-    '--output', '@OUTPUT@', '@INPUT@'])
 
 shader_resources = []
 foreach shader : shader_sources
@@ -298,7 +243,6 @@ if host_machine.system() == 'linux' and xcb_dep.found()
   app_args += ['-DORCHARD_HAVE_XCB']
 endif
 app_moc = qt6.compile_moc(headers: app_moc_headers,
-  sources: ['app/src/providers/runtime/provider_runtime.cpp'],
   include_directories: app_inc, dependencies: app_dependencies,
   extra_args: app_args)
 app_lib = static_library('orchard_app', files(app_sources) + app_moc,
@@ -353,38 +297,11 @@ qml_module = qt6.qml_module('Orchard', version: '1.0',
 exe_moc = qt6.compile_moc(sources: ['app/src/appearance/liquid_glass.cpp'],
   include_directories: app_inc, dependencies: [qt_dep, qt_gui_private])
 
-adaptive_platform = get_option('adaptive_platform')
-if adaptive_platform == ''
-  adaptive_arch = host_machine.cpu_family()
-  if adaptive_arch == 'amd64'
-    adaptive_arch = 'x86_64'
-  elif adaptive_arch == 'arm64'
-    adaptive_arch = 'aarch64'
-  endif
-  if host_machine.system() == 'windows'
-    adaptive_platform = 'windows-' + adaptive_arch + '-msvc'
-  elif host_machine.system() == 'darwin'
-    adaptive_platform = 'macos-' + adaptive_arch
-  else
-    adaptive_platform = 'linux-' + adaptive_arch
-  endif
-endif
-adaptive_stage = custom_target('adaptive mix stage',
-  input: [rust_archive] + files(rust_sources + ['scripts/stage-adaptive-mix.py']),
-  output: 'adaptive-mix.stamp',
-  command: [python, files('scripts/meson-stage-adaptive.py'),
-    '--target-dir', cargo_target_dir, '--target', rust_target,
-    '--profile', rust_profile, '--platform', adaptive_platform,
-    '--source-root', source_root,
-    '--output', meson.current_build_dir() / 'adaptive-mix.stamp'],
-  build_by_default: true)
-
 orchard = executable('orchard', files(app_executable_sources) + exe_moc +
   qml_module + [qmldir_resources] + qml_files_qrc + assets_qrc + licenses_qrc + docs_qrc + release_notes_qrc +
-  [provider_resources, shaders_cpp],
+  [shaders_cpp],
   include_directories: app_inc,
   dependencies: [app_dep, qt_dep, qt_gui_private, qt_entry_dep],
-  link_depends: adaptive_stage,
   win_subsystem: 'windows', install: true)
 
 auth_dependencies = [qt_dep, rust_dep, qjs_dep, keychain_dep] + platform_deps
@@ -412,11 +329,10 @@ else
   endif
 endif
 helper_moc = qt6.compile_moc(headers: auth_moc_headers,
-  sources: ['app/src/providers/runtime/provider_runtime.cpp'],
   include_directories: app_inc, dependencies: auth_dependencies,
   extra_args: auth_args)
 auth_helper = executable('orchard-auth-helper', files(auth_sources) + helper_moc +
-  auth_qrc + [auth_provider_resources],
+  auth_qrc,
   include_directories: app_inc,
   dependencies: auth_dependencies + [qt_entry_dep], cpp_args: auth_args,
   win_subsystem: 'windows', install: true)
@@ -517,7 +433,6 @@ if get_option('tests')
     ['offline', 'tests/offline_test.cpp'],
     ['connect_tracks', 'tests/connect/connect_tracks_test.cpp'],
     ['connect_mix', 'tests/connect/connect_mix_test.cpp'],
-    ['adaptive_mix_output', 'tests/adaptive_mix_output_test.cpp'],
     ['autoplay_select', 'tests/autoplay_select_test.cpp'],
     ['music_video_match', 'tests/music_video_match_test.cpp'],
     ['letterbox', 'tests/letterbox_test.cpp'],
@@ -555,23 +470,7 @@ if get_option('tests')
     cpp_args: ['-DORCHARD_NATIVE_COOKIE_AUTH'])
   test('orchard_auth', auth_test, timeout: 120)
 
-  media_bytecode = custom_target('provider media test bytecode',
-    input: files('tests/data/provider_media_test.js'),
-    output: 'provider-media-test.qjc',
-    command: [qjsc, '-b', '-C', '-n', 'provider-media-test.js',
-      '-o', '@OUTPUT@', '@INPUT@'])
-  test_provider_qrc = custom_target('provider test resources',
-    input: [youtube_bytecode, po_bytecode, qobuz_bytecode, media_bytecode],
-    output: 'qrc_provider_test_resources.cpp',
-    command: [python, files('scripts/meson-rcc.py'), '--rcc', rcc,
-      '--name', 'provider_test_resources', '--prefix', '/providers',
-      '--output', '@OUTPUT@', '@INPUT@'])
-  provider_test_moc = qt6.compile_moc(sources: ['tests/provider_runtime_test.cpp'],
-    include_directories: app_inc, dependencies: [qt_test_dep, app_dep])
-  provider_test = executable('orchard_provider_runtime_tests',
-    files('tests/provider_runtime_test.cpp') + provider_test_moc + [test_provider_qrc],
-    include_directories: app_inc, dependencies: [app_dep, qt_test_dep])
-  test('orchard_provider_runtime', provider_test, timeout: 120)
+
 
   docs_test_moc = qt6.compile_moc(sources: ['tests/docs_library_test.cpp'],
     include_directories: app_inc, dependencies: [qt_test_dep, app_dep])
@@ -613,23 +512,9 @@ if get_option('tests')
     test('orchard_' + spec[0], test_exe, timeout: 120)
   endforeach
 
-  adaptive_span_moc = qt6.compile_moc(sources: ['tests/adaptive_mix_span_test.cpp'],
-    include_directories: app_inc, dependencies: [qt_test_dep])
-  adaptive_span = executable('orchard_adaptive_mix_span_tests',
-    files('tests/adaptive_mix_span_test.cpp') + adaptive_span_moc,
-    include_directories: app_inc,
-    dependencies: [dependency('qt6', modules: ['Core']), qt_test_dep])
-  test('orchard_adaptive_mix_span', adaptive_span, timeout: 120)
-
   node = find_program('node', required: false)
   if node.found()
     test('orchard_fullscreen_layout', node,
       args: ['--test', files('tests/fullscreen_layout_test.js')], timeout: 120)
-    test('orchard_domain_js', node, args: ['--test'],
-      workdir: source_root / 'core/js', timeout: 120)
-    test('orchard_qobuz_js', node, args: ['--test'],
-      workdir: source_root / 'providers/qobuz', timeout: 120)
-    test('orchard_youtube_js', node, args: ['--test'],
-      workdir: source_root / 'providers/youtube', timeout: 120)
   endif
 endif

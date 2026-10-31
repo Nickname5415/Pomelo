@@ -129,19 +129,19 @@ void ConnectService::accountChanged() {
 void ConnectService::refreshDevice() {
   if (!m_node)
     return;
-  const QJsonObject device{
-      {QStringLiteral("id"), m_deviceId},
-      {QStringLiteral("name"), OrchardAccount::defaultDeviceName()},
-      {QStringLiteral("platform"), OrchardAccount::platformName()},
-      {QStringLiteral("kind"), QStringLiteral("desktop")},
-      {QStringLiteral("can_render_audio"), true},
-      // Mixing for a peer needs only the worker; this desktop's own crossfade mode is beside the point.
-      {QStringLiteral("can_mix_audio"), AdaptiveMixWorker::installed()},
-      {QStringLiteral("can_fetch_artwork"), true},
-      {QStringLiteral("providers"), QJsonArray{QStringLiteral("youtube"), QStringLiteral("qobuz")}},
-      {QStringLiteral("provider_sessions"),
-       QJsonObject{{QStringLiteral("youtube"), m_auth->isSignedIn()}, {QStringLiteral("qobuz"), m_qobuz->connected()}}},
-      {QStringLiteral("audio_transports"), QJsonArray{QStringLiteral("pcm_s16"), QStringLiteral("pcm_f32"), QStringLiteral("source")}}};
+  QJsonObject device;
+  device.insert(QStringLiteral("id"), m_deviceId);
+  device.insert(QStringLiteral("name"), OrchardAccount::defaultDeviceName());
+  device.insert(QStringLiteral("platform"), OrchardAccount::platformName());
+  device.insert(QStringLiteral("kind"), QStringLiteral("desktop"));
+  device.insert(QStringLiteral("can_render_audio"), true);
+  device.insert(QStringLiteral("can_mix_audio"), false);
+  device.insert(QStringLiteral("can_fetch_artwork"), true);
+  device.insert(QStringLiteral("providers"), QJsonArray{QStringLiteral("tidal")});
+  QJsonObject sessions;
+  sessions.insert(QStringLiteral("tidal"), true);
+  device.insert(QStringLiteral("provider_sessions"), sessions);
+  device.insert(QStringLiteral("audio_transports"), QJsonArray{QStringLiteral("source")});
   const QByteArray encoded = QJsonDocument(device).toJson(QJsonDocument::Compact);
   if (encoded == m_lastDevice)
     return;

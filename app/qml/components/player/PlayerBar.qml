@@ -104,7 +104,7 @@ Item {
         const num = Number(value || 0);
         if (!Number.isFinite(num) || num <= 0)
             return "";
-        return String(Math.round(num >= 1000 ? num / 1000 : num));
+        return String(Math.round(num >= 10000 ? num / 1000 : num));
     }
 
     // Untyped on purpose: a compiled binding reading the track map trips qmlcachegen.
@@ -122,12 +122,20 @@ Item {
         return parts.join(" · ");
     }
 
-    // Streamed songs: bitrate then codec, e.g. "128 kbps · Opus". Needs the bitrate setting.
+    // Streamed songs: bit/kHz or bitrate then codec, e.g. "24-bit / 96 kHz · FLAC".
     function streamLabel(track) {
+        if (!track)
+            return "";
+        if (track.bitDepth || track.sampleRate) {
+            const depth = track.bitDepth ? track.bitDepth + "-bit" : "";
+            const rate = track.sampleRate ? Number((track.sampleRate / 1000).toFixed(1)) + " kHz" : "";
+            const spec = [depth, rate].filter(Boolean).join(" / ");
+            return track.streamCodec ? spec + " · " + track.streamCodec : spec;
+        }
         if (!OrchardAppearance.showBitrate || OrchardPlayback.bitrate <= 0)
             return "";
         const parts = [root.formatBitrate(OrchardPlayback.bitrate) + " kbps"];
-        if (track && track.streamCodec)
+        if (track.streamCodec)
             parts.push(track.streamCodec);
         return parts.join(" · ");
     }

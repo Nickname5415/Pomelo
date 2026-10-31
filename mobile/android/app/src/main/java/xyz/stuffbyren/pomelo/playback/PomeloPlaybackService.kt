@@ -72,21 +72,27 @@ class PomeloPlaybackService : MediaLibraryService() {
     private lateinit var nowPlaying: NowPlayingPublisher
     private lateinit var playbackVolume: PlaybackVolumeMonitor
     private var tidalPlayer: com.tidal.sdk.player.Player? = null
+    private var chromecastStreamServer: ChromecastStreamServer? = null
+    private var chromecastPlayback: ChromecastPlayback? = null
 
     private var unshuffledOrder: List<String> = emptyList()
     @Volatile private var queueSnapshot: Map<String, Track> = emptyMap()
     private val handler = Handler(Looper.getMainLooper())
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private fun authoritativePlayer(): Player =
+        if (chromecastPlayback?.isActive == true && chromecastPlayback?.player != null) chromecastPlayback!!.player!!
+        else player
+
     private val positionSaver = object : Runnable {
         override fun run() {
             persistPlayback()
-            val source = player
             if (::player.isInitialized) {
+                val source = authoritativePlayer()
                 OrchardWidgetUpdater.onPlayerChanged(this@PomeloPlaybackService, source)
                 nowPlaying.updateScrobbling(source)
+                if (source.isPlaying) handler.postDelayed(this, POSITION_SAVE_INTERVAL_MS)
             }
-            if (::player.isInitialized && source.isPlaying) handler.postDelayed(this, POSITION_SAVE_INTERVAL_MS)
         }
     }
 
@@ -99,6 +105,15 @@ class PomeloPlaybackService : MediaLibraryService() {
         val playerEq = EqualizerAudioProcessor()
         playbackVolume = PlaybackVolumeMonitor(this)
         observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerEq))
+
+        val toSdkQuality: (xyz.stuffbyren.pomelo.model.AudioQuality) -> AudioQuality = { quality ->
+            when (quality) {
+                xyz.stuffbyren.pomelo.model.AudioQuality.LOW -> AudioQuality.LOW
+                xyz.stuffbyren.pomelo.model.AudioQuality.MEDIUM -> AudioQuality.HIGH
+                xyz.stuffbyren.pomelo.model.AudioQuality.HIGH -> AudioQuality.LOSSLESS
+                xyz.stuffbyren.pomelo.model.AudioQuality.MAX -> AudioQuality.HI_RES_LOSSLESS
+            }
+        }
 
         try {
             val eventProducer = EventProducer.getInstance(
@@ -117,8 +132,8 @@ class PomeloPlaybackService : MediaLibraryService() {
                 eventSender = eventProducer.eventSender,
             )
             tidalPlayer?.playbackEngine?.apply {
-                streamingWifiAudioQuality = AudioQuality.LOSSLESS
-                streamingCellularAudioQuality = AudioQuality.HIGH
+                streamingWifiAudioQuality = toSdkQuality(graph.settings.settings.value.audioQuality)
+                streamingCellularAudioQuality = toSdkQuality(graph.settings.settings.value.cellularAudioQuality)
             }
             listenToTidalEvents(graph)
         } catch (e: Exception) {
@@ -130,10 +145,21 @@ class PomeloPlaybackService : MediaLibraryService() {
             http = graph.http,
             webSession = graph.tidalWebSession,
             streamingApiProvider = { tidalPlayer?.streamingApi },
+            qualityProvider = { graph.audioQuality() },
         )
 
+        ioScope.launch {
+            graph.settings.settings.collect { settings ->
+                tidalResolver.clearCache()
+                tidalPlayer?.playbackEngine?.apply {
+                    streamingWifiAudioQuality = toSdkQuality(settings.audioQuality)
+                    streamingCellularAudioQuality = toSdkQuality(settings.cellularAudioQuality)
+                }
+            }
+        }
+
         nowPlaying = NowPlayingPublisher(graph, handler, ioScope, tidalResolver) {
-            if (::player.isInitialized) player else null
+            if (::player.isInitialized) authoritativePlayer() else null
         }
         val okHttpDataSourceFactory = OkHttpDataSource.Factory(graph.http)
         val defaultDataSourceFactory = DefaultDataSource.Factory(this, okHttpDataSourceFactory)
@@ -147,6 +173,7 @@ class PomeloPlaybackService : MediaLibraryService() {
                         val streamUrl = kotlinx.coroutines.runBlocking { tidalResolver.resolve(trackId) }
                         if (!streamUrl.isNullOrBlank()) {
                             Log.d(TAG, "Resolved track $trackId to: ${streamUrl.take(70)}...")
+                            handler.post { nowPlaying.publishBitrate() }
                             return dataSpec.buildUpon()
                                 .setUri(Uri.parse(streamUrl))
                                 .build()
@@ -169,7 +196,7 @@ class PomeloPlaybackService : MediaLibraryService() {
             browseTree = browseTree,
             stateStore = stateStore,
             browseScope = ioScope,
-            target = { player },
+            target = { authoritativePlayer() },
             onSetVideoMode = { _, _, _ -> },
             onLayoutChanged = ::updateCustomLayout,
         )
@@ -192,6 +219,33 @@ class PomeloPlaybackService : MediaLibraryService() {
         )
 
         player.addListener(playbackListener)
+
+        val streamServer = ChromecastStreamServer(this, graph.http, tidalResolver).also {
+            chromecastStreamServer = it
+        }
+        chromecastPlayback = ChromecastPlayback(
+            context = this,
+            converter = ChromecastMediaItemConverter(streamServer),
+            localPlayer = { player },
+            onCastStarted = { castPlayer ->
+                castPlayer.addListener(castPlaybackListener)
+                mediaSession.setPlayer(OrchardSessionPlayer(castPlayer))
+                persistPlayback()
+                updateCustomLayout()
+                OrchardWidgetUpdater.onPlayerChanged(this, castPlayer)
+            },
+            onCastEnded = { localPlayer ->
+                chromecastPlayback?.player?.removeListener(castPlaybackListener)
+                mediaSession.setPlayer(OrchardSessionPlayer(localPlayer))
+                persistPlayback()
+                updateCustomLayout()
+                OrchardWidgetUpdater.onPlayerChanged(this, localPlayer)
+            },
+            onError = graph::postWarning,
+        ).also {
+            it.start()
+        }
+
         OrchardWidgetUpdater.onPlayerChanged(this, player)
     }
 
@@ -237,7 +291,7 @@ class PomeloPlaybackService : MediaLibraryService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val result = super.onStartCommand(intent, flags, startId)
         if (::player.isInitialized) {
-            player.runWidgetAction(intent)
+            authoritativePlayer().runWidgetAction(intent)
         }
         return result
     }
@@ -245,6 +299,10 @@ class PomeloPlaybackService : MediaLibraryService() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         if (::nowPlaying.isInitialized) nowPlaying.finishHistory()
+        chromecastPlayback?.close()
+        chromecastPlayback = null
+        chromecastStreamServer?.close()
+        chromecastStreamServer = null
         if (::player.isInitialized) {
             persistPlayback(sync = true)
             OrchardWidgetUpdater.onPlayerChanged(this, player, forcePaused = true)
@@ -261,7 +319,8 @@ class PomeloPlaybackService : MediaLibraryService() {
 
     private fun persistPlayback(sync: Boolean = false) {
         if (!::player.isInitialized) return
-        val restored = savedPlayback(player, unshuffledOrder)
+        val current = authoritativePlayer()
+        val restored = savedPlayback(current, unshuffledOrder)
         if (sync) stateStore.save(restored) else ioScope.launch { stateStore.save(restored) }
     }
 
@@ -269,19 +328,62 @@ class PomeloPlaybackService : MediaLibraryService() {
         queueSnapshot[id]?.let { return it }
         val find = {
             if (!::player.isInitialized) null
-            else (0 until player.mediaItemCount).asSequence().map(player::getMediaItemAt)
-                .firstOrNull { it.mediaId == id }?.let(MediaItemMapper::toTrack)
+            else {
+                val current = authoritativePlayer()
+                (0 until current.mediaItemCount).asSequence().map(current::getMediaItemAt)
+                    .firstOrNull { it.mediaId == id }?.let(MediaItemMapper::toTrack)
+            }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) return find()
         return runBlocking { withTimeoutOrNull(QUEUE_LOOKUP_TIMEOUT_MS) { withContext(Dispatchers.Main) { find() } } }
     }
 
     private fun snapshotQueue(source: Player) {
-        val from = (source.currentMediaItemIndex - 1).coerceAtLeast(0)
-        val to = (source.currentMediaItemIndex + SNAPSHOT_AHEAD).coerceAtMost(source.mediaItemCount - 1)
+        val count = source.mediaItemCount
+        if (count == 0) {
+            queueSnapshot = emptyMap()
+            return
+        }
+        val currentIndex = source.currentMediaItemIndex.coerceIn(0, count - 1)
+        val from = (currentIndex - 1).coerceAtLeast(0)
+        val to = (currentIndex + SNAPSHOT_AHEAD).coerceAtMost(count - 1)
         queueSnapshot = (from..to).associate { index ->
             val item = source.getMediaItemAt(index)
             item.mediaId to MediaItemMapper.toTrack(item)
+        }
+    }
+
+    private val castPlaybackListener = object : Player.Listener {
+        override fun onEvents(player: Player, events: Player.Events) {
+            if (events.containsAny(*STATE_EVENTS)) {
+                persistPlayback()
+                updateCustomLayout()
+            }
+            if (events.contains(Player.EVENT_TRACKS_CHANGED)) nowPlaying.publishBitrate()
+            if (events.containsAny(
+                    Player.EVENT_TIMELINE_CHANGED,
+                    Player.EVENT_MEDIA_ITEM_TRANSITION,
+                    Player.EVENT_PLAYBACK_STATE_CHANGED,
+                    Player.EVENT_IS_PLAYING_CHANGED,
+                )
+            ) {
+                snapshotQueue(player)
+                nowPlaying.publishBitrate()
+                nowPlaying.hydrateArtwork()
+            }
+            OrchardWidgetUpdater.onPlayerChanged(this@PomeloPlaybackService, player)
+            nowPlaying.updateScrobbling(player)
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            savePositionWhilePlaying(isPlaying)
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            OrchardGraph.from(this@PomeloPlaybackService).transitionMarker.value = null
+            nowPlaying.resetArtwork()
+            nowPlaying.hydrateArtwork()
+            nowPlaying.publishBitrate()
         }
     }
 
@@ -346,8 +448,8 @@ class PomeloPlaybackService : MediaLibraryService() {
     }
 
     private fun updateCustomLayout() {
-        if (!::mediaSession.isInitialized) return
-        OrchardSessionCallback.applyLayout(mediaSession, player)
+        if (!::mediaSession.isInitialized || !::player.isInitialized) return
+        OrchardSessionCallback.applyLayout(mediaSession, authoritativePlayer())
     }
 
     private fun mainActivityIntent(): PendingIntent = PendingIntent.getActivity(

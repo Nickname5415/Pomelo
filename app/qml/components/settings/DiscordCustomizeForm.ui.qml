@@ -29,7 +29,7 @@ ColumnLayout {
         detailsText: "{artist}",
         stateText: ""
     })
-    readonly property var platformValues: ["YouTube Music", "Orchard V3"]
+    readonly property var platformValues: ["Pomelo", "TIDAL"]
     readonly property var activityValues: ["listening", "playing", "watching", "competing"]
     readonly property var statusDisplayValues: ["name", "details", "state"]
     property alias activityField: activityField
@@ -112,7 +112,7 @@ ColumnLayout {
 
             SettingsSelect {
                 id: platformSelect
-                model: [qsTr("YouTube Music"), qsTr("Orchard V3")]
+                model: [qsTr("Pomelo"), qsTr("TIDAL")]
                 Accessible.name: qsTr("Platform shown in Discord")
             }
         }
