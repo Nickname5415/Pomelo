@@ -45,6 +45,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,11 +65,12 @@ import xyz.stuffbyren.pomelo.model.CatalogItem
 import xyz.stuffbyren.pomelo.ui.components.ArtistSectionBottomSheet
 import xyz.stuffbyren.pomelo.ui.components.CatalogCard
 import xyz.stuffbyren.pomelo.ui.components.CategoryCard
-import xyz.stuffbyren.pomelo.ui.components.DetailBackButton
+import xyz.stuffbyren.pomelo.ui.components.PomeloDetailTopBar
+import xyz.stuffbyren.pomelo.ui.components.PomeloCircleChromeButton
 import xyz.stuffbyren.pomelo.ui.components.MessagePanel
 import xyz.stuffbyren.pomelo.ui.components.OrchardSectionHeader
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
-import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
+import xyz.stuffbyren.pomelo.ui.theme.PomeloTypography
 
 @Composable
 fun DetailScreen(
@@ -116,15 +119,21 @@ fun DetailScreen(
         label = "DetailState",
     ) { state ->
     when (state) {
-        LoadState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = LocalAccent.current, modifier = Modifier.riseIn(fromScale = 0.6f))
+        LoadState.Loading -> {
+            val scheme = MaterialTheme.colorScheme
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    color = scheme.primary,
+                    modifier = Modifier.riseIn(fromScale = 0.6f),
+                )
+            }
         }
-        is LoadState.Error -> Column {
-            DetailBackButton(onBack)
+        is LoadState.Error -> Column(Modifier.fillMaxSize()) {
+            PomeloDetailTopBar(onBack = onBack, actions = {})
             MessagePanel("Collection unavailable", state.message)
         }
-        is LoadState.Empty -> Column {
-            DetailBackButton(onBack)
+        is LoadState.Empty -> Column(Modifier.fillMaxSize()) {
+            PomeloDetailTopBar(onBack = onBack, actions = {})
             MessagePanel("Nothing here", state.message)
         }
         is LoadState.Content -> {
@@ -213,6 +222,7 @@ private fun HubDetailContent(
     onFetchSectionItems: (suspend (String, String) -> List<CatalogItem>)? = null,
 ) {
     var activeSectionSheet by remember { mutableStateOf<SectionSheetState?>(null) }
+    val scheme = MaterialTheme.colorScheme
 
     activeSectionSheet?.let { sheet ->
         ArtistSectionBottomSheet(
@@ -229,31 +239,32 @@ private fun HubDetailContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 128.dp),
+        contentPadding = PaddingValues(bottom = PomeloSpacing.listBottomInset),
     ) {
         item {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp, bottom = 8.dp),
+                    .padding(horizontal = PomeloSpacing.screenHorizontal)
+                    .padding(top = PomeloSpacing.screenHorizontal, bottom = PomeloSpacing.explicitBadgeGap),
             ) {
-                DetailBackButton(onBack)
-                Spacer(Modifier.height(12.dp))
+                PomeloCircleChromeButton(
+                    onClick = onBack,
+                    icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "Back",
+                )
+                Spacer(Modifier.height(PomeloSpacing.screenHorizontal))
                 Text(
                     text = detail.title,
-                    style = MaterialTheme.typography.displaySmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp,
-                    ),
-                    color = CanopyColors.Text,
+                    style = PomeloTypography.collectionTitle,
+                    color = scheme.onSurface,
                 )
                 if (detail.description.isNotBlank()) {
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(PomeloSpacing.explicitBadgeGap))
                     Text(
                         text = detail.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = CanopyColors.Muted,
+                        color = scheme.onSurfaceVariant,
                     )
                 }
             }
@@ -288,7 +299,7 @@ private fun HubDetailContent(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = PomeloSpacing.screenHorizontal, vertical = PomeloSpacing.explicitBadgeGap),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             rowItems.forEach { catItem ->
@@ -307,8 +318,8 @@ private fun HubDetailContent(
                 } else {
                     item {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            contentPadding = PaddingValues(horizontal = PomeloSpacing.screenHorizontal),
+                            horizontalArrangement = Arrangement.spacedBy(PomeloSpacing.screenHorizontal),
                         ) {
                             itemsIndexed(section.items, key = { index, it -> "${it.stableId}_$index" }) { _, item ->
                                 CatalogCard(item, onClick = {
@@ -342,8 +353,8 @@ private fun HubDetailContent(
             }
             item {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(horizontal = PomeloSpacing.screenHorizontal),
+                    horizontalArrangement = Arrangement.spacedBy(PomeloSpacing.screenHorizontal),
                 ) {
                     itemsIndexed(detail.related, key = { index, it -> "${it.stableId}_$index" }) { _, item ->
                         CatalogCard(item, onClick = {

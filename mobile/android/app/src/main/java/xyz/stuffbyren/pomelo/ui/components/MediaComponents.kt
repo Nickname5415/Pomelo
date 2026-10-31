@@ -58,7 +58,6 @@ import androidx.compose.ui.unit.sp
 import xyz.stuffbyren.pomelo.model.Album
 import xyz.stuffbyren.pomelo.model.CatalogItem
 import xyz.stuffbyren.pomelo.model.subtitle
-import xyz.stuffbyren.pomelo.ui.glass.GlassTone
 import xyz.stuffbyren.pomelo.ui.motion.bounceClickable
 import xyz.stuffbyren.pomelo.ui.motion.pressScale
 import xyz.stuffbyren.pomelo.ui.motion.riseIn
@@ -67,9 +66,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.scale
-import xyz.stuffbyren.pomelo.ui.glass.glassPane
-import xyz.stuffbyren.pomelo.ui.theme.CanopyColors
-import xyz.stuffbyren.pomelo.ui.theme.LocalAccent
+import xyz.stuffbyren.pomelo.ui.theme.PomeloArtwork
+import xyz.stuffbyren.pomelo.ui.theme.PomeloShapes
+import xyz.stuffbyren.pomelo.ui.theme.PomeloSpacing
+import xyz.stuffbyren.pomelo.ui.theme.PomeloTypography
 
 @Composable
 fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)? = null) {
@@ -83,10 +83,11 @@ fun OrchardSectionHeader(
     action: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
+    val scheme = MaterialTheme.colorScheme
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = PomeloSpacing.screenHorizontal, vertical = PomeloSpacing.explicitBadgeGap),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -96,22 +97,22 @@ fun OrchardSectionHeader(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp,
             ),
-            color = CanopyColors.Text,
+            color = scheme.onSurface,
         )
         if (action != null && onAction != null) {
             val source = remember { MutableInteractionSource() }
             Surface(
                 onClick = onAction,
-                color = Color.Transparent,
+                color = scheme.surfaceContainerHigh,
                 shape = CircleShape,
                 interactionSource = source,
-                modifier = Modifier.height(32.dp).pressScale(source, 0.9f).glassPane(CircleShape, GlassTone.CONTROL),
+                modifier = Modifier.height(32.dp).pressScale(source, 0.9f),
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
                     Text(
                         text = action,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = LocalAccent.current,
+                        color = scheme.primary,
                     )
                 }
             }
@@ -119,19 +120,20 @@ fun OrchardSectionHeader(
     }
 }
 
-/** Expressive rail card with soft rounded artwork (14dp or circular for artists) and clear typography. */
+/** Rail card with Pomelo artwork radii and M3 typography. */
 @Composable
 fun CatalogCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     if (item is CatalogItem.Category) {
         CategoryCard(item = item, onClick = onClick, modifier = modifier)
         return
     }
+    val scheme = MaterialTheme.colorScheme
     val isArtist = item is CatalogItem.Performer
-    val cornerRadius = if (isArtist) 999.dp else 14.dp
-    val artworkRadius = if (isArtist) 999 else 14
+    val tileSize = 140.dp
+    val tileShape = if (isArtist) PomeloArtwork.artistShape else PomeloArtwork.tileShape(tileSize)
     Column(
         modifier = modifier
-            .width(140.dp)
+            .width(tileSize)
             .bounceClickable(pressedScale = 0.93f, onClick = onClick),
         horizontalAlignment = if (isArtist) Alignment.CenterHorizontally else Alignment.Start,
     ) {
@@ -139,11 +141,16 @@ fun CatalogCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(cornerRadius))
+                .clip(tileShape),
         ) {
-            ArtworkTile(item.artworkUrl, item.title, Modifier.fillMaxSize(), artworkRadius)
+            ArtworkTile(
+                item.artworkUrl,
+                item.title,
+                Modifier.fillMaxSize(),
+                if (isArtist) 999 else PomeloArtwork.tileRadiusInt(tileSize),
+            )
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(PomeloSpacing.explicitBadgeGap))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -152,20 +159,20 @@ fun CatalogCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
             Text(
                 item.title,
                 style = MaterialTheme.typography.titleMedium,
-                color = CanopyColors.Text,
+                color = scheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = if (isArtist) TextAlign.Center else TextAlign.Start,
                 modifier = Modifier.weight(1f, fill = false),
             )
             if (item is CatalogItem.Song && item.track.explicit) {
-                ExplicitBadge()
+                PomeloExplicitBadge()
             }
         }
         Text(
             catalogSubtitle(item),
-            style = MaterialTheme.typography.bodyMedium,
-            color = CanopyColors.Muted,
+            style = PomeloTypography.muted,
+            color = scheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = if (isArtist) TextAlign.Center else TextAlign.Start,
@@ -174,22 +181,22 @@ fun CatalogCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
     }
 }
 
-/** Expressive category / genre / mood card with left colored accent stripe. */
+/** Category / genre / mood card with left accent stripe. */
 @Composable
 fun CategoryCard(
     item: CatalogItem.Category,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(12.dp)
-    val stripeColor = item.stripeColor?.let { Color(it.toInt()) } ?: LocalAccent.current
+    val scheme = MaterialTheme.colorScheme
+    val shape = PomeloShapes.md
+    val stripeColor = item.stripeColor?.let { Color(it.toInt()) } ?: scheme.primary
 
     Surface(
         modifier = modifier
             .height(52.dp)
-            .glassPane(shape, GlassTone.CONTROL)
             .bounceClickable(shape, pressedScale = 0.94f, onClick = onClick),
-        color = Color.Transparent,
+        color = scheme.surfaceContainer,
         shape = shape,
     ) {
         Row(
@@ -208,7 +215,7 @@ fun CategoryCard(
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = CanopyColors.Text,
+                color = scheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -217,14 +224,16 @@ fun CategoryCard(
     }
 }
 
-/** Expressive top pick hero card with rich gradient scrim and pill badge. */
+/** Hero pick card with artwork scrim. */
 @Composable
 fun TopPickCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val shape = PomeloShapes.xl
     Box(
         modifier
             .width(200.dp)
             .aspectRatio(0.85f)
-            .bounceClickable(RoundedCornerShape(18.dp), pressedScale = 0.95f, onClick = onClick),
+            .bounceClickable(shape, pressedScale = 0.95f, onClick = onClick),
     ) {
         ArtworkTile(item.artworkUrl, item.title, Modifier.fillMaxSize(), 0)
         Box(
@@ -233,39 +242,39 @@ fun TopPickCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
                 .background(
                     Brush.verticalGradient(
                         0f to Color.Transparent,
-                        0.45f to Color.Black.copy(alpha = 0.35f),
-                        1f to Color.Black.copy(alpha = 0.85f),
+                        0.45f to scheme.scrim.copy(alpha = 0.35f),
+                        1f to scheme.scrim.copy(alpha = 0.85f),
                     ),
                 ),
         )
         Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
             Surface(
-                color = LocalAccent.current.copy(alpha = 0.85f),
+                color = scheme.primary.copy(alpha = 0.85f),
                 shape = CircleShape,
-                modifier = Modifier.padding(bottom = 6.dp)
+                modifier = Modifier.padding(bottom = 6.dp),
             ) {
                 Text(
                     text = catalogKind(item).uppercase(),
-                    color = Color.Black,
+                    color = scheme.onPrimary,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                 )
             }
             if (item is CatalogItem.Song && item.track.explicit) {
-                ExplicitBadge(modifier = Modifier.padding(bottom = 6.dp))
+                PomeloExplicitBadge(modifier = Modifier.padding(bottom = 6.dp))
             }
             Text(
                 item.title,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = Color.White,
+                color = scheme.onPrimary,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 catalogSubtitle(item),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.80f),
+                color = scheme.onPrimary.copy(alpha = 0.80f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -273,7 +282,7 @@ fun TopPickCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
     }
 }
 
-/** Filter pill chip group inspired by SimpMusic ChipGroup. */
+/** Filter pill chip group. */
 @Composable
 fun <T> OrchardFilterChips(
     options: List<T>,
@@ -282,23 +291,23 @@ fun <T> OrchardFilterChips(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scheme = MaterialTheme.colorScheme
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = PomeloSpacing.screenHorizontal, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(PomeloSpacing.explicitBadgeGap),
     ) {
         items(options.size) { index ->
             val option = options[index]
             val isSelected = option == selected
             val containerColor by animateColorAsState(
-                if (isSelected) LocalAccent.current else Color.Transparent,
-                label = "ChipBg"
+                if (isSelected) scheme.secondaryContainer else scheme.surfaceContainer,
+                label = "ChipBg",
             )
             val textColor by animateColorAsState(
-                if (isSelected) Color.Black else CanopyColors.Text,
-                label = "ChipText"
+                if (isSelected) scheme.onSecondaryContainer else scheme.onSurface,
+                label = "ChipText",
             )
-            // Selected chip swells a touch so the choice lands with some weight.
             val chipScale by animateFloatAsState(
                 if (isSelected) 1.06f else 1f,
                 spring(dampingRatio = 0.45f, stiffness = 500f),
@@ -311,22 +320,17 @@ fun <T> OrchardFilterChips(
                 shape = CircleShape,
                 color = containerColor,
                 interactionSource = source,
-                // The selected chip is a solid accent fill, which is what makes it selected.
                 modifier = Modifier
                     .riseIn(index + 1, fromScale = 0.8f, cascadeOnScroll = true)
                     .scale(chipScale)
                     .pressScale(source, 0.9f)
-                    .height(34.dp)
-                    .then(
-                        if (isSelected) Modifier
-                        else Modifier.glassPane(CircleShape, GlassTone.CONTROL),
-                    ),
+                    .height(34.dp),
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 16.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = PomeloSpacing.screenHorizontal)) {
                     Text(
                         text = label(option),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = textColor
+                        color = textColor,
                     )
                 }
             }
@@ -335,31 +339,42 @@ fun <T> OrchardFilterChips(
 }
 
 @Composable
-fun MessagePanel(title: String, message: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
-    val shape = RoundedCornerShape(16.dp)
+fun MessagePanel(
+    title: String,
+    message: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val shape = PomeloShapes.lg
     Surface(
-        color = Color.Transparent,
+        color = scheme.surfaceContainer,
         shape = shape,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .riseIn()
-            .glassPane(shape)
+            .padding(PomeloSpacing.screenHorizontal)
+            .riseIn(),
     ) {
-        Column(Modifier.padding(20.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = CanopyColors.Text)
-            Spacer(Modifier.height(8.dp))
-            Text(message, color = CanopyColors.Muted, style = MaterialTheme.typography.bodyLarge)
+        Column(Modifier.padding(PomeloSpacing.screenHorizontal)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, color = scheme.onSurface)
+            Spacer(Modifier.height(PomeloSpacing.explicitBadgeGap))
+            Text(message, color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
             if (actionLabel != null && onAction != null) {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(PomeloSpacing.screenHorizontal))
                 Surface(
                     onClick = onAction,
-                    color = LocalAccent.current,
+                    color = scheme.primary,
                     shape = CircleShape,
-                    modifier = Modifier.height(36.dp)
+                    modifier = Modifier.height(PomeloSpacing.actionButtonHeight),
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 18.dp)) {
-                        Text(actionLabel, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            actionLabel,
+                            color = scheme.onPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                        )
                     }
                 }
             }
@@ -369,26 +384,15 @@ fun MessagePanel(title: String, message: String, actionLabel: String? = null, on
 
 internal fun catalogSubtitle(item: CatalogItem): String = when (item) {
     is CatalogItem.Song -> item.track.artist
-    // On an artist page the artist name is dropped upstream, so the year is
-    // usually all that is left; elsewhere it reads as "SZA • 2022".
     is CatalogItem.Record -> albumSubtitle(item.album)
     is CatalogItem.Performer -> item.artist.subtitle.ifBlank { "Artist" }
     is CatalogItem.Collection -> item.playlist.subtitle
     is CatalogItem.Category -> ""
 }
 
-/**
- * "SZA • 2017".
- *
- * Albums saved before the artist field was populated correctly still hold the whole browse
- * line — "Album • 2017" — in [Album.artist], which used to render as "Album • 2017 • 2017"
- * once the year was appended. Rather than migrate the cache, the parts that were never an
- * artist name are dropped on the way out.
- */
 private fun albumSubtitle(album: Album): String {
     val parts = album.artist.split("•").map(String::trim).filter(String::isNotBlank)
     val artist = parts.filterNot { it.lowercase() in ALBUM_KIND_WORDS || YEAR_ONLY.matches(it) }
-    // A year stranded in the artist line is still the album's year if nothing else has it.
     val year = album.year.ifBlank { parts.lastOrNull(YEAR_ONLY::matches).orEmpty() }
     return (artist + year).filter(String::isNotBlank).distinct().joinToString(" • ")
 }
