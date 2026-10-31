@@ -21,7 +21,7 @@ package xyz.stuffbyren.pomelo.playback
 
 import android.net.Uri
 import android.util.Log
-import com.tidal.sdk.player.common.model.AudioQuality
+import com.tidal.sdk.player.common.model.AudioQuality as TidalSdkAudioQuality
 import com.tidal.sdk.player.common.model.UriSchemeType
 import com.tidal.sdk.player.streamingapi.StreamingApi
 import com.tidal.sdk.player.streamingapi.playbackinfo.model.PlaybackInfo
@@ -32,6 +32,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import xyz.stuffbyren.pomelo.auth.TidalAuthRepository
+import xyz.stuffbyren.pomelo.model.AudioQuality
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 
@@ -56,15 +57,22 @@ class TidalStreamResolver(
     private val http: OkHttpClient,
     private val webSession: xyz.stuffbyren.pomelo.auth.TidalWebSession? = null,
     private val streamingApiProvider: () -> StreamingApi?,
+    private val qualityProvider: () -> AudioQuality = { AudioQuality.MAX },
 ) {
     private val cache = ConcurrentHashMap<String, Pair<String, Long>>()
     private val streamInfoCache = ConcurrentHashMap<String, TidalStreamInfo>()
 
+    fun clearCache() {
+        cache.clear()
+        streamInfoCache.clear()
+    }
+
     fun getStreamInfo(trackId: String): TidalStreamInfo? =
-        streamInfoCache["$trackId:cast"] ?: streamInfoCache[trackId]
+        streamInfoCache["$trackId:cast"] ?: streamInfoCache["$trackId:${qualityProvider().name}"] ?: streamInfoCache[trackId]
 
     suspend fun resolve(trackId: String, forCast: Boolean = false): String? = withContext(Dispatchers.IO) {
-        val cacheKey = if (forCast) "$trackId:cast" else trackId
+        val targetQuality = qualityProvider()
+        val cacheKey = if (forCast) "$trackId:cast" else "$trackId:${targetQuality.name}"
         val now = System.currentTimeMillis()
         val cached = cache[cacheKey]
         if (cached != null && now < cached.second) {
@@ -72,27 +80,33 @@ class TidalStreamResolver(
             return@withContext cached.first
         }
 
-        Log.d(TAG, "Resolving track $trackId (forCast=$forCast, hasStreamingApi=${streamingApiProvider() != null})")
-        val resolvedFromApi = resolveViaWebPlayback(trackId, forCast)
-            ?: resolveViaStreamingApi(trackId)
-            ?: resolveViaOpenApi(trackId)
+        Log.d(TAG, "Resolving track $trackId (quality=$targetQuality, forCast=$forCast, hasStreamingApi=${streamingApiProvider() != null})")
+        val resolvedFromApi = resolveViaWebPlayback(trackId, targetQuality, forCast)
+            ?: resolveViaStreamingApi(trackId, targetQuality, forCast)
+            ?: resolveViaOpenApi(trackId, targetQuality)
 
         if (!resolvedFromApi.isNullOrBlank()) {
             cache[cacheKey] = Pair(resolvedFromApi, now + CACHE_TTL_MS)
             return@withContext resolvedFromApi
         }
 
-        Log.w(TAG, "Failed to resolve stream URL for track $trackId (forCast=$forCast)")
+        Log.w(TAG, "Failed to resolve stream URL for track $trackId (quality=$targetQuality, forCast=$forCast)")
         null
     }
 
-    private suspend fun resolveViaWebPlayback(trackId: String, forCast: Boolean = false): String? {
+    private suspend fun resolveViaWebPlayback(
+        trackId: String,
+        targetQuality: AudioQuality,
+        forCast: Boolean = false,
+    ): String? {
         val token = webSession?.getAccessToken() ?: return null
         val countryCode = auth.session()?.countryCode ?: "MX"
-        val qualities = if (forCast) {
-            listOf("LOSSLESS", "HIGH", "LOW")
-        } else {
-            listOf("HI_RES", "LOSSLESS", "HIGH", "LOW")
+        val effectiveQuality = if (forCast && targetQuality == AudioQuality.MAX) AudioQuality.HIGH else targetQuality
+        val qualities = when (effectiveQuality) {
+            AudioQuality.MAX -> listOf("HI_RES", "LOSSLESS", "HIGH", "LOW")
+            AudioQuality.HIGH -> listOf("LOSSLESS", "HIGH", "LOW")
+            AudioQuality.MEDIUM -> listOf("HIGH", "LOW")
+            AudioQuality.LOW -> listOf("LOW")
         }
 
         for (quality in qualities) {
@@ -142,8 +156,8 @@ class TidalStreamResolver(
                         val audioQuality = json.optString("audioQuality", quality)
                         val bitDepth = json.optInt("bitDepth", if (audioQuality.contains("HI_RES", ignoreCase = true)) 24 else 16)
                         val hiRes = audioQuality.contains("HI_RES", ignoreCase = true) || bitDepth > 16 || sampleRate > 48000
-                        val effectiveBitrate = if (bandwidthKbps > 0) bandwidthKbps else if (codec == "FLAC") (if (hiRes) 2304 else 850) else 320
-                        streamInfoCache[trackId] = TidalStreamInfo(
+                        val effectiveBitrate = if (bandwidthKbps > 0) bandwidthKbps else if (codec == "FLAC") (if (hiRes) 2304 else 850) else (if (quality == "LOW") 96 else 320)
+                        val info = TidalStreamInfo(
                             url = extracted,
                             bitrateKbps = effectiveBitrate,
                             bitDepth = bitDepth,
@@ -151,6 +165,9 @@ class TidalStreamResolver(
                             codec = codec,
                             hiRes = hiRes,
                         )
+                        val infoKey = if (forCast) "$trackId:cast" else "$trackId:${targetQuality.name}"
+                        streamInfoCache[infoKey] = info
+                        streamInfoCache[trackId] = info
                     }
                     Pair(presentation, extracted)
                 }
@@ -169,9 +186,27 @@ class TidalStreamResolver(
         return null
     }
 
-    private suspend fun resolveViaStreamingApi(trackId: String): String? {
+    private suspend fun resolveViaStreamingApi(
+        trackId: String,
+        targetQuality: AudioQuality,
+        forCast: Boolean = false,
+    ): String? {
         val streamingApi = streamingApiProvider() ?: return null
-        val qualities = listOf(AudioQuality.LOSSLESS, AudioQuality.HIGH, AudioQuality.LOW)
+        val effectiveQuality = if (forCast && targetQuality == AudioQuality.MAX) AudioQuality.HIGH else targetQuality
+        val qualities = when (effectiveQuality) {
+            AudioQuality.MAX, AudioQuality.HIGH -> listOf(
+                TidalSdkAudioQuality.LOSSLESS,
+                TidalSdkAudioQuality.HIGH,
+                TidalSdkAudioQuality.LOW,
+            )
+            AudioQuality.MEDIUM -> listOf(
+                TidalSdkAudioQuality.HIGH,
+                TidalSdkAudioQuality.LOW,
+            )
+            AudioQuality.LOW -> listOf(
+                TidalSdkAudioQuality.LOW,
+            )
+        }
         for (quality in qualities) {
             val result = runCatching {
                 val playbackInfo = streamingApi.getTrackPlaybackInfo(
@@ -192,19 +227,28 @@ class TidalStreamResolver(
             if (result != null) {
                 if (result.first == com.tidal.sdk.player.common.model.AssetPresentation.FULL && !result.second.isNullOrBlank()) {
                     Log.i(TAG, "Found FULL stream for $trackId via StreamingApi at quality $quality")
-                    val isLossless = quality == AudioQuality.LOSSLESS
-                    streamInfoCache[trackId] = TidalStreamInfo(
+                    val isLossless = quality == TidalSdkAudioQuality.LOSSLESS
+                    val effectiveBitrate = when (quality) {
+                        TidalSdkAudioQuality.LOSSLESS -> 850
+                        TidalSdkAudioQuality.HIGH -> 320
+                        TidalSdkAudioQuality.LOW -> 96
+                        else -> 320
+                    }
+                    val info = TidalStreamInfo(
                         url = result.second!!,
-                        bitrateKbps = if (isLossless) 850 else 320,
+                        bitrateKbps = effectiveBitrate,
                         bitDepth = 16,
                         sampleRate = 44100,
                         codec = if (isLossless) "FLAC" else "AAC",
                         hiRes = false,
                     )
+                    val infoKey = if (forCast) "$trackId:cast" else "$trackId:${targetQuality.name}"
+                    streamInfoCache[infoKey] = info
+                    streamInfoCache[trackId] = info
                     return result.second
                 }
                 // If it's the last quality or preview, save it if nothing better
-                if (quality == AudioQuality.LOW && !result.second.isNullOrBlank()) {
+                if (quality == TidalSdkAudioQuality.LOW && !result.second.isNullOrBlank()) {
                     return result.second
                 }
             }
@@ -212,16 +256,28 @@ class TidalStreamResolver(
         return null
     }
 
-    private suspend fun resolveViaOpenApi(trackId: String): String? {
+    private suspend fun resolveViaOpenApi(
+        trackId: String,
+        targetQuality: AudioQuality,
+    ): String? {
         val token = auth.getAccessToken() ?: return null
         val session = auth.session()
         val countryCode = session?.countryCode ?: "US"
 
-        val formatCandidates = listOf(
-            "FLAC,AACLC,HEAACV1",
-            "AACLC,HEAACV1",
-            "HEAACV1",
-        )
+        val formatCandidates = when (targetQuality) {
+            AudioQuality.MAX, AudioQuality.HIGH -> listOf(
+                "FLAC,AACLC,HEAACV1",
+                "AACLC,HEAACV1",
+                "HEAACV1",
+            )
+            AudioQuality.MEDIUM -> listOf(
+                "AACLC,HEAACV1",
+                "HEAACV1",
+            )
+            AudioQuality.LOW -> listOf(
+                "HEAACV1",
+            )
+        }
 
         for (formats in formatCandidates) {
             val uriBuilder = Uri.parse("$TIDAL_API_BASE/trackManifests/$trackId").buildUpon()

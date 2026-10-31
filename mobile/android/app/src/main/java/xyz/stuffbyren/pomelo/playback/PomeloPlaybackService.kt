@@ -106,6 +106,15 @@ class PomeloPlaybackService : MediaLibraryService() {
         playbackVolume = PlaybackVolumeMonitor(this)
         observeAudioSettings(graph, ioScope, playbackVolume.state, listOf(playerEq))
 
+        val toSdkQuality: (xyz.stuffbyren.pomelo.model.AudioQuality) -> AudioQuality = { quality ->
+            when (quality) {
+                xyz.stuffbyren.pomelo.model.AudioQuality.LOW -> AudioQuality.LOW
+                xyz.stuffbyren.pomelo.model.AudioQuality.MEDIUM -> AudioQuality.HIGH
+                xyz.stuffbyren.pomelo.model.AudioQuality.HIGH -> AudioQuality.LOSSLESS
+                xyz.stuffbyren.pomelo.model.AudioQuality.MAX -> AudioQuality.HI_RES_LOSSLESS
+            }
+        }
+
         try {
             val eventProducer = EventProducer.getInstance(
                 credentialsProvider = graph.auth.credentialsProvider,
@@ -123,8 +132,8 @@ class PomeloPlaybackService : MediaLibraryService() {
                 eventSender = eventProducer.eventSender,
             )
             tidalPlayer?.playbackEngine?.apply {
-                streamingWifiAudioQuality = AudioQuality.LOSSLESS
-                streamingCellularAudioQuality = AudioQuality.HIGH
+                streamingWifiAudioQuality = toSdkQuality(graph.settings.settings.value.audioQuality)
+                streamingCellularAudioQuality = toSdkQuality(graph.settings.settings.value.cellularAudioQuality)
             }
             listenToTidalEvents(graph)
         } catch (e: Exception) {
@@ -136,7 +145,18 @@ class PomeloPlaybackService : MediaLibraryService() {
             http = graph.http,
             webSession = graph.tidalWebSession,
             streamingApiProvider = { tidalPlayer?.streamingApi },
+            qualityProvider = { graph.audioQuality() },
         )
+
+        ioScope.launch {
+            graph.settings.settings.collect { settings ->
+                tidalResolver.clearCache()
+                tidalPlayer?.playbackEngine?.apply {
+                    streamingWifiAudioQuality = toSdkQuality(settings.audioQuality)
+                    streamingCellularAudioQuality = toSdkQuality(settings.cellularAudioQuality)
+                }
+            }
+        }
 
         nowPlaying = NowPlayingPublisher(graph, handler, ioScope, tidalResolver) {
             if (::player.isInitialized) authoritativePlayer() else null

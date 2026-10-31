@@ -357,7 +357,17 @@ internal fun NonMusicSkipRow(value: NonMusicSkipMode, onChange: (NonMusicSkipMod
 }
 
 internal val AudioQuality.label: String
-    get() = when (this) { AudioQuality.DATA_SAVER -> "Saver"; AudioQuality.NORMAL -> "Normal"; AudioQuality.HIGH -> "High"; AudioQuality.MAX -> "Max" }
+    get() = when (this) {
+        AudioQuality.LOW -> "Low"
+        AudioQuality.MEDIUM -> "Medium"
+        AudioQuality.HIGH -> "High"
+        AudioQuality.MAX -> "Max"
+    }
 
 private val AudioQuality.description: String
-    get() = when (this) { AudioQuality.DATA_SAVER -> "Uses the least data"; AudioQuality.NORMAL -> "Balanced quality and data"; AudioQuality.HIGH -> "Best quality, more data"; AudioQuality.MAX -> "Lossless and Hi-Res audio" }
+    get() = when (this) {
+        AudioQuality.LOW -> "96 kbps (AAC)"
+        AudioQuality.MEDIUM -> "320 kbps (AAC)"
+        AudioQuality.HIGH -> "CD quality (16-bit / 44.1 kHz FLAC)"
+        AudioQuality.MAX -> "Hi-Res (up to 24-bit / 192 kHz FLAC)"
+    }

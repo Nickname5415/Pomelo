@@ -63,10 +63,8 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                 sendYouTubeHistory = values[SEND_YOUTUBE_HISTORY] ?: true,
                 downloadAnimatedArtwork = values[DOWNLOAD_ANIMATED_ARTWORK] ?: false,
                 downloadToSdCard = values[DOWNLOAD_TO_SD_CARD] ?: false,
-                audioQuality = runCatching { AudioQuality.valueOf(values[AUDIO_QUALITY].orEmpty()) }
-                    .getOrDefault(AudioQuality.HIGH),
-                cellularAudioQuality = runCatching { AudioQuality.valueOf(values[CELLULAR_AUDIO_QUALITY].orEmpty()) }
-                    .getOrDefault(AudioQuality.HIGH),
+                audioQuality = parseAudioQuality(values[AUDIO_QUALITY]),
+                cellularAudioQuality = parseAudioQuality(values[CELLULAR_AUDIO_QUALITY]),
                 useSystemColors = values[SYSTEM_COLORS] ?: false,
                 animatedBackground = values[ANIMATED_BACKGROUND] ?: false,
                 crossfadeEnabled = values[CROSSFADE_ENABLED] ?: false,
@@ -303,3 +301,12 @@ internal fun decodeSearchHistory(value: String): List<String> = runCatching {
         for (index in 0 until values.length()) values.optString(index).takeIf(String::isNotBlank)?.let(::add)
     }
 }.getOrDefault(emptyList())
+
+private fun parseAudioQuality(value: String?): AudioQuality =
+    when (value) {
+        "LOW", "DATA_SAVER" -> AudioQuality.LOW
+        "MEDIUM", "NORMAL" -> AudioQuality.MEDIUM
+        "HIGH" -> AudioQuality.HIGH
+        "MAX" -> AudioQuality.MAX
+        else -> AudioQuality.HIGH
+    }
